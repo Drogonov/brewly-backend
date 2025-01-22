@@ -3,7 +3,7 @@ name: Generate and Publish Swagger JSON
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   generate-swagger:
@@ -45,4 +45,4 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add swagger.json
           git commit -m "Update Swagger JSON"
-          git push origin main
+          git push origin master
