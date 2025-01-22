@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: Dockerfile-prod
+      args:
+        NODE_ENV: ${NODE_ENV}
+        DB_PORT: ${POSTGRES_DB_PORT}
+        DB_HOST: ${POSTGRES_DB_HOST}
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - DB_PORT=${POSTGRES_DB_PORT}
+      - DB_HOST=${POSTGRES_DB_HOST}
+    ports:
+      - "${SERVER_PORT}:${APP_PORT}"
+    depends_on:
+      - db-prod
+
+  db-prod:
+    image: postgres:13
+    container_name: db-prod
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${SERVER_DB_PORT}:${POSTGRES_DB_PORT}"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "${SERVER_PGADMIN_PORT}:${PGADMIN_PORT}"
+    depends_on:
+      - db-prod
+
+volumes:
+  db-prod:

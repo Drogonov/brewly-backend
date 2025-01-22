@@ -1,0 +1,51 @@
+# Stage 1: Build Stage
+FROM node:20-alpine as builder
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Arguments can be passed during build time
+ARG NODE_ENV=production
+ARG DB_PORT=5432
+ARG DB_HOST=db-prod
+
+# Copy package.json and package-lock.json
+COPY package.json package-lock.json ./
+
+# Install dev dependencies to ensure build tools are available
+RUN npm ci
+
+# Copy the rest of the application code
+COPY . .
+
+# Copy Prisma schema
+COPY prisma ./prisma
+
+# Build the application
+RUN npm run build
+
+# Stage 2: Production Stage
+FROM node:20-alpine
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy necessary files from the builder stage
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/package.json ./
+COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/prisma ./prisma
+COPY --from=builder /usr/src/app/config ./config
+
+# Install OpenSSL for secure connections
+RUN apk add --no-cache openssl
+
+# Install dockerize for service health checks
+ENV DOCKERIZE_VERSION v0.6.0
+RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+
+# Ensure the database is ready before starting the application
+CMD ["sh", "-c", \
+     "npm run prisma:generate-prod && npm run prisma:db-push-prod && dockerize -wait tcp://${DB_HOST}:${DB_PORT} -timeout 60s && npm run start:prod"]

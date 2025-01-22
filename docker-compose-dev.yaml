@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # app:
+  #   container_name: app
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile-dev
+  #     args:
+  #       NODE_ENV: ${NODE_ENV}
+  #       DB_PORT: ${POSTGRES_DB_PORT}
+  #       DB_HOST: ${POSTGRES_DB_HOST}
+  #   environment:
+  #     - NODE_ENV=${NODE_ENV}
+  #     - DB_PORT=${POSTGRES_DB_PORT}
+  #     - DB_HOST=${POSTGRES_DB_HOST}
+  #   ports:
+  #     - "${SERVER_PORT}:${APP_PORT}"
+  #   depends_on:
+  #     - db-dev
+
+  db-dev:
+    image: postgres:13
+    container_name: db-dev
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${SERVER_DB_PORT}:${POSTGRES_DB_PORT}"
+
+volumes:
+  db-dev:

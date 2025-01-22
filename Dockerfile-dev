@@ -1,0 +1,41 @@
+# Use the official Node.js 16 image as a base image
+FROM node:20-alpine
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Arguments can be passed during build time
+ARG NODE_ENV=development
+ARG DB_PORT=5432
+ARG DB_HOST=db-dev
+
+# Print ARGS for debugging
+# RUN echo "NODE_ENV is ${NODE_ENV}" && echo "DB_HOST is ${DB_HOST}" && echo "DB_PORT is ${DB_PORT}"
+
+# Copy the package.json and package-lock.json to the working directory
+COPY package*.json ./
+
+# Install the project dependencies
+RUN npm install
+RUN npm install prisma @prisma/client
+
+# Copy the rest of the application code to the working directory
+COPY . .
+
+# Copy the prisma schema
+COPY prisma ./prisma
+
+# Build the application
+RUN npm run build
+
+# Install openssl for secure connections
+RUN apk add --no-cache openssl
+
+# Install dockerize for service health checks
+ENV DOCKERIZE_VERSION v0.6.0
+RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+
+# Utilizing a shell to dynamically check the DB hostname and port
+CMD ["sh", "-c", "npm run prisma:generate-dev & npm run prisma:db-push-dev & dockerize -wait tcp://${DB_HOST}:${DB_PORT} -timeout 60m npm run start:dev"]
