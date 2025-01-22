@@ -67,6 +67,7 @@ You will need
 - SSH_KEY - need to connect to the server
 - VPS_HOST - server ip
 - VPS_USER - server user
+- REPO_BOT_PAT - github access token for bot to create swagger info in brewly-swagger repo (Repo_Bot — repo, workflow permissions)
 
 #### 1.1 SSH Generation
 
