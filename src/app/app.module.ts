@@ -6,11 +6,13 @@ import { configuration } from '../config/configuration';
 import { validationSchema } from '../config/validationSchema';
 import { ConfigurationModule } from '../config/configuration.module';
 import { PrismaModule } from '../prisma/prisma.module';
-import { AuthModule } from '../auth/auth.module';
+import { AuthModule } from '../app.modules/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AtGuard } from '../common/guards';
 import { JWTSessionModule } from '../jwt-session/jwt-session.module';
 import { MailModule } from '../mail/mail.module';
+import { OnboardingModule } from 'src/app.modules/onboarding/onboarding.module';
+import { SettingsModule } from 'src/app.modules/settings/settings.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { MailModule } from '../mail/mail.module';
     }),
     ConfigurationModule,
     AuthModule,
+    OnboardingModule,
+    SettingsModule,
     PrismaModule,
     JWTSessionModule,
     MailModule

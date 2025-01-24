@@ -8,4 +8,4 @@ import { SettingsService } from './settings.service';
   controllers: [SettingsController],
   providers: [SettingsService, ConfigurationService],
 })
-export class AuthModule {}
+export class SettingsModule {}

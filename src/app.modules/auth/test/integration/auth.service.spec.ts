@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { User } from '@prisma/client';
 import { decode } from 'jsonwebtoken';
-import { AppModule } from '../../../app/app.module';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { AppModule } from '../../../../app/app.module';
+import { PrismaService } from '../../../../prisma/prisma.service';
 import { AuthService } from '../../auth.service';
 import { Tokens } from '../../types';
 
