@@ -45,8 +45,9 @@ export class AuthService {
             errorMsg: "Email is already registered, please sign in."
           }]
         });
+      } else {
+        throw error;
       }
-      throw error;
     }
   }
 
