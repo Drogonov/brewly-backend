@@ -5,7 +5,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export interface IOnboardingPageResponse {
     title: string;
     text: string;
-    imageUrl?: URL
+    imageURL?: URL
     buttonText?: string;
 }
 
@@ -19,7 +19,7 @@ export class OnboardingPageResponseDto implements IOnboardingPageResponse {
     text: string;
 
     @ApiPropertyOptional({ example: 'hhtps://brewly.digital/images/1' })
-    imageUrl?: URL;
+    imageURL?: URL;
 
     @ApiPropertyOptional({ example: 'Lets go' })
     buttonText?: string;

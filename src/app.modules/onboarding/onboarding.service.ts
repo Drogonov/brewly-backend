@@ -10,7 +10,7 @@ export class OnboardingService {
                 {
                     title: "Onboarding 1",
                     text: "Lorem Ipsum",
-                    imageUrl: new URL("https://brewly.digital/images/1"),
+                    imageURL: new URL("https://picsum.photos/seed/picsum/200/300"),
                     buttonText: "Lets Go"
                 }
             ]
