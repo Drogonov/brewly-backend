@@ -4,6 +4,7 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,26 +15,151 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement())
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id            Int       @id @default(autoincrement())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   userName      String?
   email         String    @unique
   hash          String
   otpHash       String?
   isVerificated Boolean
   sessions      Session[]
+  companies     Company[]
 }
 
 model Session {
-  id Int @id @default(autoincrement())
-
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  hashedRt  String?
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+}
 
-  hashedRt String?
-  userId   Int
-  user     User    @relation(fields: [userId], references: [id])
+model Company {
+  id                 Int      @id @default(autoincrement())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  ownerId            Int
+  owner              User     @relation(fields: [ownerId], references: [id])
+  chiefBaristas      Int[]
+  baristasId         Int[]
+  sampleTypesId      Int[]
+  warehouseSamplesId Int[]
+}
+
+model SampleType {
+  id                            Int      @id @default(autoincrement())
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime @updatedAt
+  companiesId                   Int[]
+  originCompanyName             String
+  sampleName                    String
+  roastTypeId                   Int
+  coffeTypeId                   Int
+  connectedToWarehouseSamplesId Int[]
+}
+
+model WarehouseSample {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  companyId    Int
+  sampleTypeId Int
+  roastDate    DateTime
+  openDate     DateTime
+  wheight      Int
+  barCode      String
+}
+
+model Cupping {
+  id                 Int      @id @default(autoincrement())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  cuppingCreatorId   Int
+  cuppingName        String
+  companyId          Int
+  invitedUsersId     Int[]
+  sampleTypesId      Int[]
+  warehouseSamplesId Int[]
+
+  sampleTestingIds Int[]
+}
+
+model CuppingResults {
+  id                   Int                      @id @default(autoincrement())
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  companyId            Int
+  cuppingId            Int
+  cuppingTimeInSeconds Int
+  results              CuppingResultForSample[]
+}
+
+model CuppingResultForSample {
+  id              Int            @id @default(autoincrement())
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  cuppingResultId Int
+  cuppingResult   CuppingResults @relation(fields: [cuppingResultId], references: [id])
+  averageScore Int
+  averageSampleTestingId Int
+}
+
+model CuppingSettings {
+  id                    Int      @id @default(autoincrement())
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  randomSamplesOrder    Boolean
+  openSampleNameCupping Boolean
+  singleUserCupping     Boolean
+  inviteAllTeammates    Boolean
+  companyId             Int
+  userId                Int
+}
+
+model RoastType {
+  id                     Int      @id @default(autoincrement())
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  value                  String
+  isCustom               Boolean
+  companiesIdUsingCustom Int[]
+}
+
+model CoffeeType {
+  id                     Int      @id @default(autoincrement())
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  value                  String
+  isCustom               Boolean
+  companiesIdUsingCustom Int[]
+}
+
+model SampleTesting {
+  id                          Int      @id @default(autoincrement())
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+  userId                      Int
+  companyId                   Int
+  cuppingId                   Int
+  userSamplePropertiesId      Int[]
+  userTestingTimeInSeconds    Int
+}
+
+model SampleProperty {
+  id             Int      @id @default(autoincrement())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  propertyTypeId Int
+  intensity      Int
+  quality        Int
+  comment        String
+}
+
+model PropertyType {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  propertyName String
 }
