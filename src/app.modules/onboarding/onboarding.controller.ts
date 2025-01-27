@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/common/decorators';
+import { Public } from 'src/app.services/common/decorators';
 import { OnboardingResponseDto } from './dto';
 import { OnboardingService } from './onboarding.service';
 

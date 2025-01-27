@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigurationService } from 'src/config/configuration.service';
+import { ConfigurationService } from 'src/app.services/config/configuration.service';
 import { CuppingController } from './cupping.controller';
 import { CuppingService } from './cupping.service';
 
