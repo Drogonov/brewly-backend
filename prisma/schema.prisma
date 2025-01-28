@@ -53,73 +53,38 @@ model Session {
 //
 
 model Company {
-  id               Int               @id @default(autoincrement())
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  ownerId          Int
-  owner            User              @relation("UserOwnedCompanies", fields: [ownerId], references: [id])
-  chiefBaristas    User[]            @relation("ChiefBaristas")
-  baristas         User[]            @relation("Baristas")
-  sampleTypes      SampleType[]      @relation("SampleTypesOwnedByCompany")
-  warehouseSamples WarehouseSample[]
-  cuppings         Cupping[]
-  cuppingSettings  CuppingSettings[]
-  cuppingResult    CuppingResult[]
-  sampleTesting    SampleTesting[]
+  id              Int               @id @default(autoincrement())
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  ownerId         Int
+  owner           User              @relation("UserOwnedCompanies", fields: [ownerId], references: [id])
+  chiefBaristas   User[]            @relation("ChiefBaristas")
+  baristas        User[]            @relation("Baristas")
+  sampleTypes     SampleType[]      @relation("SampleTypesOwnedByCompany")
+  sampleItems     SampleItem[]
+  cuppings        Cupping[]
+  cuppingSettings CuppingSettings[]
+  cuppingResult   CuppingResult[]
+  sampleTesting   SampleTesting[]
 }
 
 //
 // ──────────────────────────────────────────────────────
-//  SAMPLE TYPE / WAREHOUSE SAMPLE
-// ──────────────────────────────────────────────────────
-//
-
-model SampleType {
-  id                Int               @id @default(autoincrement())
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  originCompanyName String
-  sampleName        String
-  roastTypeId       Int
-  roastType         RoastType         @relation(fields: [roastTypeId], references: [id])
-  coffeTypeId       Int
-  coffeeType        CoffeeType        @relation(fields: [coffeTypeId], references: [id])
-  company           Company[]         @relation("SampleTypesOwnedByCompany")
-  warehouseSamples  WarehouseSample[]
-}
-
-model WarehouseSample {
-  id           Int        @id @default(autoincrement())
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  companyId    Int
-  company      Company    @relation(fields: [companyId], references: [id])
-  sampleTypeId Int
-  sampleType   SampleType @relation(fields: [sampleTypeId], references: [id])
-  roastDate    DateTime
-  openDate     DateTime
-  wheight      Int
-  barCode      String
-  cuppings     Cupping[]  @relation("CuppingWarehouseSamples")
-}
-
-//
-// ──────────────────────────────────────────────────────
-//  CUPPING / CUPPING RESULTS
+//  CUPPING CUPPING / RESULT / SETTINGS
 // ──────────────────────────────────────────────────────
 //
 
 model Cupping {
-  id               Int               @id @default(autoincrement())
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id               Int             @id @default(autoincrement())
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
   cuppingCreatorId Int
-  cuppingCreator   User              @relation(fields: [cuppingCreatorId], references: [id])
+  cuppingCreator   User            @relation(fields: [cuppingCreatorId], references: [id])
   cuppingName      String
   companyId        Int
-  company          Company           @relation(fields: [companyId], references: [id])
-  invitedUsers     User[]            @relation("CuppingInvitedUsers")
-  warehouseSamples WarehouseSample[] @relation("CuppingWarehouseSamples")
+  company          Company         @relation(fields: [companyId], references: [id])
+  invitedUsers     User[]          @relation("CuppingInvitedUsers")
+  sampleItems      SampleItem[]    @relation("CuppingSampleItems")
   sampleTestings   SampleTesting[]
   cuppingResult    CuppingResult?
 }
@@ -147,12 +112,6 @@ model CuppingResultForSample {
   sampleTesting          SampleTesting? @relation(fields: [averageSampleTestingId], references: [id])
 }
 
-//
-// ──────────────────────────────────────────────────────
-//  CUPPING SETTINGS
-// ──────────────────────────────────────────────────────
-//
-
 model CuppingSettings {
   id                    Int      @id @default(autoincrement())
   createdAt             DateTime @default(now())
@@ -169,9 +128,38 @@ model CuppingSettings {
 
 //
 // ──────────────────────────────────────────────────────
-//  ROAST TYPE / COFFEE TYPE
+//  SAMPLE TYPE / ITEM / ROAST TYPE / COFFEE TYPE
 // ──────────────────────────────────────────────────────
 //
+
+model SampleType {
+  id                Int          @id @default(autoincrement())
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  originCompanyName String
+  sampleName        String
+  roastTypeId       Int
+  roastType         RoastType    @relation(fields: [roastTypeId], references: [id])
+  coffeTypeId       Int
+  coffeeType        CoffeeType   @relation(fields: [coffeTypeId], references: [id])
+  company           Company[]    @relation("SampleTypesOwnedByCompany")
+  sampleItems       SampleItem[]
+}
+
+model SampleItem {
+  id           Int        @id @default(autoincrement())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  companyId    Int
+  company      Company    @relation(fields: [companyId], references: [id])
+  sampleTypeId Int
+  sampleType   SampleType @relation(fields: [sampleTypeId], references: [id])
+  roastDate    DateTime
+  openDate     DateTime
+  wheight      Int // in gramms
+  barCode      String
+  cuppings     Cupping[]  @relation("CuppingSampleItems")
+}
 
 model RoastType {
   id         Int          @id @default(autoincrement())

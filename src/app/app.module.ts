@@ -13,6 +13,7 @@ import { JWTSessionModule } from 'src/app.services/jwt-session/jwt-session.modul
 import { MailModule } from 'src/app.services/mail/mail.module';
 import { OnboardingModule } from 'src/app.modules/onboarding/onboarding.module';
 import { SettingsModule } from 'src/app.modules/settings/settings.module';
+import { SamplesModule } from 'src/app.modules/samples/samples.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { SettingsModule } from 'src/app.modules/settings/settings.module';
     AuthModule,
     OnboardingModule,
     SettingsModule,
+    SamplesModule,
     PrismaModule,
     JWTSessionModule,
     MailModule

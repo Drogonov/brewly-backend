@@ -7,11 +7,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { Public, GetCurrentUserId, GetCurrentUser } from '../../common/decorators';
-import { RtGuard } from '../../common/guards';
+import { Public, GetCurrentUserId, GetCurrentUser } from 'src/app.services/common/decorators';
+import { RtGuard } from 'src/app.services/common/guards';
 import { AuthService } from './auth.service';
 import { AuthRequestDto, StatusResponseDto } from './dto';
-import { ErrorResponseDto, TokensResponseDto } from 'src/common/dto';
+import { ErrorResponseDto, TokensResponseDto } from 'src/app.services/common/dto';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiUnprocessableEntityResponse } from '@nestjs/swagger';
 
 @Controller('auth')

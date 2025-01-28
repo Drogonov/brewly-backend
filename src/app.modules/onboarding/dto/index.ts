@@ -1,1 +1,1 @@
-export * from './onboarding-response.model'
+export * from './onboarding-response.dto'

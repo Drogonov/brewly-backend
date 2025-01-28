@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IOnboardingPageResponse, OnboardingPageResponseDto } from './onboarding.page-response.model';
+import { IOnboardingPageResponse, OnboardingPageResponseDto } from './onboarding.page-response.dto';
 
 // MARK: - Project implementation
 
