@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { GetCuppingSamplesRequestDto, IGetCuppingSamplesResponse } from './dto';
+import { GetCuppingSamplesRequestDto, IGetCuppingSamplesResponse, SaveCuppingTestsRequestDto } from './dto';
+import { ISuccessIdResponse } from '../samples/dto';
 
 @Injectable()
 export class TestingService {
@@ -8,6 +9,12 @@ export class TestingService {
         return {
             cuppingId: 666,
             sampleTestings: []
+        };
+    }
+
+    async saveCuppingTestsResult(dto: SaveCuppingTestsRequestDto): Promise<ISuccessIdResponse> {
+        return {
+            id: 666
         };
     }
 }
