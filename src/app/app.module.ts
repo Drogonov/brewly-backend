@@ -6,7 +6,7 @@ import { ConfigurationModule } from 'src/app.services/config/configuration.modul
 import { PrismaModule } from 'src/app.services/prisma/prisma.module';
 import { AuthModule } from '../app.modules/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
-import { AtGuard } from 'src/app.services/common/guards';
+import { AtGuard } from 'src/app.common/guards';
 import { JWTSessionModule } from 'src/app.services/jwt-session/jwt-session.module';
 import { MailModule } from 'src/app.services/mail/mail.module';
 import { OnboardingModule } from 'src/app.modules/onboarding/onboarding.module';

@@ -2,9 +2,9 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './types';
-import { ACCESS_TOKEN_EXPIRATION, REFRESH_TOKEN_EXPIRATION } from 'src/app.services/common/constants/constants';
+import { ACCESS_TOKEN_EXPIRATION, REFRESH_TOKEN_EXPIRATION } from 'src/app.common/constants/constants';
 import { ConfigurationService } from 'src/app.services/config/configuration.service';
-import { ITokensResponse } from 'src/app.services/common/dto';
+import { ITokensResponse } from 'src/app.common/dto';
 import * as argon from 'argon2';
 import { User, Session } from '@prisma/client';
 

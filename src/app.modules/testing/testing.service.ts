@@ -1,18 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { GetCuppingSamplesRequestDto, IGetCuppingSamplesResponse } from './dto';
 
 @Injectable()
 export class TestingService {
 
-    // async getOnboarding(): Promise<IOnboardingResponse> {
-    //     return {
-    //         pages: [
-    //             {
-    //                 title: "Onboarding 1",
-    //                 text: "Lorem Ipsum",
-    //                 imageUrl: new URL("https://brewly.digital/images/1"),
-    //                 buttonText: "Lets Go"
-    //             }
-    //         ]
-    //     }
-    // }
+    async getCuppingSamples(dto: GetCuppingSamplesRequestDto): Promise<IGetCuppingSamplesResponse> {
+        return {
+            cuppingId: 666,
+            sampleTestings: []
+        };
+    }
 }

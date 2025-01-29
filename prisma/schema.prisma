@@ -83,6 +83,8 @@ model Cupping {
   cuppingName      String
   companyId        Int
   company          Company         @relation(fields: [companyId], references: [id])
+  settingsId       Int
+  settings         CuppingSettings @relation(fields: [settingsId], references: [id])
   invitedUsers     User[]          @relation("CuppingInvitedUsers")
   sampleItems      SampleItem[]    @relation("CuppingSampleItems")
   sampleTestings   SampleTesting[]
@@ -113,17 +115,18 @@ model CuppingResultForSample {
 }
 
 model CuppingSettings {
-  id                    Int      @id @default(autoincrement())
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                    Int       @id @default(autoincrement())
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
   randomSamplesOrder    Boolean
   openSampleNameCupping Boolean
   singleUserCupping     Boolean
   inviteAllTeammates    Boolean
+  cuppings              Cupping[]
   companyId             Int
-  company               Company  @relation(fields: [companyId], references: [id])
+  company               Company   @relation(fields: [companyId], references: [id])
   userId                Int
-  user                  User     @relation(fields: [userId], references: [id])
+  user                  User      @relation(fields: [userId], references: [id])
 }
 
 //
@@ -147,18 +150,19 @@ model SampleType {
 }
 
 model SampleItem {
-  id           Int        @id @default(autoincrement())
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  companyId    Int
-  company      Company    @relation(fields: [companyId], references: [id])
-  sampleTypeId Int
-  sampleType   SampleType @relation(fields: [sampleTypeId], references: [id])
-  roastDate    DateTime
-  openDate     DateTime
-  wheight      Int // in gramms
-  barCode      String
-  cuppings     Cupping[]  @relation("CuppingSampleItems")
+  id            Int             @id @default(autoincrement())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  companyId     Int
+  company       Company         @relation(fields: [companyId], references: [id])
+  sampleTypeId  Int
+  sampleType    SampleType      @relation(fields: [sampleTypeId], references: [id])
+  roastDate     DateTime
+  openDate      DateTime
+  wheight       Int // in gramms
+  barCode       String
+  cuppings      Cupping[]       @relation("CuppingSampleItems")
+  sampleTesting SampleTesting[]
 }
 
 model RoastType {
@@ -195,9 +199,11 @@ model SampleTesting {
   company                  Company                  @relation(fields: [companyId], references: [id])
   cuppingId                Int
   cupping                  Cupping                  @relation(fields: [cuppingId], references: [id])
+  sampleItemId             Int
+  sampleItem               SampleItem               @relation(fields: [sampleItemId], references: [id])
   userTestingTimeInSeconds Int
   userSampleProperties     SampleProperty[]
-  CuppingResultForSample   CuppingResultForSample[]
+  cuppingResultForSample   CuppingResultForSample[]
 }
 
 model SampleProperty {

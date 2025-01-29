@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 
 import { SamplesService } from './samples.service';
-import { Public } from 'src/app.services/common/decorators';
+import { Public } from 'src/app.common/decorators';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import {
   CoffeeTypeResponseDto,

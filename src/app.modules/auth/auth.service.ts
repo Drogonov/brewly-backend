@@ -3,10 +3,10 @@ import { Prisma, User } from '@prisma/client';
 import * as argon from 'argon2';
 import { PrismaService } from 'src/app.services/prisma/prisma.service';
 import { AuthRequestDto, IStatusResponse, StatusResponseDto } from './dto';
-import { ITokensResponse } from 'src/app.services/common/dto';
+import { ITokensResponse } from 'src/app.common/dto';
 import { JWTSessionService } from 'src/app.services/jwt-session/jwt-session.service';
 import { MailService } from 'src/app.services/mail/mail.service';
-import { BusinessErrorException, ErrorSubCodes } from 'src/app.services/common/exceptions';
+import { BusinessErrorException, ErrorSubCodes } from 'src/app.common/exceptions';
 
 @Injectable()
 export class AuthService {

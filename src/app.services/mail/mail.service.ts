@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as sgMail from '@sendgrid/mail';
-import { BusinessErrorException, ErrorSubCodes } from 'src/app.services/common/exceptions';
+import { BusinessErrorException, ErrorSubCodes } from 'src/app.common/exceptions';
 import { ConfigurationService } from 'src/app.services/config/configuration.service';
 
 @Injectable()
