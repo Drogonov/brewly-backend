@@ -2,9 +2,9 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { JWT_REFRESH } from 'src/common/constants/constants';
-import { ConfigurationService } from 'src/config/configuration.service';
-import { JwtPayload, JwtPayloadWithRt } from 'src/jwt-session/types';
+import { JWT_REFRESH } from 'src/app.services/common/constants/constants';
+import { ConfigurationService } from 'src/app.services/config/configuration.service';
+import { JwtPayload, JwtPayloadWithRt } from 'src/app.services/jwt-session/types';
 
 @Injectable()
 export class RtStrategy extends PassportStrategy(Strategy, JWT_REFRESH) {

@@ -11,10 +11,10 @@ export class OnboardingController {
   constructor(private readonly onboardingService: OnboardingService) {}
 
   @Public()
-  @Post('intro')
+  @Post('page')
   @ApiOperation({ summary: 'Get Onboarding response' })
   @ApiOkResponse({ description: 'Returns a onboarding', type: OnboardingResponseDto })
-  getOnboarding(): Promise<OnboardingResponseDto> {
-    return this.onboardingService.getOnboarding();
+  getOnboarding(pageNumber?: number): Promise<OnboardingResponseDto> {
+    return this.onboardingService.getOnboarding(pageNumber);
   }
 }

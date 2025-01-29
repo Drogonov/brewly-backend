@@ -4,7 +4,7 @@ import { IOnboardingResponse } from './dto';
 @Injectable()
 export class OnboardingService {
 
-    async getOnboarding(): Promise<IOnboardingResponse> {
+    async getOnboarding(pageNumber?: number): Promise<IOnboardingResponse> {
         return {
             pages: [
                 {

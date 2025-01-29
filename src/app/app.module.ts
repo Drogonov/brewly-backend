@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { configuration } from 'src/app.services/config/configuration';
 import { validationSchema } from 'src/app.services/config/validationSchema';
@@ -14,9 +12,14 @@ import { MailModule } from 'src/app.services/mail/mail.module';
 import { OnboardingModule } from 'src/app.modules/onboarding/onboarding.module';
 import { SettingsModule } from 'src/app.modules/settings/settings.module';
 import { SamplesModule } from 'src/app.modules/samples/samples.module';
+import { UserModule } from 'src/app.modules/user/user.module';
+import { CompanyModule } from 'src/app.modules/company/company.module';
+import { CuppingModule } from 'src/app.modules/cupping/cupping.module';
+import { TestingModule } from '@nestjs/testing';
 
 @Module({
   imports: [
+    // app.services
     ConfigModule.forRoot({
       envFilePath: `${process.cwd()}/config/${process.env.NODE_ENV}.env`,
       isGlobal: true,
@@ -24,21 +27,23 @@ import { SamplesModule } from 'src/app.modules/samples/samples.module';
       validationSchema,
     }),
     ConfigurationModule,
-    AuthModule,
-    OnboardingModule,
-    SettingsModule,
-    SamplesModule,
-    PrismaModule,
     JWTSessionModule,
-    MailModule
+    MailModule,
+    PrismaModule,
+    // app.modules
+    AuthModule,
+    CompanyModule,
+    CuppingModule,
+    OnboardingModule,
+    SamplesModule,
+    SettingsModule,
+    TestingModule,
+    UserModule,
   ],
-  controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_GUARD,
-      useClass: AtGuard,
-    }
-  ],
+  controllers: [],
+  providers: [{
+    provide: APP_GUARD,
+    useClass: AtGuard,
+  }],
 })
 export class AppModule { }
