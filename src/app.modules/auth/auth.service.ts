@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
+import { Company, Prisma, User } from '@prisma/client';
 import * as argon from 'argon2';
 import { PrismaService } from 'src/app.services/prisma/prisma.service';
 import { AuthRequestDto, IStatusResponse, StatusResponseDto } from './dto';
@@ -22,6 +22,7 @@ export class AuthService {
     const hashedOtp = await argon.hash(otp)
 
     let user: User;
+    let company: Company;
 
     try {
       user = await this.prisma.user.create({
@@ -29,8 +30,18 @@ export class AuthService {
           email: dto.email,
           hash,
           otpHash: hashedOtp,
-          isVerificated: false
+          isVerificated: false,
+          currentCompany: {}
         },
+      });
+
+      company = await this.prisma.company.create({
+        data: {
+          owner: {
+            connect: { id: user.id }
+          },
+          isPersonal: true
+        }
       });
 
       await this.mailService.sendOtpEmail(dto.email, otp);

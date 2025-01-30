@@ -1,2 +1,2 @@
 export * from './auth-request.dto';
-export * from './status-response.dto';
+export * from '../../../app.common/dto/status-response.dto';

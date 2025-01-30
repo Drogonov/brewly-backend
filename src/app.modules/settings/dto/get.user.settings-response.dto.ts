@@ -1,10 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IUserInfoResponse } from './user.info-response.model';
-import { IIconTextNumberInfoBlockResponse } from './icon.text.number.block-response.model';
+import { IUserInfoResponse } from './user.info-response.dto';
+import { IIconTextNumberInfoBlockResponse } from './icon.text.number.block-response.dto';
 
 // MARK: - Project implementation
 
-export interface ISettingsResponse {
+export interface IGetUserSettingsResponse {
     title: string;
     registerUserText: string;
     userInfo: IUserInfoResponse;
@@ -16,7 +16,7 @@ export interface ISettingsResponse {
 
 // MARK: - Swagger class
 
-export class SettingsResponseDto implements ISettingsResponse {
+export class GetUserSettingsResponseDto implements IGetUserSettingsResponse {
     @ApiProperty({ example: 'Settings 1' })
     title: string;
 

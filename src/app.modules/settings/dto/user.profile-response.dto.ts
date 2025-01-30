@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IUserInfoResponse } from './user.info-response.model';
-import { ICompanyInfoResponse } from './company.info-response.model';
-import { ICompanyRulesResponse } from './company.rules-response.model';
+import { IUserInfoResponse } from './user.info-response.dto';
+import { ICompanyInfoResponse } from './company.info-response.dto';
+import { ICompanyRulesResponse } from './company.rules-response.dto';
 
 // MARK: - Project implementation
 

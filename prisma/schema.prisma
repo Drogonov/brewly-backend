@@ -19,22 +19,24 @@ datasource db {
 //
 
 model User {
-  id              Int               @id @default(autoincrement())
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  userName        String?
-  email           String            @unique
-  hash            String
-  otpHash         String?
-  isVerificated   Boolean
-  sessions        Session[]
-  ownedCompanies  Company[]         @relation("UserOwnedCompanies")
-  chiefOf         Company[]         @relation("ChiefBaristas")
-  baristaOf       Company[]         @relation("Baristas")
-  invitedCuppings Cupping[]         @relation("CuppingInvitedUsers")
-  sampleTestings  SampleTesting[]
-  cuppingSettings CuppingSettings[]
-  Cupping         Cupping[]
+  id               Int               @id @default(autoincrement())
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  userName         String?
+  email            String            @unique
+  hash             String
+  otpHash          String?
+  isVerificated    Boolean
+  currentCompanyId Int
+  currentCompany   Company           @relation("CurrentUserCompany", fields: [currentCompanyId], references: [id])
+  sessions         Session[]
+  ownedCompanies   Company[]         @relation("UserOwnedCompanies")
+  chiefOf          Company[]         @relation("ChiefBaristas")
+  baristaOf        Company[]         @relation("Baristas")
+  invitedCuppings  Cupping[]         @relation("CuppingInvitedUsers")
+  sampleTestings   SampleTesting[]
+  cuppingSettings  CuppingSettings[]
+  createdCuppings  Cupping[]         @relation("CreatedCuppingsByUser")
 }
 
 model Session {
@@ -66,6 +68,8 @@ model Company {
   cuppingSettings CuppingSettings[]
   cuppingResult   CuppingResult[]
   sampleTesting   SampleTesting[]
+  currentTeam     User[]            @relation("CurrentUserCompany")
+  isPersonal      Boolean
 }
 
 //
@@ -79,7 +83,7 @@ model Cupping {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   cuppingCreatorId Int
-  cuppingCreator   User            @relation(fields: [cuppingCreatorId], references: [id])
+  cuppingCreator   User            @relation("CreatedCuppingsByUser", fields: [cuppingCreatorId], references: [id])
   cuppingName      String
   companyId        Int
   company          Company         @relation(fields: [companyId], references: [id])
