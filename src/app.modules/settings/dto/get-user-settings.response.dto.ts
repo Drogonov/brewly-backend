@@ -1,13 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IUserInfoResponse } from './user.info-response.dto';
-import { IIconTextNumberInfoBlockResponse } from './icon.text.number.block-response.dto';
+import { ISettingsUserInfoResponse } from './settings-user-info.response.dto';
+import { IIconTextNumberInfoBlockResponse } from './icon-text-number-block.response.dto';
 
 // MARK: - Project implementation
 
 export interface IGetUserSettingsResponse {
     title: string;
-    registerUserText: string;
-    userInfo: IUserInfoResponse;
+    registerUserText?: string;
+    userInfo: ISettingsUserInfoResponse;
     friendsBlock?: IIconTextNumberInfoBlockResponse;
     teamMatesBlock?: IIconTextNumberInfoBlockResponse;
     onboardingBlock?: IIconTextNumberInfoBlockResponse;
@@ -20,11 +20,11 @@ export class GetUserSettingsResponseDto implements IGetUserSettingsResponse {
     @ApiProperty({ example: 'Settings 1' })
     title: string;
 
-    @ApiProperty({ example: 'Register Brewly Account' })
-    registerUserText: string;
+    @ApiPropertyOptional({ example: 'Register Brewly Account' })
+    registerUserText?: string;
 
     @ApiProperty({ description: 'User Information' })
-    userInfo: IUserInfoResponse;
+    userInfo: ISettingsUserInfoResponse;
 
     @ApiPropertyOptional({ description: 'Friends Info' })
     friendsBlock?: IIconTextNumberInfoBlockResponse;

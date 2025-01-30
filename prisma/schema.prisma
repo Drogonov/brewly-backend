@@ -27,8 +27,8 @@ model User {
   hash             String
   otpHash          String?
   isVerificated    Boolean
-  currentCompanyId Int
-  currentCompany   Company           @relation("CurrentUserCompany", fields: [currentCompanyId], references: [id])
+  currentCompanyId Int?
+  currentCompany   Company?          @relation("CurrentUserCompany", fields: [currentCompanyId], references: [id])
   sessions         Session[]
   ownedCompanies   Company[]         @relation("UserOwnedCompanies")
   chiefOf          Company[]         @relation("ChiefBaristas")

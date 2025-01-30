@@ -51,9 +51,10 @@ export class JWTSessionService {
     }
   }
 
-  async getTokens(userId: number, email: string): Promise<ITokensResponse> {
+  async getTokens(userId: number, currentCompanyId: number, email: string): Promise<ITokensResponse> {
     const jwtPayload: JwtPayload = {
-      sub: userId,
+      userId: userId,
+      currentCompanyId: currentCompanyId,
       email: email,
     };
 

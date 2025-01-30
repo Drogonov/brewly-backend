@@ -21,30 +21,42 @@ export class AuthService {
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
     const hashedOtp = await argon.hash(otp)
 
-    let user: User;
-    let company: Company;
-
     try {
-      user = await this.prisma.user.create({
-        data: {
-          email: dto.email,
-          hash,
-          otpHash: hashedOtp,
-          isVerificated: false,
-          currentCompany: {}
-        },
-      });
-
-      company = await this.prisma.company.create({
-        data: {
-          owner: {
-            connect: { id: user.id }
+      const user = await this.prisma.$transaction(async (prisma) => {
+        // Step 1: Create User first
+        const createdUser = await prisma.user.create({
+          data: {
+            email: dto.email,
+            hash,
+            otpHash: hashedOtp,
+            isVerificated: false
           },
-          isPersonal: true
-        }
+        });
+  
+        // Step 2: Create Company and link owner to user
+        const createdCompany = await prisma.company.create({
+          data: {
+            owner: {
+              connect: { id: createdUser.id },
+            },
+            isPersonal: true,
+          },
+        });
+  
+        // Step 3: Update User to set currentCompanyId
+        await prisma.user.update({
+          where: { id: createdUser.id },
+          data: {
+            currentCompany: {
+              connect: { id: createdCompany.id },
+            },
+          },
+        });
+  
+        return createdUser;
       });
 
-      await this.mailService.sendOtpEmail(dto.email, otp);
+      await this.mailService.sendOtpEmail(user.email, otp);
 
       return { status: "success" };
     } catch (error) {
@@ -177,7 +189,7 @@ export class AuthService {
 
     await this.jwtSessionService.verifyRtMatch(user, rt);
 
-    const tokens = await this.jwtSessionService.getTokens(user.id, user.email);
+    const tokens = await this.jwtSessionService.getTokens(user.id, user.currentCompanyId, user.email);
     await this.jwtSessionService.updateRtHash(user, rt, tokens.refresh_token);
 
     return tokens;
@@ -186,7 +198,7 @@ export class AuthService {
   // MARK: - Private Methods
 
   async _getNewSessionTokens(user: User) {
-    const tokens = await this.jwtSessionService.getTokens(user.id, user.email);
+    const tokens = await this.jwtSessionService.getTokens(user.id, user.currentCompanyId, user.email);
     const rt = await argon.hash(tokens.refresh_token);
 
     await this.prisma.session

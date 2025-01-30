@@ -1,12 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IUserInfoResponse } from './user.info-response.dto';
-import { ICompanyInfoResponse } from './company.info-response.dto';
-import { ICompanyRulesResponse } from './company.rules-response.dto';
+import { ISettingsUserInfoResponse } from './settings-user-info.response.dto';
+import { ICompanyInfoResponse } from './company-info.response.dto';
+import { ICompanyRulesResponse } from './company-rules.response.dto';
 
 // MARK: - Project implementation
 
 export interface IUserProfileResponse {
-    userInfo: IUserInfoResponse;
+    userInfo: ISettingsUserInfoResponse;
     companies: [ICompanyInfoResponse];
     createNewCompanyText: string;
     companyRules: ICompanyRulesResponse;
@@ -16,7 +16,7 @@ export interface IUserProfileResponse {
 
 export class UserProfileResponseDto implements IUserProfileResponse {
     @ApiProperty({ description: 'Информация о пользователе' })
-    userInfo: IUserInfoResponse;
+    userInfo: ISettingsUserInfoResponse;
 
     @ApiProperty({ description: 'Доступные компании пользователя' })
     companies: [ICompanyInfoResponse];

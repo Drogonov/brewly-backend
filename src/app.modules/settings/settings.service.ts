@@ -1,33 +1,33 @@
 import { Injectable } from '@nestjs/common';
 import { IGetUserSettingsResponse, IStatusResponse } from './dto';
+import { UserRole } from './dto/settings-user-info.response.dto';
 
 @Injectable()
 export class SettingsService {
 
-    async getUserSettings(userId: number): Promise<IGetUserSettingsResponse> {
+    async getUserSettings(userId: number, currentCompanyId: number): Promise<IGetUserSettingsResponse> {
         return {
-            title: "",
-            registerUserText: "",
+            title: "Settings",
+            registerUserText: "Register Brewly Account",
             userInfo: {
-                userName: '',
-                companyName: '',
-                email: '',
-                role: ''
+                userName: 'Test Test',
+                companyName: 'Personal',
+                email: 'test@test.com',
+                role: UserRole.owner
             },
             friendsBlock: {
-                iconName: '',
-                text: '',
-                number: 0
+                iconName: 'person',
+                text: 'Friends',
+                number: 10
             },
             teamMatesBlock: {
-                iconName: '',
-                text: '',
+                iconName: 'person.line.dotted.person',
+                text: 'Team Mates',
                 number: 0
             },
             onboardingBlock: {
-                iconName: '',
-                text: '',
-                number: 0
+                iconName: 'questionmark.bubble',
+                text: 'Onboarding'
             },
             cuppingDefaultSettingsText: "Cupping Default Settings"
         };
