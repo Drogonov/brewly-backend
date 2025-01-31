@@ -1,11 +1,11 @@
 import { IsNotEmpty, IsString, IsEmail } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CuppingSettingsRequestDto {
+export class SaveDefaultCuppingSettingsRequestDto {
 
   @IsNotEmpty()
   @ApiProperty({ example: 666 })
-  userdId: number
+  userId: number
 
   @IsNotEmpty()
   @ApiProperty({ example: 666 })

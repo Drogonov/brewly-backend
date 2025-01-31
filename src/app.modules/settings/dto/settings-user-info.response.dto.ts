@@ -4,6 +4,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export interface ISettingsUserInfoResponse {
     userName: string;
+    userImageURL?: string;
     companyName?: string;
     email: string;
     role: UserRole;
@@ -14,6 +15,9 @@ export interface ISettingsUserInfoResponse {
 export class SettingsUserInfoResponseDto implements ISettingsUserInfoResponse {
     @ApiProperty({ description: 'Name of the user', example: "User Name" })
     userName: string;
+
+    @ApiPropertyOptional({ description: 'Image of the user', example: "https://picsum.photos/seed/picsum/200/300" })
+    userImageURL?: string;
 
     @ApiPropertyOptional({ description: 'Current user company name' })
     companyName?: string;

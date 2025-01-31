@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IGetUserSettingsResponse, IStatusResponse } from './dto';
+import { SaveDefaultCuppingSettingsRequestDto, IGetUserSettingsResponse, IStatusResponse, IGetDefaultCuppingSettingsResponse } from './dto';
 import { UserRole } from './dto/settings-user-info.response.dto';
 
 @Injectable()
@@ -11,6 +11,7 @@ export class SettingsService {
             registerUserText: "Register Brewly Account",
             userInfo: {
                 userName: 'Test Test',
+                userImageURL: "https://picsum.photos/seed/picsum/200/300",
                 companyName: 'Personal',
                 email: 'test@test.com',
                 role: UserRole.owner
@@ -33,9 +34,18 @@ export class SettingsService {
         };
     }
 
-    async saveDefaultCuppingSettings(userId: number, companyId: number): Promise<IStatusResponse> {
+    async saveDefaultCuppingSettings(dto: SaveDefaultCuppingSettingsRequestDto): Promise<IStatusResponse> {
         return {
-            status: "Successful"
+            status: "successful"
+        };
+    }
+
+    async getDefaultCuppingSettings(userId: number, currentCompanyId: number): Promise<IGetDefaultCuppingSettingsResponse> {
+        return {
+            randomSamplesOrder: true,
+            openSampleNameCupping: false,
+            singleUserCupping: false,
+            inviteAllTeammates: true
         };
     }
 }
