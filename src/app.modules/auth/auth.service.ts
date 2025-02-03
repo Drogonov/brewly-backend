@@ -32,7 +32,7 @@ export class AuthService {
             isVerificated: false
           },
         });
-  
+
         // Step 2: Create Company and link owner to user
         const createdCompany = await prisma.company.create({
           data: {
@@ -42,7 +42,7 @@ export class AuthService {
             isPersonal: true,
           },
         });
-  
+
         // Step 3: Update User to set currentCompanyId
         await prisma.user.update({
           where: { id: createdUser.id },
@@ -52,7 +52,7 @@ export class AuthService {
             },
           },
         });
-  
+
         return createdUser;
       });
 
@@ -137,7 +137,10 @@ export class AuthService {
       where: {
         email: dto.email,
       },
-      include: { sessions: true }
+      include: {
+        sessions: true,
+        currentCompany: true
+      }
     });
 
     if (!user) throw new BusinessErrorException({
@@ -166,12 +169,15 @@ export class AuthService {
     return tokens;
   }
 
-  async logout(userId: number, rt: string): Promise<IStatusResponse> {    
+  async logout(userId: number, rt: string): Promise<IStatusResponse> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
       },
-      include: { sessions: true }
+      include: {
+        sessions: true,
+        currentCompany: true
+      }
     });
     await this.jwtSessionService.endSession(user, rt);
 
@@ -183,7 +189,10 @@ export class AuthService {
       where: {
         id: userId,
       },
-      include: { sessions: true }
+      include: {
+        sessions: true,
+        currentCompany: true
+      }
     });
     if (!user || !user.sessions) throw new ForbiddenException('Session Expired');
 

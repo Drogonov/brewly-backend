@@ -5,7 +5,10 @@ import { UserRole } from './dto/settings-user-info.response.dto';
 @Injectable()
 export class SettingsService {
 
-    async getUserSettings(userId: number, currentCompanyId: number): Promise<IGetUserSettingsResponse> {
+    async getUserSettings(
+        userId: number,
+        currentCompanyId: number
+    ): Promise<IGetUserSettingsResponse> {
         return {
             title: "Settings",
             registerUserText: "Register Brewly Account",
