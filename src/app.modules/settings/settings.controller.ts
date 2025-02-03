@@ -10,7 +10,17 @@ import {
 import { SettingsService } from './settings.service';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { GetCurrentUserId, GetCurrentUserCompanyId } from 'src/app.common/decorators';
-import { GetDefaultCuppingSettingsResponseDto, GetUserSettingsResponseDto, IGetDefaultCuppingSettingsResponse, IGetUserSettingsResponse, IStatusResponse, SaveDefaultCuppingSettingsRequestDto, StatusResponseDto } from './dto';
+import {
+  GetDefaultCuppingSettingsResponseDto,
+  GetUserSettingsResponseDto,
+  IGetDefaultCuppingSettingsResponse,
+  IGetUserProfileResponse,
+  IGetUserSettingsResponse,
+  IStatusResponse,
+  SaveDefaultCuppingSettingsRequestDto,
+  StatusResponseDto,
+  GetUserProfileResponseDto
+} from './dto';
 
 @Controller('settings')
 export class SettingsController {
@@ -44,5 +54,16 @@ export class SettingsController {
     @GetCurrentUserCompanyId() currentCompanyId: number
   ): Promise<IGetDefaultCuppingSettingsResponse> {
     return this.settingsService.getDefaultCuppingSettings(userId, currentCompanyId);
+  }
+
+  @Get('profile')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get user profile' })
+  @ApiOkResponse({ description: 'Returns user profile information', type: GetUserProfileResponseDto })
+  getUserProfile(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number
+  ): Promise<IGetUserProfileResponse> {
+    return this.settingsService.getUserProfile(userId, currentCompanyId);
   }
 }

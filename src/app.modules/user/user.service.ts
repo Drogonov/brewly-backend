@@ -9,15 +9,12 @@ export class UserService {
         currentCompanyId: number,
         str: string
     ): Promise<ISearchUsersResponse> {
-        console.log(userId);
-        console.log(currentCompanyId);
-        console.log(str);
-
         return {
             users: [
                 {
                     userId: 0,
                     userName: 'John Wayne',
+                    userImageURL: 'https://picsum.photos/seed/picsum/200/300',
                     email: 'test@test.com',
                     isChief: true,
                     isOwner: true
