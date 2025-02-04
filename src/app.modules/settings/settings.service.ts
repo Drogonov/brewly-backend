@@ -74,10 +74,10 @@ export class SettingsService {
                     isPersonal: true
                 },
                 {
-                    id: 0,
+                    id: 1,
                     companyName: "Znak Coffee",
-                    isCurrent: true,
-                    isPersonal: true
+                    isCurrent: false,
+                    isPersonal: false
                 }
             ],
             createNewCompanyText: "Create new Company",
