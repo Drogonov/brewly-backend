@@ -1,29 +1,25 @@
-import { IsNotEmpty, IsString, IsEmail } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class SaveDefaultCuppingSettingsRequestDto {
 
-  @IsNotEmpty()
-  @ApiProperty({ example: 666 })
-  userId: number
-
-  @IsNotEmpty()
-  @ApiProperty({ example: 666 })
-  companyId: number
+  @ApiProperty({ example: "Cupping Name" })
+  @IsOptional()
+  defaultCuppingName?: string;
 
   @IsNotEmpty()
   @ApiProperty({ example: true })
-  randomSamplesOrder: boolean
+  randomSamplesOrder: boolean;
 
   @IsNotEmpty()
   @ApiProperty({ example: true })
-  openSampleNameCupping: boolean
+  openSampleNameCupping: boolean;
 
   @IsNotEmpty()
   @ApiProperty({ example: true })
-  singleUserCupping: boolean
+  singleUserCupping: boolean;
 
   @IsNotEmpty()
   @ApiProperty({ example: true })
-  inviteAllTeammates: boolean
+  inviteAllTeammates: boolean;
 }

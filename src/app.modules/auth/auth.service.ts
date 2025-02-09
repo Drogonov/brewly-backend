@@ -2,7 +2,7 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Company, Prisma, User } from '@prisma/client';
 import * as argon from 'argon2';
 import { PrismaService } from 'src/app.services/prisma/prisma.service';
-import { AuthRequestDto, IStatusResponse, StatusResponseDto } from './dto';
+import { AuthRequestDto, IStatusResponse, StatusResponseDto, StatusType } from './dto';
 import { ITokensResponse } from 'src/app.common/dto';
 import { JWTSessionService } from 'src/app.services/jwt-session/jwt-session.service';
 import { MailService } from 'src/app.services/mail/mail.service';
@@ -58,7 +58,7 @@ export class AuthService {
 
       await this.mailService.sendOtpEmail(user.email, otp);
 
-      return { status: "success" };
+      return { status: StatusType.SUCCESS };
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new BusinessErrorException({
@@ -126,7 +126,7 @@ export class AuthService {
 
       await this.mailService.sendOtpEmail(dto.email, otp);
 
-      return { status: "success" };
+      return { status: StatusType.SUCCESS };
     } catch (error) {
       throw error;
     }
@@ -181,7 +181,7 @@ export class AuthService {
     });
     await this.jwtSessionService.endSession(user, rt);
 
-    return { status: "success" };
+    return { status: StatusType.SUCCESS };
   }
 
   async refreshTokens(userId: number, rt: string): Promise<ITokensResponse> {

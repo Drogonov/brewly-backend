@@ -5,7 +5,8 @@ import {
     IStatusResponse,
     IGetDefaultCuppingSettingsResponse,
     IGetUserProfileResponse,
-    UserRole
+    UserRole,
+    StatusType
 } from './dto';
 
 @Injectable()
@@ -45,12 +46,14 @@ export class SettingsService {
 
     async saveDefaultCuppingSettings(dto: SaveDefaultCuppingSettingsRequestDto): Promise<IStatusResponse> {
         return {
-            status: "successful"
+            status: StatusType.SUCCESS,
+            description: "We save your data, thanks for your time"
         };
     }
 
     async getDefaultCuppingSettings(userId: number, currentCompanyId: number): Promise<IGetDefaultCuppingSettingsResponse> {
         return {
+            defaultCuppingName: "Cupping Name",
             randomSamplesOrder: true,
             openSampleNameCupping: false,
             singleUserCupping: false,
