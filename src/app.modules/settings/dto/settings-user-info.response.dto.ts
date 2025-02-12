@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { UserRole } from 'src/app.common/dto';
 
 // MARK: - Project implementation
 
@@ -27,10 +28,4 @@ export class SettingsUserInfoResponseDto implements ISettingsUserInfoResponse {
 
     @ApiProperty({ description: 'User role', example: "owner" })
     role: UserRole;
-}
-
-export enum UserRole {
-    owner = 'owner',
-    chief = 'chief',
-    barista = 'barista',
 }

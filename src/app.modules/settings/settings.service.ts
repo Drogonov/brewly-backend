@@ -5,9 +5,9 @@ import {
     IStatusResponse,
     IGetDefaultCuppingSettingsResponse,
     IGetUserProfileResponse,
-    UserRole,
     StatusType
 } from './dto';
+import { UserRole } from 'src/app.common/dto';
 
 @Injectable()
 export class SettingsService {

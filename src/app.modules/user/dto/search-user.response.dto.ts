@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { UserRole } from 'src/app.common/dto';
 
 // MARK: - Project implementation
 
@@ -7,8 +8,7 @@ export interface ISearchUserResponse {
     userName: string;
     userImageURL?: string;
     email: string;
-    isChief: boolean;
-    isOwner: boolean;
+    role: UserRole;
 }
 
 // MARK: - Swagger class
@@ -26,9 +26,6 @@ export class SearchUserResponseDto implements ISearchUserResponse {
     @ApiProperty({ example: 'test@test.com' })
     email: string;
 
-    @ApiProperty({ example: true })
-    isChief: boolean;
-
-    @ApiProperty({ example: true })
-    isOwner: boolean;
+    @ApiProperty({ example: "barista" })
+    role: UserRole;
 }
