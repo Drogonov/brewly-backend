@@ -5,7 +5,6 @@ export enum SearchUserType {
   friendsList = 'friendsList',
   friendsGlobalSearch = 'friendsGlobalSearch',
   teammatesList = 'teammatesList',
-  teammatesGlobalSearch = 'teammatesGlobalSearch',
 }
 
 export class SearchUserRequestDto {
