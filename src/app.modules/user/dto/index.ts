@@ -1,2 +1,6 @@
 export * from './search-users.response.dto'
-export * from './search-user-request.dto'
+export * from './search-user.response.dto'
+export * from './search-users-request.dto'
+export * from './search-user-type'
+export * from './get-user.request.dto'
+export * from './get-user.response.dto'

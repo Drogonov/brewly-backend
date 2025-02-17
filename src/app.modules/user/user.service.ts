@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ISearchUsersResponse, SearchUserRequestDto, SearchUserType } from './dto';
+import { GetUserRequestDto, IGetUserResponse, ISearchUserResponse, ISearchUsersResponse, SearchUsersRequestDto, SearchUserType } from './dto';
 import { UserRole } from 'src/app.common/dto';
 
 @Injectable()
@@ -8,7 +8,7 @@ export class UserService {
     async searchForUsers(
         userId: number,
         currentCompanyId: number,
-        dto: SearchUserRequestDto
+        dto: SearchUsersRequestDto
     ): Promise<ISearchUsersResponse> {
         return {
             users: [
@@ -39,5 +39,19 @@ export class UserService {
                 }
             ]
         };
+    }
+
+    async getUser(
+        userId: number,
+        currentCompanyId: number,
+        dto: GetUserRequestDto
+    ): Promise<IGetUserResponse> {
+        return {
+            userId: 0,
+            userName: 'John Wayne',
+            userImageURL: 'https://picsum.photos/seed/picsum/200/300',
+            email: 'test@test.com',
+            role: UserRole.barista,
+        }
     }
 }

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 
 import { UserService } from './user.service';
-import { ISearchUsersResponse, SearchUsersResponseDto, SearchUserRequestDto, SearchUserType } from './dto';
+import { ISearchUsersResponse, SearchUsersResponseDto, SearchUsersRequestDto, SearchUserType, SearchUserResponseDto, GetUserRequestDto, GetUserResponseDto, IGetUserResponse } from './dto';
 import { GetCurrentUserCompanyId, GetCurrentUserId, Public } from 'src/app.common/decorators';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
@@ -21,7 +21,7 @@ export class UserController {
   searchForUsers(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
-    @Query() dto: SearchUserRequestDto
+    @Query() dto: SearchUsersRequestDto
   ): Promise<ISearchUsersResponse> {
     return this.userService.searchForUsers(userId, currentCompanyId, dto);
   }
@@ -35,5 +35,16 @@ export class UserController {
     @Query('type') type: SearchUserType
   ): Promise<ISearchUsersResponse> {
     return this.userService.getUsersList(userId, currentCompanyId, type);
+  }
+
+  @Get('get')
+  @ApiOperation({ summary: 'Get User' })
+  @ApiOkResponse({ description: 'Returns DTO with user', type: GetUserResponseDto })
+  getUser(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Query() dto: GetUserRequestDto
+  ): Promise<IGetUserResponse> {
+    return this.userService.getUser(userId, currentCompanyId, dto);
   }
 }

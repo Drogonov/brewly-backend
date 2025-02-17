@@ -1,13 +1,8 @@
 import { IsNotEmpty, IsString, IsEmail, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { SearchUserType } from './search-user-type';
 
-export enum SearchUserType {
-  friendsList = 'friendsList',
-  friendsGlobalSearch = 'friendsGlobalSearch',
-  teammatesList = 'teammatesList',
-}
-
-export class SearchUserRequestDto {
+export class SearchUsersRequestDto {
 
   @ApiProperty({ example: "Vlad Emeliyanov" })
   @IsNotEmpty()
