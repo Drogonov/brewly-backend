@@ -6,8 +6,7 @@ export class GetUserRequestDto {
 
   @ApiProperty({ example: 666 })
   @IsNotEmpty()
-  @IsNumber()
-  userdId: number;
+  userId: number;
 
   @IsNotEmpty()
   @ApiProperty({ example: SearchUserType.friendsList })
