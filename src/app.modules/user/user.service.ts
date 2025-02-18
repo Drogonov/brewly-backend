@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GetUserRequestDto, IGetUserResponse, ISearchUserResponse, ISearchUsersResponse, SearchUsersRequestDto, SearchUserType } from './dto';
+import { GetUserActionType, GetUserRequestDto, IGetUserResponse, ISearchUserResponse, ISearchUsersResponse, SearchUsersRequestDto, SearchUserType } from './dto';
 import { UserRole } from 'src/app.common/dto';
 
 @Injectable()
@@ -51,7 +51,37 @@ export class UserService {
             userName: 'John Wayne',
             userImageURL: 'https://picsum.photos/seed/picsum/200/300',
             email: 'test@test.com',
+            comment: "Some info about user",
             role: UserRole.barista,
+            status: "Friends, teammates",
+            actions: [
+                {
+                    type: GetUserActionType.addToFriends,
+                    title: 'Add to Friends',
+                    isEnabled: false
+                },
+                {
+                    type: GetUserActionType.addToTeam,
+                    title: 'Add to Team',
+                    isEnabled: false
+                },
+                {
+                    type: GetUserActionType.removeFromFriends,
+                    title: 'Remove from Friends',
+                    isEnabled: false
+                },
+                {
+                    type: GetUserActionType.removeFromTeam,
+                    title: 'Remove from Team',
+                    isEnabled: false
+                },
+                {
+                    type: GetUserActionType.makeChief,
+                    title: 'Make Chief',
+                    isEnabled: false,
+                    switchIsOn: true
+                }
+            ]
         }
     }
 }
