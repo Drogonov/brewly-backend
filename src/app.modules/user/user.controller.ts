@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 
 import { UserService } from './user.service';
-import { ISearchUsersResponse, SearchUsersResponseDto, SearchUsersRequestDto, SearchUserType, SearchUserResponseDto, GetUserRequestDto, GetUserResponseDto, IGetUserResponse } from './dto';
+import { ISearchUsersResponse, SearchUsersResponseDto, SearchUsersRequestDto, SearchUserType, SearchUserResponseDto, GetUserRequestDto, GetUserResponseDto, IGetUserResponse, StatusResponseDto, MakeUserActionRequest, IStatusResponse } from './dto';
 import { GetCurrentUserCompanyId, GetCurrentUserId, Public } from 'src/app.common/decorators';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
@@ -46,5 +46,16 @@ export class UserController {
     @Query() dto: GetUserRequestDto
   ): Promise<IGetUserResponse> {
     return this.userService.getUser(userId, currentCompanyId, dto);
+  }
+
+  @Post('action')
+  @ApiOperation({ summary: 'Some action made by user' })
+  @ApiOkResponse({ description: 'Returns status of user interaction', type: StatusResponseDto })
+  makeUserAction(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Query() dto: MakeUserActionRequest
+  ): Promise<IStatusResponse> {
+    return this.userService.makeUserAction(userId, currentCompanyId, dto);
   }
 }

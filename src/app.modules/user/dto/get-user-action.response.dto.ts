@@ -1,27 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { UserActionType } from './user-action.type';
 
 // MARK: - Project implementation
 
 export interface IGetUserAction {
-    type: GetUserActionType;
+    type: UserActionType;
     title: string;
     isEnabled: boolean;
-    switchIsOn?: boolean
-}
-
-export enum GetUserActionType {
-    addToFriends = 'addToFriends',
-    addToTeam = 'addToTeam',
-    removeFromFriends = 'removeFromFriends',
-    removeFromTeam = 'removeFromTeam',
-    makeChief = 'makeChief',
+    switchIsOn?: boolean;
 }
 
 // MARK: - Swagger class
 
 export class GetUserActionDto implements IGetUserAction {
     @ApiProperty({ example: 'addToFriends' })
-    type: GetUserActionType;
+    type: UserActionType;
 
     @ApiProperty({ example: 'Add to Friends' })
     title: string;

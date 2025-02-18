@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GetUserActionType, GetUserRequestDto, IGetUserResponse, ISearchUserResponse, ISearchUsersResponse, SearchUsersRequestDto, SearchUserType } from './dto';
+import { IStatusResponse, GetUserRequestDto, IGetUserResponse, ISearchUserResponse, ISearchUsersResponse, MakeUserActionRequest, SearchUsersRequestDto, SearchUserType, UserActionType, StatusType } from './dto';
 import { UserRole } from 'src/app.common/dto';
 
 @Injectable()
@@ -56,32 +56,43 @@ export class UserService {
             status: "Friends, teammates",
             actions: [
                 {
-                    type: GetUserActionType.addToFriends,
+                    type: UserActionType.addToFriends,
                     title: 'Add to Friends',
                     isEnabled: false
                 },
                 {
-                    type: GetUserActionType.addToTeam,
+                    type: UserActionType.addToTeam,
                     title: 'Add to Team',
                     isEnabled: false
                 },
                 {
-                    type: GetUserActionType.removeFromFriends,
+                    type: UserActionType.removeFromFriends,
                     title: 'Remove from Friends',
                     isEnabled: false
                 },
                 {
-                    type: GetUserActionType.removeFromTeam,
+                    type: UserActionType.removeFromTeam,
                     title: 'Remove from Team',
                     isEnabled: false
                 },
                 {
-                    type: GetUserActionType.makeChief,
+                    type: UserActionType.makeChief,
                     title: 'Make Chief',
                     isEnabled: false,
                     switchIsOn: true
                 }
             ]
+        }
+    }
+
+    async makeUserAction(
+        userId: number,
+        currentCompanyId: number,
+        dto: MakeUserActionRequest
+    ): Promise<IStatusResponse> {
+        return {
+            status: StatusType.SUCCESS,
+            description: "We sended message to user"
         }
     }
 }

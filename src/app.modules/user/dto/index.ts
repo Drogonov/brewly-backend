@@ -5,3 +5,6 @@ export * from './search-user-type'
 export * from './get-user.request.dto'
 export * from './get-user.response.dto'
 export * from './get-user-action.response.dto'
+export * from './user-action.type'
+export * from './make-user-action.request.dto'
+export * from '../../../app.common/dto/status-response.dto';
