@@ -10,6 +10,7 @@ export interface IGetUserSettingsResponse {
     userInfo: ISettingsUserInfoResponse;
     friendsBlock?: IIconTextNumberInfoBlockResponse;
     teamMatesBlock?: IIconTextNumberInfoBlockResponse;
+    requestsBlock?: IIconTextNumberInfoBlockResponse;
     onboardingBlock?: IIconTextNumberInfoBlockResponse;
     cuppingDefaultSettingsText: string;
 }
@@ -31,6 +32,9 @@ export class GetUserSettingsResponseDto implements IGetUserSettingsResponse {
 
     @ApiPropertyOptional({ description: 'Teammates Info' })
     teamMatesBlock?: IIconTextNumberInfoBlockResponse;
+
+    @ApiPropertyOptional({ description: 'Sended requests' })
+    requestsBlock?: IIconTextNumberInfoBlockResponse;
 
     @ApiPropertyOptional({ description: 'Onboarding Info' })
     onboardingBlock?: IIconTextNumberInfoBlockResponse;

@@ -32,13 +32,18 @@ export class SettingsService {
                 number: 10
             },
             teamMatesBlock: {
-                iconName: 'person.line.dotted.person',
+                iconName: 'person.3.sequence',
                 text: 'Team Mates',
                 number: 0
             },
+            requestsBlock: {
+                iconName: "arrow.up.message",
+                text: "Sended Requests",
+                number: 1
+            },
             onboardingBlock: {
                 iconName: 'questionmark.bubble',
-                text: 'Onboarding'
+                text: 'Guide'
             },
             cuppingDefaultSettingsText: "Cupping Default Settings"
         };
