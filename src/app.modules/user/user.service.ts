@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IStatusResponse, GetUserRequestDto, IGetUserResponse, ISearchUsersResponse, MakeUserActionRequest, SearchUsersRequestDto, SearchUserType, UserActionType, StatusType, IGetUserSendedRequestsResponse } from './dto';
+import { IStatusResponse, GetUserRequestDto, IGetUserResponse, ISearchUsersResponse, MakeUserActionRequest, SearchUsersRequestDto, SearchUserType, UserActionType, StatusType, IGetUserSendedRequestsResponse, IGetUserNotificationsResponse, UserNotificationType } from './dto';
 import { UserRole } from 'src/app.common/dto';
 
 @Injectable()
@@ -125,6 +125,30 @@ export class UserService {
         return {
             status: StatusType.SUCCESS,
             description: "Заявка успешно отменена"
+        }
+    }
+
+    async getUserNotifications(
+        userId: number,
+        currentCompanyId: number,
+    ): Promise<IGetUserNotificationsResponse> {
+        return {
+            notifications: [
+                {
+                    notificationId: 0,
+                    notificationDate: '2025-01-01T00:00:00Z',
+                    iconName: 'person',
+                    description: 'У вас новая заявка в друзья от Person',
+                    type: UserNotificationType.friendRequest
+                },
+                {
+                    notificationId: 1,
+                    notificationDate: '2025-02-01T00:00:00Z',
+                    iconName: 'bell',
+                    description: 'Шеф-бариста User Name приглашает вас на капинг',
+                    type: UserNotificationType.cuppingInvitation
+                },
+            ]
         }
     }
 }

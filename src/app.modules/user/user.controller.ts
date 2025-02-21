@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 
 import { UserService } from './user.service';
-import { ISearchUsersResponse, SearchUsersResponseDto, SearchUsersRequestDto, SearchUserType, SearchUserResponseDto, GetUserRequestDto, GetUserResponseDto, IGetUserResponse, StatusResponseDto, MakeUserActionRequest, IStatusResponse, GetUserSendedRequestsResponseDto, IGetUserSendedRequestsResponse } from './dto';
+import { ISearchUsersResponse, SearchUsersResponseDto, SearchUsersRequestDto, SearchUserType, SearchUserResponseDto, GetUserRequestDto, GetUserResponseDto, IGetUserResponse, StatusResponseDto, MakeUserActionRequest, IStatusResponse, GetUserSendedRequestsResponseDto, IGetUserSendedRequestsResponse, GetUserNotificationsResponseDto, IGetUserNotificationsResponse } from './dto';
 import { GetCurrentUserCompanyId, GetCurrentUserId, Public } from 'src/app.common/decorators';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
@@ -79,4 +79,14 @@ export class UserController {
   ): Promise<IStatusResponse> {
     return this.userService.rejectUserSendedRequest(userId, currentCompanyId, requestId);
   }
+
+  @Get('notifications')
+  @ApiOperation({ summary: 'Get user notifications' })
+  @ApiOkResponse({ description: 'Returns DTO of the user notifications', type: GetUserNotificationsResponseDto })
+  getUserNotifications(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number
+  ): Promise<IGetUserNotificationsResponse> {
+    return this.userService.getUserNotifications(userId, currentCompanyId);
+  }  
 }
