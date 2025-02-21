@@ -8,3 +8,5 @@ export * from './get-user-action.response.dto'
 export * from './user-action.type'
 export * from './make-user-action.request.dto'
 export * from '../../../app.common/dto/status-response.dto';
+export * from './get-user-sended-request.response.dto'
+export * from './get-user-sended-requests.response.dto'

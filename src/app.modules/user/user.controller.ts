@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 
 import { UserService } from './user.service';
-import { ISearchUsersResponse, SearchUsersResponseDto, SearchUsersRequestDto, SearchUserType, SearchUserResponseDto, GetUserRequestDto, GetUserResponseDto, IGetUserResponse, StatusResponseDto, MakeUserActionRequest, IStatusResponse } from './dto';
+import { ISearchUsersResponse, SearchUsersResponseDto, SearchUsersRequestDto, SearchUserType, SearchUserResponseDto, GetUserRequestDto, GetUserResponseDto, IGetUserResponse, StatusResponseDto, MakeUserActionRequest, IStatusResponse, GetUserSendedRequestsResponseDto, IGetUserSendedRequestsResponse } from './dto';
 import { GetCurrentUserCompanyId, GetCurrentUserId, Public } from 'src/app.common/decorators';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
@@ -57,5 +57,26 @@ export class UserController {
     @Query() dto: MakeUserActionRequest
   ): Promise<IStatusResponse> {
     return this.userService.makeUserAction(userId, currentCompanyId, dto);
+  }
+
+  @Get('requests')
+  @ApiOperation({ summary: 'Get user sended requests' })
+  @ApiOkResponse({ description: 'Returns DTO of the requests sended by user', type: GetUserSendedRequestsResponseDto })
+  getUserSendedRequests(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number
+  ): Promise<IGetUserSendedRequestsResponse> {
+    return this.userService.getUserSendedRequests(userId, currentCompanyId);
+  }
+
+  @Post('reject')
+  @ApiOperation({ summary: 'Reject user sended request' })
+  @ApiOkResponse({ description: 'Returns status of user request rejection', type: StatusResponseDto })
+  rejectUserSendedRequest(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Query('requestId') requestId: number
+  ): Promise<IStatusResponse> {
+    return this.userService.rejectUserSendedRequest(userId, currentCompanyId, requestId);
   }
 }

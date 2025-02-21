@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IStatusResponse, GetUserRequestDto, IGetUserResponse, ISearchUserResponse, ISearchUsersResponse, MakeUserActionRequest, SearchUsersRequestDto, SearchUserType, UserActionType, StatusType } from './dto';
+import { IStatusResponse, GetUserRequestDto, IGetUserResponse, ISearchUsersResponse, MakeUserActionRequest, SearchUsersRequestDto, SearchUserType, UserActionType, StatusType, IGetUserSendedRequestsResponse } from './dto';
 import { UserRole } from 'src/app.common/dto';
 
 @Injectable()
@@ -93,6 +93,38 @@ export class UserService {
         return {
             status: StatusType.SUCCESS,
             description: "We sended message to user"
+        }
+    }
+
+    async getUserSendedRequests(
+        userId: number,
+        currentCompanyId: number,
+    ): Promise<IGetUserSendedRequestsResponse> {
+        return {
+            requests: [
+                {
+                    requestId: 0,
+                    requestDate: '2025-01-01T00:00:00Z',
+                    description: 'Заявка на добавление в друзья пользователя Naggibator',
+                    status: 'pending'
+                },
+                {
+                    requestId: 1,
+                    requestDate: '2025-02-01T00:00:00Z',
+                    description: 'Заявка на добавление в команду пользователя Some User'
+                }
+            ]
+        }
+    }
+
+    async rejectUserSendedRequest(
+        userId: number,
+        currentCompanyId: number,
+        requestId: number
+    ): Promise<IStatusResponse> {
+        return {
+            status: StatusType.SUCCESS,
+            description: "Заявка успешно отменена"
         }
     }
 }
