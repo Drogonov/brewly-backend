@@ -7,6 +7,7 @@ export interface ISettingsUserInfoResponse {
     userName: string;
     userImageURL?: string;
     companyName?: string;
+    companyImageURL?: string;
     email: string;
     role: UserRole;
 }
@@ -22,6 +23,9 @@ export class SettingsUserInfoResponseDto implements ISettingsUserInfoResponse {
 
     @ApiPropertyOptional({ description: 'Current user company name' })
     companyName?: string;
+
+    @ApiPropertyOptional({ description: 'Image of the company', example: "https://picsum.photos/seed/picsum/200/300" })
+    companyImageURL?: string;
 
     @ApiProperty({ example: 'test@test.com' })
     email: string;

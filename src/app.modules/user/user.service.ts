@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IStatusResponse, GetUserRequestDto, IGetUserResponse, ISearchUsersResponse, MakeUserActionRequest, SearchUsersRequestDto, SearchUserType, UserActionType, StatusType, IGetUserSendedRequestsResponse, IGetUserNotificationsResponse, UserNotificationType } from './dto';
+import { IStatusResponse, GetUserRequestDto, IGetUserResponse, ISearchUsersResponse, MakeUserActionRequest, SearchUsersRequestDto, SearchUserType, UserActionType, StatusType, IGetUserSendedRequestsResponse, IGetUserNotificationsResponse, UserNotificationType, SaveEditUserRequest, StatusResponseDto, IGetUserDataResponse } from './dto';
 import { UserRole } from 'src/app.common/dto';
 
 @Injectable()
@@ -85,6 +85,18 @@ export class UserService {
         }
     }
 
+    async getUserData(
+        userId: number
+    ): Promise<IGetUserDataResponse> { 
+        return {
+            userId: 0,
+            userName: 'John Wayne',
+            userImageURL: 'https://picsum.photos/seed/picsum/200/300',
+            email: 'test@test.com',
+            about: "Some info about user"
+        }
+    }
+
     async makeUserAction(
         userId: number,
         currentCompanyId: number,
@@ -149,6 +161,16 @@ export class UserService {
                     type: UserNotificationType.cuppingInvitation
                 },
             ]
+        }
+    }
+
+    async saveEditUser(
+        userId: number,
+        dto: SaveEditUserRequest
+    ): Promise<StatusResponseDto> {
+        return {
+            status: StatusType.SUCCESS,
+            description: "We updated user info"
         }
     }
 }

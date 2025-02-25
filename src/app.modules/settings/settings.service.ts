@@ -23,6 +23,7 @@ export class SettingsService {
                 userName: 'Test Test',
                 userImageURL: "https://picsum.photos/seed/picsum/200/300",
                 companyName: 'Personal',
+                companyImageURL: "https://picsum.photos/seed/picsum/200/300",
                 email: 'test@test.com',
                 role: UserRole.owner
             },

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 
 import { UserService } from './user.service';
-import { ISearchUsersResponse, SearchUsersResponseDto, SearchUsersRequestDto, SearchUserType, SearchUserResponseDto, GetUserRequestDto, GetUserResponseDto, IGetUserResponse, StatusResponseDto, MakeUserActionRequest, IStatusResponse, GetUserSendedRequestsResponseDto, IGetUserSendedRequestsResponse, GetUserNotificationsResponseDto, IGetUserNotificationsResponse } from './dto';
+import { ISearchUsersResponse, SearchUsersResponseDto, SearchUsersRequestDto, SearchUserType, SearchUserResponseDto, GetUserRequestDto, GetUserResponseDto, IGetUserResponse, StatusResponseDto, MakeUserActionRequest, IStatusResponse, GetUserSendedRequestsResponseDto, IGetUserSendedRequestsResponse, GetUserNotificationsResponseDto, IGetUserNotificationsResponse, SaveEditUserRequest, GetUserDataResponseDto, IGetUserDataResponse } from './dto';
 import { GetCurrentUserCompanyId, GetCurrentUserId, Public } from 'src/app.common/decorators';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
@@ -46,6 +46,15 @@ export class UserController {
     @Query() dto: GetUserRequestDto
   ): Promise<IGetUserResponse> {
     return this.userService.getUser(userId, currentCompanyId, dto);
+  }
+
+  @Get('data')
+  @ApiOperation({ summary: 'Get self User data' })
+  @ApiOkResponse({ description: 'Returns DTO of the current user', type: GetUserDataResponseDto })
+  getUserData(
+    @GetCurrentUserId() userId: number,
+  ): Promise<IGetUserDataResponse> {
+    return this.userService.getUserData(userId);
   }
 
   @Post('action')
@@ -89,4 +98,14 @@ export class UserController {
   ): Promise<IGetUserNotificationsResponse> {
     return this.userService.getUserNotifications(userId, currentCompanyId);
   }  
+
+  @Post('edit')
+  @ApiOperation({ summary: 'Edit user info' })
+  @ApiOkResponse({ description: 'Returns DTO with status of edit operation', type: StatusResponseDto })
+  saveEditUser(
+    @GetCurrentUserId() userId: number,
+    @Query() dto: SaveEditUserRequest
+  ): Promise<IStatusResponse> {
+    return this.userService.saveEditUser(userId , dto)
+  }
 }
