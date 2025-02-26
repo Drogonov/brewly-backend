@@ -9,9 +9,6 @@ export interface IGetUserProfileResponse {
     userInfo: ISettingsUserInfoResponse;
     companies: ICompanyInfoResponse[];
     createNewCompanyText: string;
-    rulesForOwner: ICompanyRuleResponse[];
-    rulesForChief: ICompanyRuleResponse[];
-    rulesForBarista: ICompanyRuleResponse[];
 }
 
 // MARK: - Swagger class
@@ -25,13 +22,4 @@ export class GetUserProfileResponseDto implements IGetUserProfileResponse {
 
     @ApiProperty({ example: 'Create New Company' })
     createNewCompanyText: string;
-
-    @ApiProperty({ description: 'Rules which owner add fo himself' })
-    rulesForOwner: ICompanyRuleResponse[];
-
-    @ApiProperty({ description: 'Rules for chief added by owner or other chiefs' })
-    rulesForChief: ICompanyRuleResponse[];
-
-    @ApiProperty({ description: 'Rules for barista added by owner or chief' })
-    rulesForBarista: ICompanyRuleResponse[];
 }

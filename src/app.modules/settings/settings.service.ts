@@ -5,7 +5,10 @@ import {
     IStatusResponse,
     IGetDefaultCuppingSettingsResponse,
     IGetUserProfileResponse,
-    StatusType
+    StatusType,
+    IGetCompanyRulesResponse,
+    SaveCompanyRulesRequestDto,
+    StatusResponseDto
 } from './dto';
 import { UserRole } from 'src/app.common/dto';
 
@@ -50,14 +53,19 @@ export class SettingsService {
         };
     }
 
-    async saveDefaultCuppingSettings(dto: SaveDefaultCuppingSettingsRequestDto): Promise<IStatusResponse> {
+    async saveDefaultCuppingSettings(
+        dto: SaveDefaultCuppingSettingsRequestDto
+    ): Promise<IStatusResponse> {
         return {
             status: StatusType.SUCCESS,
             description: "We save your data, thanks for your time"
         };
     }
 
-    async getDefaultCuppingSettings(userId: number, currentCompanyId: number): Promise<IGetDefaultCuppingSettingsResponse> {
+    async getDefaultCuppingSettings(
+        userId: number,
+        currentCompanyId: number
+    ): Promise<IGetDefaultCuppingSettingsResponse> {
         return {
             defaultCuppingName: "Cupping Name",
             randomSamplesOrder: true,
@@ -67,7 +75,10 @@ export class SettingsService {
         };
     }
 
-    async getUserProfile(userId: number, currentCompanyId: number): Promise<IGetUserProfileResponse> {
+    async getUserProfile(
+        userId: number,
+        currentCompanyId: number
+    ): Promise<IGetUserProfileResponse> {
         return {
             userInfo: {
                 userName: 'Test Test',
@@ -89,7 +100,16 @@ export class SettingsService {
                     isPersonal: false
                 }
             ],
-            createNewCompanyText: "Create new Company",
+            createNewCompanyText: "Create new Company"
+        };
+    }
+
+    async getCompanyRules(
+        userId: number,
+        currentCompanyId: number
+    ): Promise<IGetCompanyRulesResponse> {
+        return {
+            companyName: "Some Company",
             rulesForOwner: [
                 {
                     id: 0,
@@ -131,6 +151,17 @@ export class SettingsService {
                     value: false
                 }
             ]
-        };
+        }
+    }
+
+    async saveCompanyRules(
+        userId: number,
+        currentCompanyId: number,
+        dto: SaveCompanyRulesRequestDto
+    ): Promise<StatusResponseDto> {
+        return {
+            status: StatusType.SUCCESS,
+            description: "We saved all info"
+        }
     }
 }

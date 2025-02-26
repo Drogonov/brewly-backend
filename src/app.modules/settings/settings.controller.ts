@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
 } from '@nestjs/common';
 
 import { SettingsService } from './settings.service';
@@ -19,7 +20,10 @@ import {
   IStatusResponse,
   SaveDefaultCuppingSettingsRequestDto,
   StatusResponseDto,
-  GetUserProfileResponseDto
+  GetUserProfileResponseDto,
+  GetCompanyRulesResponseDto,
+  IGetCompanyRulesResponse,
+  SaveCompanyRulesRequestDto
 } from './dto';
 
 @Controller('settings')
@@ -65,5 +69,28 @@ export class SettingsController {
     @GetCurrentUserCompanyId() currentCompanyId: number
   ): Promise<IGetUserProfileResponse> {
     return this.settingsService.getUserProfile(userId, currentCompanyId);
+  }
+
+  @Get('get-company-rules')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get availiable rules for user to change' })
+  @ApiOkResponse({ description: 'Returns list of rules for user', type: GetCompanyRulesResponseDto })
+  getCompanyRules(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number
+  ): Promise<IGetCompanyRulesResponse> {
+    return this.settingsService.getCompanyRules(userId, currentCompanyId)
+  }
+
+  @Post('save-company-rules')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Save rules for the company' })
+  @ApiOkResponse({ description: 'Save list of changed fules by user', type: StatusResponseDto })
+  saveCompanyRules(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Body() dto: SaveCompanyRulesRequestDto
+  ): Promise<IStatusResponse> {
+    return this.settingsService.saveCompanyRules(userId, currentCompanyId, dto)
   }
 }
