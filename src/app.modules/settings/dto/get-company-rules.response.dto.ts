@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ICompanyRuleResponse } from './company-rule.response.dto';
+import { ICompanyRuleResponse } from './nested/company-rule.response.dto';
 
 // MARK: - Project implementation
 

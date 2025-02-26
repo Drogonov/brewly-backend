@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ISearchUserResponse, SearchUserResponseDto } from './search-user.response.dto';
-import { IGetUserSendedRequestResponse } from './get-user-sended-request.response.dto';
+import { IGetUserSendedRequestResponse } from '../nested/get-user-sended-request.response.dto';
 
 // MARK: - Project implementation
 

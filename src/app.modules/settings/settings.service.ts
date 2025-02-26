@@ -4,7 +4,6 @@ import {
     IGetUserSettingsResponse,
     IStatusResponse,
     IGetDefaultCuppingSettingsResponse,
-    IGetUserProfileResponse,
     StatusType,
     IGetCompanyRulesResponse,
     SaveCompanyRulesRequestDto,
@@ -20,15 +19,18 @@ export class SettingsService {
         currentCompanyId: number
     ): Promise<IGetUserSettingsResponse> {
         return {
-            title: "Settings",
-            registerUserText: "Register Brewly Account",
             userInfo: {
+                userId: 0,
                 userName: 'Test Test',
                 userImageURL: "https://picsum.photos/seed/picsum/200/300",
+                email: 'test@test.com',
+                role: UserRole.owner,
+            },
+            companyInfo: {
+                companyId: 0,
+                ownerId: 0,
                 companyName: 'Personal',
                 companyImageURL: "https://picsum.photos/seed/picsum/200/300",
-                email: 'test@test.com',
-                role: UserRole.owner
             },
             friendsBlock: {
                 iconName: 'person',
@@ -72,35 +74,6 @@ export class SettingsService {
             openSampleNameCupping: false,
             singleUserCupping: false,
             inviteAllTeammates: true
-        };
-    }
-
-    async getUserProfile(
-        userId: number,
-        currentCompanyId: number
-    ): Promise<IGetUserProfileResponse> {
-        return {
-            userInfo: {
-                userName: 'Test Test',
-                userImageURL: "https://picsum.photos/seed/picsum/200/300",
-                companyName: 'Personal',
-                email: 'test@test.com',
-                role: UserRole.owner
-            },
-            companies: [
-                {
-                    id: 0,
-                    isCurrent: true,
-                    isPersonal: true
-                },
-                {
-                    id: 1,
-                    companyName: "Znak Coffee",
-                    isCurrent: false,
-                    isPersonal: false
-                }
-            ],
-            createNewCompanyText: "Create new Company"
         };
     }
 

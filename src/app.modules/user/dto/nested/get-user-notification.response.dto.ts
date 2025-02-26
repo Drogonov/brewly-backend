@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from 'src/app.common/dto';
-import { UserNotificationType } from './user-notification-type';
+import { UserNotificationType } from '../types/user-notification-type';
 
 // MARK: - Project implementation
 

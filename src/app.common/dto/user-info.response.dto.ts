@@ -1,23 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from 'src/app.common/dto';
-import { IGetUserAction } from './get-user-action.response.dto';
 
 // MARK: - Project implementation
 
-export interface IGetUserResponse {
+export interface IUserInfoResponse {
     userId: number;
     userName: string;
     userImageURL?: string;
     email: string;
-    comment?: string;
-    role: UserRole;
-    status: string;
-    actions: IGetUserAction[]
+    role?: UserRole;
+    about?: string;
 }
 
 // MARK: - Swagger class
 
-export class GetUserResponseDto implements IGetUserResponse {
+export class UserInfoResponseDto implements IUserInfoResponse {
     @ApiProperty({ example: 666 })
     userId: number;
 
@@ -30,15 +27,9 @@ export class GetUserResponseDto implements IGetUserResponse {
     @ApiProperty({ example: 'test@test.com' })
     email: string;
 
-    @ApiPropertyOptional({ example: "Some info about user" })
-    comment?: string;
+    @ApiProperty({ description: "will be achieved if we provide company for user", example: "barista" })
+    role?: UserRole;
 
-    @ApiProperty({ example: "barista" })
-    role: UserRole;
-
-    @ApiProperty({ example: 'Friend, teammate' })
-    status: string;
-
-    @ApiProperty({ description: "user interaction actions" })
-    actions: IGetUserAction[]
+    @ApiProperty({ example: 'Some info about user' })
+    about?: string;
 }

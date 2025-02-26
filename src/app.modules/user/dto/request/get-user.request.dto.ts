@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString, IsEmail, IsOptional, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { SearchUserType } from './search-user-type';
+import { SearchUserType } from '../types/search-user-type';
 
 export class GetUserRequestDto {
 

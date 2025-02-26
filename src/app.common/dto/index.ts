@@ -1,3 +1,5 @@
 export * from './tokens-response.dto'
 export * from './error-response.dto'
 export * from './user-role'
+export * from './company-info.response.dto'
+export * from './user-info.response.dto'

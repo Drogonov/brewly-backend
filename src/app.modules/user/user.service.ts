@@ -1,6 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { IStatusResponse, GetUserRequestDto, IGetUserResponse, ISearchUsersResponse, MakeUserActionRequest, SearchUsersRequestDto, SearchUserType, UserActionType, StatusType, IGetUserSendedRequestsResponse, IGetUserNotificationsResponse, UserNotificationType, SaveEditUserRequest, StatusResponseDto, IGetUserDataResponse } from './dto';
-import { UserRole } from 'src/app.common/dto';
+import {
+    IStatusResponse,
+    SearchUserType,
+    UserActionType,
+    StatusType,
+    UserNotificationType,
+    StatusResponseDto,
+    SearchUsersRequestDto,
+    ISearchUsersResponse,
+    IGetUserCardResponse,
+    GetUserRequestDto,
+    IGetUserNotificationsResponse,
+    IGetUserSendedRequestsResponse,
+    MakeUserActionRequest,
+    SaveEditUserRequest,
+} from './dto';
+import { IUserInfoResponse, UserRole } from 'src/app.common/dto';
 
 @Injectable()
 export class UserService {
@@ -41,18 +56,20 @@ export class UserService {
         };
     }
 
-    async getUser(
+    async getUserCard(
         userId: number,
         currentCompanyId: number,
         dto: GetUserRequestDto
-    ): Promise<IGetUserResponse> {
+    ): Promise<IGetUserCardResponse> {
         return {
-            userId: 0,
-            userName: 'John Wayne',
-            userImageURL: 'https://picsum.photos/seed/picsum/200/300',
-            email: 'test@test.com',
-            comment: "Some info about user",
-            role: UserRole.barista,
+            userInfo: {
+                userId: 0,
+                userName: 'John Wayne',
+                userImageURL: 'https://picsum.photos/seed/picsum/200/300',
+                email: 'test@test.com',
+                about: "Some info about user",
+                role: UserRole.barista,
+            },
             status: "Friends, teammates",
             actions: [
                 {
@@ -85,26 +102,15 @@ export class UserService {
         }
     }
 
-    async getUserData(
+    async getUserInfo(
         userId: number
-    ): Promise<IGetUserDataResponse> { 
+    ): Promise<IUserInfoResponse> {
         return {
             userId: 0,
             userName: 'John Wayne',
             userImageURL: 'https://picsum.photos/seed/picsum/200/300',
             email: 'test@test.com',
             about: "Some info about user"
-        }
-    }
-
-    async makeUserAction(
-        userId: number,
-        currentCompanyId: number,
-        dto: MakeUserActionRequest
-    ): Promise<IStatusResponse> {
-        return {
-            status: StatusType.SUCCESS,
-            description: "We sended message to user"
         }
     }
 
@@ -129,17 +135,6 @@ export class UserService {
         }
     }
 
-    async rejectUserSendedRequest(
-        userId: number,
-        currentCompanyId: number,
-        requestId: number
-    ): Promise<IStatusResponse> {
-        return {
-            status: StatusType.SUCCESS,
-            description: "Заявка успешно отменена"
-        }
-    }
-
     async getUserNotifications(
         userId: number,
         currentCompanyId: number,
@@ -161,6 +156,28 @@ export class UserService {
                     type: UserNotificationType.cuppingInvitation
                 },
             ]
+        }
+    }
+
+    async makeUserAction(
+        userId: number,
+        currentCompanyId: number,
+        dto: MakeUserActionRequest
+    ): Promise<IStatusResponse> {
+        return {
+            status: StatusType.SUCCESS,
+            description: "We sended message to user"
+        }
+    }
+
+    async rejectUserSendedRequest(
+        userId: number,
+        currentCompanyId: number,
+        requestId: number
+    ): Promise<IStatusResponse> {
+        return {
+            status: StatusType.SUCCESS,
+            description: "Заявка успешно отменена"
         }
     }
 

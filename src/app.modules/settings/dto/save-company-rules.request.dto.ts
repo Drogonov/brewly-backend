@@ -1,6 +1,5 @@
 import { IsNotEmpty, IsString, IsEmail, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { ICompanyRuleResponse } from './company-rule.response.dto';
 
 export class SaveCompanyRulesRequestDto {
 

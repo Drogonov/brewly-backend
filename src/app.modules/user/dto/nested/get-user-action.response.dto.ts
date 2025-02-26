@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { UserActionType } from './user-action.type';
+import { UserActionType } from '../types/user-action.type';
 
 // MARK: - Project implementation
 

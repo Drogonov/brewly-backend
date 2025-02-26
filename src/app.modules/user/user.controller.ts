@@ -7,7 +7,25 @@ import {
 } from '@nestjs/common';
 
 import { UserService } from './user.service';
-import { ISearchUsersResponse, SearchUsersResponseDto, SearchUsersRequestDto, SearchUserType, SearchUserResponseDto, GetUserRequestDto, GetUserResponseDto, IGetUserResponse, StatusResponseDto, MakeUserActionRequest, IStatusResponse, GetUserSendedRequestsResponseDto, IGetUserSendedRequestsResponse, GetUserNotificationsResponseDto, IGetUserNotificationsResponse, SaveEditUserRequest, GetUserDataResponseDto, IGetUserDataResponse } from './dto';
+import {
+  ISearchUsersResponse,
+  SearchUsersResponseDto,
+  SearchUsersRequestDto,
+  SearchUserType,
+  GetUserRequestDto,
+  GetUserCardResponseDto,
+  IGetUserCardResponse,
+  StatusResponseDto,
+  MakeUserActionRequest,
+  IStatusResponse,
+  UserInfoResponseDto,
+  IUserInfoResponse,
+  GetUserSendedRequestsResponseDto,
+  IGetUserSendedRequestsResponse,
+  GetUserNotificationsResponseDto,
+  IGetUserNotificationsResponse,
+  SaveEditUserRequest,
+} from './dto';
 import { GetCurrentUserCompanyId, GetCurrentUserId, Public } from 'src/app.common/decorators';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
@@ -37,24 +55,44 @@ export class UserController {
     return this.userService.getUsersList(userId, currentCompanyId, type);
   }
 
-  @Get('get')
+  @Get('get-card')
   @ApiOperation({ summary: 'Get User' })
-  @ApiOkResponse({ description: 'Returns DTO with user', type: GetUserResponseDto })
-  getUser(
+  @ApiOkResponse({ description: 'Returns DTO with user', type: GetUserCardResponseDto })
+  getUserCard(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
     @Query() dto: GetUserRequestDto
-  ): Promise<IGetUserResponse> {
-    return this.userService.getUser(userId, currentCompanyId, dto);
+  ): Promise<IGetUserCardResponse> {
+    return this.userService.getUserCard(userId, currentCompanyId, dto);
   }
 
-  @Get('data')
+  @Get('info')
   @ApiOperation({ summary: 'Get self User data' })
-  @ApiOkResponse({ description: 'Returns DTO of the current user', type: GetUserDataResponseDto })
+  @ApiOkResponse({ description: 'Returns DTO of the current user', type: UserInfoResponseDto })
   getUserData(
     @GetCurrentUserId() userId: number,
-  ): Promise<IGetUserDataResponse> {
-    return this.userService.getUserData(userId);
+  ): Promise<IUserInfoResponse> {
+    return this.userService.getUserInfo(userId);
+  }
+
+  @Get('requests')
+  @ApiOperation({ summary: 'Get user sended requests' })
+  @ApiOkResponse({ description: 'Returns DTO of the requests sended by user', type: GetUserSendedRequestsResponseDto })
+  getUserSendedRequests(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number
+  ): Promise<IGetUserSendedRequestsResponse> {
+    return this.userService.getUserSendedRequests(userId, currentCompanyId);
+  }
+
+  @Get('notifications')
+  @ApiOperation({ summary: 'Get user notifications' })
+  @ApiOkResponse({ description: 'Returns DTO of the user notifications', type: GetUserNotificationsResponseDto })
+  getUserNotifications(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number
+  ): Promise<IGetUserNotificationsResponse> {
+    return this.userService.getUserNotifications(userId, currentCompanyId);
   }
 
   @Post('action')
@@ -68,16 +106,6 @@ export class UserController {
     return this.userService.makeUserAction(userId, currentCompanyId, dto);
   }
 
-  @Get('requests')
-  @ApiOperation({ summary: 'Get user sended requests' })
-  @ApiOkResponse({ description: 'Returns DTO of the requests sended by user', type: GetUserSendedRequestsResponseDto })
-  getUserSendedRequests(
-    @GetCurrentUserId() userId: number,
-    @GetCurrentUserCompanyId() currentCompanyId: number
-  ): Promise<IGetUserSendedRequestsResponse> {
-    return this.userService.getUserSendedRequests(userId, currentCompanyId);
-  }
-
   @Post('reject')
   @ApiOperation({ summary: 'Reject user sended request' })
   @ApiOkResponse({ description: 'Returns status of user request rejection', type: StatusResponseDto })
@@ -89,16 +117,6 @@ export class UserController {
     return this.userService.rejectUserSendedRequest(userId, currentCompanyId, requestId);
   }
 
-  @Get('notifications')
-  @ApiOperation({ summary: 'Get user notifications' })
-  @ApiOkResponse({ description: 'Returns DTO of the user notifications', type: GetUserNotificationsResponseDto })
-  getUserNotifications(
-    @GetCurrentUserId() userId: number,
-    @GetCurrentUserCompanyId() currentCompanyId: number
-  ): Promise<IGetUserNotificationsResponse> {
-    return this.userService.getUserNotifications(userId, currentCompanyId);
-  }  
-
   @Post('edit')
   @ApiOperation({ summary: 'Edit user info' })
   @ApiOkResponse({ description: 'Returns DTO with status of edit operation', type: StatusResponseDto })
@@ -106,6 +124,6 @@ export class UserController {
     @GetCurrentUserId() userId: number,
     @Query() dto: SaveEditUserRequest
   ): Promise<IStatusResponse> {
-    return this.userService.saveEditUser(userId , dto)
+    return this.userService.saveEditUser(userId, dto)
   }
 }

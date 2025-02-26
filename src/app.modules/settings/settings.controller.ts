@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -15,12 +16,10 @@ import {
   GetDefaultCuppingSettingsResponseDto,
   GetUserSettingsResponseDto,
   IGetDefaultCuppingSettingsResponse,
-  IGetUserProfileResponse,
   IGetUserSettingsResponse,
   IStatusResponse,
   SaveDefaultCuppingSettingsRequestDto,
   StatusResponseDto,
-  GetUserProfileResponseDto,
   GetCompanyRulesResponseDto,
   IGetCompanyRulesResponse,
   SaveCompanyRulesRequestDto
@@ -58,17 +57,6 @@ export class SettingsController {
     @GetCurrentUserCompanyId() currentCompanyId: number
   ): Promise<IGetDefaultCuppingSettingsResponse> {
     return this.settingsService.getDefaultCuppingSettings(userId, currentCompanyId);
-  }
-
-  @Get('profile')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get user profile' })
-  @ApiOkResponse({ description: 'Returns user profile information', type: GetUserProfileResponseDto })
-  getUserProfile(
-    @GetCurrentUserId() userId: number,
-    @GetCurrentUserCompanyId() currentCompanyId: number
-  ): Promise<IGetUserProfileResponse> {
-    return this.settingsService.getUserProfile(userId, currentCompanyId);
   }
 
   @Get('get-company-rules')
