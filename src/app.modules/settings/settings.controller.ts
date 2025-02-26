@@ -40,7 +40,7 @@ export class SettingsController {
     return this.settingsService.getUserSettings(userId, currentCompanyId);
   }
 
-  @Post('save-cupping-setings')
+  @Post('save-cupping-settings')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Save default cupping settings' })
   @ApiOkResponse({ description: 'Save new cupping settings', type: StatusResponseDto })
@@ -48,7 +48,7 @@ export class SettingsController {
     return this.settingsService.saveDefaultCuppingSettings(dto);
   }
 
-  @Get('get-cupping-setings')
+  @Get('get-cupping-settings')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get default cupping settings' })
   @ApiOkResponse({ description: 'Returns current default cupping settings', type: GetDefaultCuppingSettingsResponseDto })

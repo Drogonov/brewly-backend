@@ -11,7 +11,6 @@ export interface IGetUserSettingsResponse {
     teamMatesBlock?: IIconTextNumberInfoBlockResponse;
     requestsBlock?: IIconTextNumberInfoBlockResponse;
     onboardingBlock?: IIconTextNumberInfoBlockResponse;
-    cuppingDefaultSettingsText: string;
 }
 
 // MARK: - Swagger class
@@ -34,7 +33,4 @@ export class GetUserSettingsResponseDto implements IGetUserSettingsResponse {
 
     @ApiPropertyOptional({ description: 'Onboarding Info' })
     onboardingBlock?: IIconTextNumberInfoBlockResponse;
-
-    @ApiProperty({ example: 'Cupping Default Settings' })
-    cuppingDefaultSettingsText: string;
 }

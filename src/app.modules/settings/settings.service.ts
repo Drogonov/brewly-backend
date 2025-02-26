@@ -50,8 +50,7 @@ export class SettingsService {
             onboardingBlock: {
                 iconName: 'questionmark.bubble',
                 text: 'Guide'
-            },
-            cuppingDefaultSettingsText: "Cupping Default Settings"
+            }
         };
     }
 

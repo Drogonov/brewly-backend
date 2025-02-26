@@ -12,7 +12,7 @@ import {
   SearchUsersResponseDto,
   SearchUsersRequestDto,
   SearchUserType,
-  GetUserRequestDto,
+  GetUserCardRequestDto,
   GetUserCardResponseDto,
   IGetUserCardResponse,
   StatusResponseDto,
@@ -36,12 +36,12 @@ export class UserController {
   @Get('search')
   @ApiOperation({ summary: 'Search for users' })
   @ApiOkResponse({ description: 'Returns DTO with users search result array', type: SearchUsersResponseDto })
-  searchForUsers(
+  searchUsers(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
     @Query() dto: SearchUsersRequestDto
   ): Promise<ISearchUsersResponse> {
-    return this.userService.searchForUsers(userId, currentCompanyId, dto);
+    return this.userService.searchUsers(userId, currentCompanyId, dto);
   }
 
   @Get('list')
@@ -61,7 +61,7 @@ export class UserController {
   getUserCard(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
-    @Query() dto: GetUserRequestDto
+    @Query() dto: GetUserCardRequestDto
   ): Promise<IGetUserCardResponse> {
     return this.userService.getUserCard(userId, currentCompanyId, dto);
   }
@@ -69,7 +69,7 @@ export class UserController {
   @Get('info')
   @ApiOperation({ summary: 'Get self User data' })
   @ApiOkResponse({ description: 'Returns DTO of the current user', type: UserInfoResponseDto })
-  getUserData(
+  getUserInfo(
     @GetCurrentUserId() userId: number,
   ): Promise<IUserInfoResponse> {
     return this.userService.getUserInfo(userId);

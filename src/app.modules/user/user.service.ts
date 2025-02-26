@@ -9,7 +9,7 @@ import {
     SearchUsersRequestDto,
     ISearchUsersResponse,
     IGetUserCardResponse,
-    GetUserRequestDto,
+    GetUserCardRequestDto,
     IGetUserNotificationsResponse,
     IGetUserSendedRequestsResponse,
     MakeUserActionRequest,
@@ -20,7 +20,7 @@ import { IUserInfoResponse, UserRole } from 'src/app.common/dto';
 @Injectable()
 export class UserService {
 
-    async searchForUsers(
+    async searchUsers(
         userId: number,
         currentCompanyId: number,
         dto: SearchUsersRequestDto
@@ -59,7 +59,7 @@ export class UserService {
     async getUserCard(
         userId: number,
         currentCompanyId: number,
-        dto: GetUserRequestDto
+        dto: GetUserCardRequestDto
     ): Promise<IGetUserCardResponse> {
         return {
             userInfo: {
