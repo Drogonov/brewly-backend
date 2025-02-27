@@ -17,7 +17,8 @@ import {
   IGetUserCompaniesResponse,
   GetUserCompaniesResponseDto,
   IStatusResponse,
-  StatusResponseDto
+  StatusResponseDto,
+  EditCompanyRequestDto
 } from './dto';
 
 import { CompanyService } from './company.service';
@@ -59,5 +60,29 @@ export class CompanyController {
     @Query('companyId') companyId: number
   ): Promise<IGetCompanyDataResponse> {
     return this.companyService.getCompanyData(userId, currentCompanyId, companyId)
+  }
+
+  @Post('change-current')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Change current company' })
+  @ApiOkResponse({ description: 'Change current company', type: StatusResponseDto })
+  changeCurrentCompany(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Query('companyId') companyId: number
+  ): Promise<IStatusResponse> {
+    return this.companyService.changeCurrentCompany(userId, currentCompanyId, companyId)
+  }
+
+  @Post('edit')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Edit or create company' })
+  @ApiOkResponse({ description: 'Edit or create if id is empty company', type: StatusResponseDto })
+  editCompany(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Body() dto: EditCompanyRequestDto
+  ): Promise<IStatusResponse> {
+    return this.companyService.editCompany(userId, currentCompanyId, dto)
   }
 }

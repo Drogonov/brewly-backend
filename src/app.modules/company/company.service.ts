@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+    EditCompanyRequestDto,
     IGetCompanyDataResponse,
     IGetUserCompaniesResponse,
     StatusResponseDto,
@@ -71,6 +72,28 @@ export class CompanyService {
                     role: UserRole.chief
                 }
             ]
+        }
+    }
+
+    async changeCurrentCompany(
+        userId: number,
+        currentCompanyId: number,
+        companyId: number  
+    ): Promise<StatusResponseDto> {
+        return {
+            status: StatusType.SUCCESS,
+            description: "We have changed your current company"
+        }
+    }
+
+    async editCompany(
+        userId: number,
+        currentCompanyId: number,
+        dto: EditCompanyRequestDto
+    ): Promise<StatusResponseDto> {
+        return {
+            status: StatusType.SUCCESS,
+            description: "We have updated your company"
         }
     }
 }
