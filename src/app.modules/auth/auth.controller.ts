@@ -10,7 +10,7 @@ import {
 import { Public, GetCurrentUserId, GetCurrentUser } from 'src/app.common/decorators';
 import { RtGuard } from 'src/app.common/guards';
 import { AuthService } from './auth.service';
-import { AuthRequestDto, StatusResponseDto } from './dto';
+import { AuthRequestDto, OTPRequestDto, StatusResponseDto } from './dto';
 import { ErrorResponseDto, TokensResponseDto } from 'src/app.common/dto';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiUnprocessableEntityResponse } from '@nestjs/swagger';
 
@@ -34,7 +34,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify OTP and authenticate user' })
   @ApiOkResponse({ description: 'Returns access and refresh tokens', type: TokensResponseDto })
   @ApiUnprocessableEntityResponse({ description: 'Returns business top layer error', type: ErrorResponseDto })
-  verifyOTP(@Body() dto: AuthRequestDto): Promise<TokensResponseDto> {
+  verifyOTP(@Body() dto: OTPRequestDto): Promise<TokensResponseDto> {
     return this.authService.verifyOTP(dto);
   }
 

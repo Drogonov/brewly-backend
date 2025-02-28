@@ -3,7 +3,7 @@ import { Company, Prisma, User } from '@prisma/client';
 import * as argon from 'argon2';
 import * as ms from 'ms';
 import { PrismaService } from 'src/app.services/prisma/prisma.service';
-import { AuthRequestDto, IStatusResponse, StatusResponseDto, StatusType } from './dto';
+import { AuthRequestDto, IStatusResponse, OTPRequestDto, StatusResponseDto, StatusType } from './dto';
 import { ITokensResponse } from 'src/app.common/dto';
 import { JWTSessionService } from 'src/app.services/jwt-session/jwt-session.service';
 import { MailService } from 'src/app.services/mail/mail.service';
@@ -76,12 +76,12 @@ export class AuthService {
     }
   }
 
-  async verifyOTP(dto: AuthRequestDto): Promise<ITokensResponse> {
+  async verifyOTP(dto: OTPRequestDto): Promise<ITokensResponse> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
 
-    if (!user || !await argon.verify(user.otpHash, dto.password)) {
+    if (!user || !await argon.verify(user.otpHash, dto.otp)) {
       throw new BusinessErrorException({
         errorSubCode: ErrorSubCodes.INCORRECT_OTP,
         errorMsg: "Incorrect OTP pls try again"
