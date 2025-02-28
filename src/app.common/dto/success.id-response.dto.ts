@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 // MARK: - Project implementation
 
@@ -9,6 +10,7 @@ export interface ISuccessIdResponse {
 // MARK: - Swagger class
 
 export class SuccessIdResponseDto implements ISuccessIdResponse {
-    @ApiProperty({ example: '666' })
+    @ApiProperty({ example: 666 })
+    @Type(() => Number)
     id: number;
 }

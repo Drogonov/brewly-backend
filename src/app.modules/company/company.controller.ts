@@ -83,6 +83,7 @@ export class CompanyController {
     @GetCurrentUserCompanyId() currentCompanyId: number,
     @Body() dto: EditCompanyRequestDto
   ): Promise<IStatusResponse> {
-    return this.companyService.editCompany(userId, currentCompanyId, dto)
+    console.log(dto);
+    return this.companyService.editCompany(userId, currentCompanyId, dto);
   }
 }

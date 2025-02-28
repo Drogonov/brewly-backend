@@ -20,4 +20,5 @@ export class StatusResponseDto implements IStatusResponse {
 export enum StatusType {
     SUCCESS = 'Successful',
     INPROGRESS = 'In Progress',
+    DENIED = 'Denied',
 }

@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { UserRole } from 'src/app.common/dto';
 
 // MARK: - Project implementation
@@ -16,6 +17,7 @@ export interface IUserInfoResponse {
 
 export class UserInfoResponseDto implements IUserInfoResponse {
     @ApiProperty({ example: 666 })
+    @Type(() => Number)
     userId: number;
 
     @ApiProperty({ example: 'John Wayne' })

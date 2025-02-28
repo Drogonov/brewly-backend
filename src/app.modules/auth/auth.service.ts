@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Company, Prisma, User } from '@prisma/client';
+import { Company, Prisma, Role, User } from '@prisma/client';
 import * as argon from 'argon2';
 import { PrismaService } from 'src/app.services/prisma/prisma.service';
 import { AuthRequestDto, IStatusResponse, OTPRequestDto, StatusResponseDto, StatusType } from './dto';
@@ -14,17 +14,18 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtSessionService: JWTSessionService,
     private mailService: MailService
-  ) {}
+  ) { }
 
   async signUpLocal(dto: AuthRequestDto): Promise<IStatusResponse> {
     const hash = await argon.hash(dto.password);
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = "666666";
     const hashedOtp = await argon.hash(otp);
 
     try {
       const user = await this.prisma.$transaction(async (prisma) => {
-        // Step 1: Create user
-        const createdUser = await prisma.user.create({
+        // Step 1: Create the user
+        const createdUser = await this.prisma.user.create({
           data: {
             email: dto.email,
             hash,
@@ -33,29 +34,39 @@ export class AuthService {
           },
         });
 
-        // Step 2: Create Company and link owner to user
-        const createdCompany = await prisma.company.create({
+        // Step 2: Create the company
+        const createdCompany = await this.prisma.company.create({
           data: {
-            owner: { connect: { id: createdUser.id } },
+            companyName: "Personal",
             isPersonal: true,
           },
         });
 
-        // Step 3: Update User with current company connection
-        await prisma.user.update({
+        // Step 3: Create the relation between the user and the company
+        await this.prisma.userToCompanyRelation.create({
+          data: {
+            userId: createdUser.id,
+            companyId: createdCompany.id,
+            role: Role.OWNER
+          },
+        });
+
+        // Step 4: Update the user with the current company connection
+        return await this.prisma.user.update({
           where: { id: createdUser.id },
           data: {
             currentCompany: { connect: { id: createdCompany.id } },
           },
         });
-
-        return createdUser;
       });
 
-      await this.mailService.sendOtpEmail(user.email, otp);
+      // await this.mailService.sendOtpEmail(user.email, otp);
       return { status: StatusType.SUCCESS };
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
         throw new BusinessErrorException({
           errorSubCode: ErrorSubCodes.USER_ALREADY_EXIST,
           errorFields: [
@@ -158,12 +169,12 @@ export class AuthService {
       where: { id: userId },
       include: { sessions: true, currentCompany: true },
     });
-  
+
     // If user is not found, consider the session already ended.
     if (!user) {
       return { status: StatusType.SUCCESS };
     }
-  
+
     await this.jwtSessionService.endSession(user, rt);
     return { status: StatusType.SUCCESS };
   }
