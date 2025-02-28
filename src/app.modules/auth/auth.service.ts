@@ -1,12 +1,14 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Company, Prisma, User } from '@prisma/client';
 import * as argon from 'argon2';
+import * as ms from 'ms';
 import { PrismaService } from 'src/app.services/prisma/prisma.service';
 import { AuthRequestDto, IStatusResponse, StatusResponseDto, StatusType } from './dto';
 import { ITokensResponse } from 'src/app.common/dto';
 import { JWTSessionService } from 'src/app.services/jwt-session/jwt-session.service';
 import { MailService } from 'src/app.services/mail/mail.service';
 import { BusinessErrorException, ErrorSubCodes } from 'src/app.common/exceptions';
+import { REFRESH_TOKEN_EXPIRATION } from 'src/app.common/constants/constants';
 
 @Injectable()
 export class AuthService {
@@ -218,6 +220,22 @@ export class AuthService {
         }
       });
 
+    await this._checkOldSessions(user);
+
     return tokens;
+  }
+
+  async _checkOldSessions(user: User) {
+    const expirationTimeMs = ms(REFRESH_TOKEN_EXPIRATION);
+    const expiredThreshold = new Date(Date.now() - expirationTimeMs);
+
+    await this.prisma.session.deleteMany({
+      where: {
+        userId: user.id,
+        createdAt: {
+          lt: expiredThreshold,
+        },
+      },
+    });
   }
 }
