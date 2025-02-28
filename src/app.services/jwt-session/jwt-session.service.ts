@@ -7,6 +7,7 @@ import { ConfigurationService } from 'src/app.services/config/configuration.serv
 import { ITokensResponse } from 'src/app.common/dto';
 import * as argon from 'argon2';
 import { User, Session } from '@prisma/client';
+import * as ms from 'ms';
 
 @Injectable()
 export class JWTSessionService {
@@ -14,51 +15,59 @@ export class JWTSessionService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private config: ConfigurationService
-  ) { }
+  ) {}
 
-  async updateRtHash(user: User & { sessions: Session[] }, oldRt: string, newRt: string): Promise<void> {
-    const currentSession = await this._findCurrentSesion(user, oldRt);    
-    const hash = await argon.hash(newRt);
-    
-    await this.prisma.session.update({
-      where: {
-        id: currentSession.id
-      },
+  /**
+   * Creates a new session by generating tokens, storing the hashed refresh token,
+   * and cleaning up any expired sessions.
+   */
+  async createSession(user: User & { sessions?: Session[] }): Promise<ITokensResponse> {
+    const tokens = await this.getTokens(user.id, user.currentCompanyId, user.email);
+    const hashedRt = await argon.hash(tokens.refresh_token);
+
+    await this.prisma.session.create({
       data: {
-        hashedRt: hash
-      }
-    })
+        userId: user.id,
+        hashedRt,
+      },
+    });
+
+    // Cleanup expired sessions for the user
+    await this._cleanupOldSessions(user.id);
+    return tokens;
   }
 
-  async endSession(user: User & { sessions: Session[] }, rt: string) {
-    const currentSession = await this._findCurrentSesion(user, rt);
+  async updateRtHash(user: User & { sessions?: Session[] }, oldRt: string, newRt: string): Promise<void> {
+    const currentSession = await this._findCurrentSession(user, oldRt);
+    const newHash = await argon.hash(newRt);
 
-    await this.prisma.session.delete({
-        where: {
-          id: currentSession.id
-        }
+    await this.prisma.session.update({
+      where: { id: currentSession.id },
+      data: { hashedRt: newHash },
     });
   }
 
-  async verifyRtMatch(user: User & { sessions: Session[] }, rt: string): Promise<Boolean> {
-    const currentSession = await this._findCurrentSesion(user, rt);
+  async endSession(user: User & { sessions?: Session[] }, rt: string): Promise<void> {
+    const currentSession = await this._findCurrentSession(user, rt);
+    await this.prisma.session.delete({
+      where: { id: currentSession.id },
+    });
+  }
+
+  async verifyRtMatch(user: User & { sessions?: Session[] }, rt: string): Promise<boolean> {
+    const currentSession = await this._findCurrentSession(user, rt);
     const rtMatches = await argon.verify(currentSession.hashedRt, rt);
 
     if (!rtMatches) {
       throw new ForbiddenException('Session expired.');
-    } else {
-      return rtMatches;
     }
+    return rtMatches;
   }
 
   async getTokens(userId: number, currentCompanyId: number, email: string): Promise<ITokensResponse> {
-    const jwtPayload: JwtPayload = {
-      userId: userId,
-      currentCompanyId: currentCompanyId,
-      email: email,
-    };
+    const jwtPayload: JwtPayload = { userId, currentCompanyId, email };
 
-    const [at, rt] = await Promise.all([
+    const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(jwtPayload, {
         secret: this.config.getAccessTokenSecret(),
         expiresIn: ACCESS_TOKEN_EXPIRATION,
@@ -70,27 +79,42 @@ export class JWTSessionService {
     ]);
 
     return {
-      access_token: at,
-      refresh_token: rt,
+      access_token: accessToken,
+      refresh_token: refreshToken,
     };
   }
 
-  // MARK: - Private Methods
+  // Private Methods
 
-  async _findCurrentSesion(user: User & { sessions: Session[] }, rt: string): Promise<Session> {
-    let currentSession: Session;
-
+  /**
+   * Finds the session corresponding to the provided refresh token.
+   */
+  async _findCurrentSession(user: User & { sessions?: Session[] }, rt: string): Promise<Session> {
+    // Ensure sessions exist and are non-empty
+    if (!user || !user.sessions || user.sessions.length === 0) {
+      throw new ForbiddenException('No active sessions found.');
+    }
+  
     for (const session of user.sessions) {
-      const isMatch = await argon.verify(session.hashedRt, rt);
-      if (isMatch) {
-        currentSession = session;
+      if (await argon.verify(session.hashedRt, rt)) {
+        return session;
       }
     }
+    throw new ForbiddenException('Cannot find the matching session.');
+  }
 
-    if (!currentSession) {
-      throw new ForbiddenException('Cannot find the matching session.');
-    } else {
-      return currentSession;
-    }
+  /**
+   * Deletes sessions older than the refresh token expiration period.
+   */
+  async _cleanupOldSessions(userId: number): Promise<void> {
+    const expirationTimeMs = ms(REFRESH_TOKEN_EXPIRATION);
+    const expiredThreshold = new Date(Date.now() - expirationTimeMs);
+
+    await this.prisma.session.deleteMany({
+      where: {
+        userId,
+        createdAt: { lt: expiredThreshold },
+      },
+    });
   }
 }
