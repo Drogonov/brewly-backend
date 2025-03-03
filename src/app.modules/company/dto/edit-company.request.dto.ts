@@ -5,9 +5,9 @@ import { Type } from 'class-transformer';
 export class EditCompanyRequestDto {
 
   @ApiProperty({ example: 666 })
-  @IsNotEmpty()
+  @IsOptional()
   @Type(() => Number)
-  companyId: number;
+  companyId?: number;
 
   @IsNotEmpty()
   @ApiProperty({ example: "Some Name" })

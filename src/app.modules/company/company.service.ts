@@ -7,9 +7,10 @@ import {
   StatusResponseDto,
   StatusType,
   ICompanyInfoResponse,
-  UserRole
+  UserRole,
+  IUserInfoResponse
 } from './dto';
-import { Company, Role } from '@prisma/client';
+import { Company, Role, User } from '@prisma/client';
 
 @Injectable()
 export class CompanyService {
@@ -80,26 +81,34 @@ export class CompanyService {
     currentCompanyId: number,
     companyId: number
   ): Promise<IGetCompanyDataResponse> {
+    const company = await this.prisma.company.findUnique({
+      where: { id: companyId },
+      include: { relatedToUsers: true }
+    });
+
+    const relatedTeam = await this.prisma.userToCompanyRelation.findMany({
+      where: { companyId: companyId },
+      include: { user: true }
+    })
+
+    const mapCompanyInfo = (company: any): ICompanyInfoResponse => ({
+      companyId: company.id,
+      ownerId: company.relatedToUsers.find((relation) => relation.role === Role.OWNER).id,
+      companyName: company.companyName,
+      companyImageURL: company.companyImageURL
+    })
+
+    const mapUser = (user: User): IUserInfoResponse => ({
+      userId: user.id,
+      userName: user.userName,
+      email: user.email,
+      userImageURL: user.userImageURL,
+      role: UserRole.barista
+    });
+
     return {
-      companyInfo: {
-        companyId: 0,
-        ownerId: 0,
-        companyName: "Znak Coffee"
-      },
-      team: [
-        {
-          userId: 0,
-          userName: 'Owner',
-          email: 'owner@test.com',
-          role: UserRole.owner
-        },
-        {
-          userId: 1,
-          userName: 'Chief',
-          email: 'chief@text.com',
-          role: UserRole.chief
-        }
-      ]
+      companyInfo: mapCompanyInfo(company),
+      team: relatedTeam.map((relation) => mapUser(relation.user))
     }
   }
 
@@ -108,6 +117,12 @@ export class CompanyService {
     currentCompanyId: number,
     companyId: number
   ): Promise<StatusResponseDto> {
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { currentCompanyId: companyId }
+    });
+
     return {
       status: StatusType.SUCCESS,
       description: "We have changed your current company"
