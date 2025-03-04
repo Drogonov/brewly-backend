@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,23 +17,28 @@ datasource db {
 //
 
 model User {
-  id                 Int                     @id @default(autoincrement())
-  createdAt          DateTime                @default(now())
-  updatedAt          DateTime                @updatedAt
-  userName           String?
-  userImageURL       String?
-  email              String                  @unique
-  hash               String
-  otpHash            String?
-  isVerificated      Boolean
-  currentCompanyId   Int?
-  currentCompany     Company?                @relation("CurrentUserCompany", fields: [currentCompanyId], references: [id])
-  sessions           Session[]
-  invitedCuppings    Cupping[]               @relation("CuppingInvitedUsers")
-  sampleTestings     SampleTesting[]
-  cuppingSettings    CuppingSettings[]
-  createdCuppings    Cupping[]               @relation("CreatedCuppingsByUser")
-  relatedToCompanies UserToCompanyRelation[] @relation("RelatedCompanies")
+  id                      Int                     @id @default(autoincrement())
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  userName                String?
+  userImageURL            String?
+  email                   String                  @unique
+  about                   String?
+  hash                    String
+  otpHash                 String?
+  isVerificated           Boolean
+  currentCompanyId        Int?
+  currentCompany          Company?                @relation("CurrentUserCompany", fields: [currentCompanyId], references: [id])
+  sessions                Session[]
+  invitedCuppings         Cupping[]               @relation("CuppingInvitedUsers")
+  sampleTestings          SampleTesting[]
+  cuppingSettings         CuppingSettings[]
+  createdCuppings         Cupping[]               @relation("CreatedCuppingsByUser")
+  relatedToCompanies      UserToCompanyRelation[] @relation("RelatedCompanies")
+  sentFriendships         Friendship[]            @relation("FriendshipSender")
+  receivedFriendships     Friendship[]            @relation("FriendshipReceiver")
+  sentTeamInvitations     TeamInvitation[]        @relation("TeamInvitationSender")
+  receivedTeamInvitations TeamInvitation[]        @relation("TeamInvitationReceiver")
 }
 
 model Session {
@@ -47,11 +50,11 @@ model Session {
   user      User     @relation(fields: [userId], references: [id])
 }
 
-enum Role {
-  OWNER
-  CHIEF
-  BARISTA
-}
+//
+// ──────────────────────────────────────────────────────
+//  RELATION / USER REQUESTS
+// ──────────────────────────────────────────────────────
+//
 
 model UserToCompanyRelation {
   id        Int      @id @default(autoincrement())
@@ -69,11 +72,53 @@ model UserToCompanyRelation {
   @@unique([userId, companyId])
 }
 
+enum FriendshipType {
+  REQUEST
+  FRIEND
+  DENIED
+  ENDED
+}
+
+enum TeamInvitationType {
+  REQUEST
+  TEAM
+  DENIED
+  ENDED
+}
+
+model Friendship {
+  id         Int            @id @default(autoincrement())
+  sender     User           @relation("FriendshipSender", fields: [senderId], references: [id])
+  senderId   Int
+  receiver   User           @relation("FriendshipReceiver", fields: [receiverId], references: [id])
+  receiverId Int
+  type       FriendshipType
+  createdAt  DateTime       @default(now())
+}
+
+model TeamInvitation {
+  id         Int                @id @default(autoincrement())
+  companyId  Int
+  company    Company            @relation("TeamInvitationCompany", fields: [companyId], references: [id])
+  sender     User               @relation("TeamInvitationSender", fields: [senderId], references: [id])
+  senderId   Int
+  receiver   User               @relation("TeamInvitationReceiver", fields: [receiverId], references: [id])
+  receiverId Int
+  type       TeamInvitationType
+  createdAt  DateTime           @default(now())
+}
+
 //
 // ──────────────────────────────────────────────────────
-//  COMPANY
+//  COMPANY / ROLE
 // ──────────────────────────────────────────────────────
 //
+
+enum Role {
+  OWNER
+  CHIEF
+  BARISTA
+}
 
 model Company {
   id              Int                     @id @default(autoincrement())
@@ -90,11 +135,12 @@ model Company {
   isPersonal      Boolean
   companyName     String
   companyImageURL String?
+  teamInvitations TeamInvitation[]        @relation("TeamInvitationCompany")
 }
 
 //
 // ──────────────────────────────────────────────────────
-//  CUPPING CUPPING / RESULT / SETTINGS
+//  CUPPING / RESULT / SETTINGS
 // ──────────────────────────────────────────────────────
 //
 
@@ -183,7 +229,7 @@ model SampleItem {
   sampleType    SampleType      @relation(fields: [sampleTypeId], references: [id])
   roastDate     DateTime
   openDate      DateTime
-  wheight       Int // in gramms
+  weight        Int
   barCode       String
   cuppings      Cupping[]       @relation("CuppingSampleItems")
   sampleTesting SampleTesting[]

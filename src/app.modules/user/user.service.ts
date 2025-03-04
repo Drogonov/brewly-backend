@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/app.services/prisma/prisma.service';
 import {
     IStatusResponse,
     SearchUserType,
@@ -16,28 +17,51 @@ import {
     SaveEditUserRequest,
 } from './dto';
 import { IUserInfoResponse, UserRole } from 'src/app.common/dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
+    constructor(
+        private prisma: PrismaService,
+    ) { }
 
+    // Need to add friends and team feature to users
     async searchUsers(
         userId: number,
         currentCompanyId: number,
         dto: SearchUsersRequestDto
     ): Promise<ISearchUsersResponse> {
-        return {
-            users: [
-                {
-                    userId: 0,
-                    userName: 'John Wayne',
-                    userImageURL: 'https://picsum.photos/seed/picsum/200/300',
-                    email: 'test@test.com',
-                    role: UserRole.barista,
-                }
-            ]
-        };
+        // Only handling global search logic.
+        // if (dto.type !== SearchUserType.friendsGlobalSearch) {
+        //     return { users: [] };
+        // }
+
+        // Search for users (excluding the current user) whose userName or email matches the search string.
+        const users = await this.prisma.user.findMany({
+            where: {
+                id: { not: userId },
+                OR: [
+                    { userName: { contains: dto.searchStr, mode: 'insensitive' } },
+                    { email: { contains: dto.searchStr, mode: 'insensitive' } },
+                ],
+            },
+        });
+
+        const mapUser = (user: User): IUserInfoResponse => ({
+            userId: user.id,
+            userName: user.userName,
+            userImageURL: user.userImageURL,
+            email: user.email,
+            role: UserRole.barista,
+            about: user.about
+        });
+
+        const mappedUsers = users.map(user => mapUser(user));
+
+        return { users: mappedUsers };
     }
 
+    // Need to add friends and team feature to users
     async getUsersList(
         userId: number,
         currentCompanyId: number,
@@ -56,6 +80,7 @@ export class UserService {
         };
     }
 
+    // Need to add Action, Request, Notification logic
     async getUserCard(
         userId: number,
         currentCompanyId: number,
@@ -105,15 +130,25 @@ export class UserService {
     async getUserInfo(
         userId: number
     ): Promise<IUserInfoResponse> {
-        return {
-            userId: 0,
-            userName: 'John Wayne',
-            userImageURL: 'https://picsum.photos/seed/picsum/200/300',
-            email: 'test@test.com',
-            about: "Some info about user"
-        }
+        const user = await this.prisma.user.findUnique({
+            where: {
+                id: userId
+            }
+        })
+
+        const mapUser = (user: User): IUserInfoResponse => ({
+            userId: user.id,
+            userName: user.userName,
+            userImageURL: user.userImageURL,
+            email: user.email,
+            role: UserRole.barista,
+            about: user.about
+        });
+
+        return mapUser(user);
     }
 
+    // Need to add Request Logic
     async getUserSendedRequests(
         userId: number,
         currentCompanyId: number,
@@ -135,6 +170,7 @@ export class UserService {
         }
     }
 
+    // Need to add Notifications
     async getUserNotifications(
         userId: number,
         currentCompanyId: number,
@@ -159,6 +195,7 @@ export class UserService {
         }
     }
 
+    // Need to add Action logic (for user Card)
     async makeUserAction(
         userId: number,
         currentCompanyId: number,
@@ -170,6 +207,7 @@ export class UserService {
         }
     }
 
+    // Need to add Requests
     async rejectUserSendedRequest(
         userId: number,
         currentCompanyId: number,
@@ -185,9 +223,18 @@ export class UserService {
         userId: number,
         dto: SaveEditUserRequest
     ): Promise<StatusResponseDto> {
+        const user = await this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                userName: dto.userName,
+                email: dto.email,
+                about: dto.about
+            }
+        })
+
         return {
             status: StatusType.SUCCESS,
-            description: "We updated user info"
+            description: `We updated info for ${user.userName}`
         }
     }
 }

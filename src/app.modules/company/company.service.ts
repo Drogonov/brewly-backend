@@ -101,9 +101,10 @@ export class CompanyService {
     const mapUser = (user: User): IUserInfoResponse => ({
       userId: user.id,
       userName: user.userName,
-      email: user.email,
       userImageURL: user.userImageURL,
-      role: UserRole.barista
+      email: user.email,
+      role: UserRole.barista,
+      about: user.about
     });
 
     return {
@@ -120,7 +121,9 @@ export class CompanyService {
 
     await this.prisma.user.update({
       where: { id: userId },
-      data: { currentCompanyId: companyId }
+      data: {
+        currentCompany: { connect: { id: companyId } },
+      }
     });
 
     return {

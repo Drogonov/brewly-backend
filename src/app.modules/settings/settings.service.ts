@@ -7,31 +7,67 @@ import {
     StatusType,
     IGetCompanyRulesResponse,
     SaveCompanyRulesRequestDto,
-    StatusResponseDto
+    StatusResponseDto,
+    IUserInfoResponse,
+    UserRole,
+    ICompanyInfoResponse
 } from './dto';
-import { UserRole } from 'src/app.common/dto';
+import { PrismaService } from 'src/app.services/prisma/prisma.service';
+import { Role, User } from '@prisma/client';
 
 @Injectable()
 export class SettingsService {
+    constructor(
+        private prisma: PrismaService,
+    ) { }
 
     async getUserSettings(
         userId: number,
         currentCompanyId: number
     ): Promise<IGetUserSettingsResponse> {
+        const user = await this.prisma.user.findUnique({
+            where: {
+                id: userId
+            },
+            include: { currentCompany: { include: { relatedToUsers: true } } }
+        })
+
+        var currentCompany = user.currentCompany;
+        // Fix for cases when change of company was with error
+        if (!currentCompany) {
+            const relation = await this.prisma.userToCompanyRelation.findFirst({
+                where: { userId: userId },
+                include: { company: { include: { relatedToUsers: true } } }
+            });
+
+            await this.prisma.user.update({
+                where: { id: userId },
+                data: {
+                    currentCompany: { connect: { id: relation.company.id } },
+                }
+            });
+            currentCompany = relation.company;
+        }
+
+        const mapCompany = (company: any): ICompanyInfoResponse => ({
+            companyId: company.id,
+            ownerId: company.relatedToUsers.find((relation) => relation.role === Role.OWNER).id,
+            companyName: company.companyName, // Assumes this field exists in your DB
+            companyImageURL: company.companyImageURL, // Optional: adjust if needed
+        });
+
+        const mapUser = (user: User): IUserInfoResponse => ({
+            userId: user.id,
+            userName: user.userName,
+            userImageURL: user.userImageURL,
+            email: user.email,
+            role: UserRole.barista,
+            about: user.about
+        });
+
         return {
-            userInfo: {
-                userId: 0,
-                userName: 'Test Test',
-                userImageURL: "https://picsum.photos/seed/picsum/200/300",
-                email: 'test@test.com',
-                role: UserRole.owner,
-            },
-            companyInfo: {
-                companyId: 0,
-                ownerId: 0,
-                companyName: 'Personal',
-                companyImageURL: "https://picsum.photos/seed/picsum/200/300",
-            },
+            userInfo: mapUser(user),
+            companyInfo: mapCompany(currentCompany),
             friendsBlock: {
                 iconName: 'person',
                 text: 'Friends',

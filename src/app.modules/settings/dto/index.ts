@@ -1,6 +1,7 @@
 export * from 'src/app.common/dto/user-info.response.dto'
 export * from 'src/app.common/dto/company-info.response.dto'
 export * from 'src/app.common/dto/status-response.dto'
+export * from 'src/app.common/dto/user-role'
 
 export * from './save-default-cupping-settings.request.dto';
 export * from './save-company-rules.request.dto';
