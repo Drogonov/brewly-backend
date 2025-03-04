@@ -9,3 +9,5 @@ export * from './save-company-rules.request.dto';
 export * from './get-user-settings.response.dto';
 export * from './get-default-cupping-settings.response.dto';
 export * from './get-company-rules.response.dto';
+
+export * from './nested/icon-text-number-info-block.response.dto';

@@ -10,7 +10,7 @@ import {
   UserRole,
   IUserInfoResponse
 } from './dto';
-import { Company, Role, User } from '@prisma/client';
+import { Company, CompanyRuleType, Role, User } from '@prisma/client';
 
 @Injectable()
 export class CompanyService {
@@ -18,7 +18,6 @@ export class CompanyService {
     private prisma: PrismaService,
   ) { }
 
-  // Retrieves all companies the user is involved in and distinguishes the current company.
   async getUserCompanies(
     userId: number,
     currentCompanyId: number,
@@ -52,7 +51,7 @@ export class CompanyService {
     const deletedCompany = await this.prisma.company.findUnique({
       where: { id: companyId }
     });
-  
+
     if (companyId === currentCompanyId || deletedCompany?.isPersonal) {
       return {
         status: StatusType.DENIED,
@@ -63,12 +62,12 @@ export class CompanyService {
       await this.prisma.userToCompanyRelation.deleteMany({
         where: { companyId: companyId },
       });
-  
+
       // Now, delete the company
       await this.prisma.company.delete({
         where: { id: companyId }
       });
-  
+
       return {
         status: StatusType.SUCCESS,
         description: "We have deleted all info about this company"
@@ -81,6 +80,18 @@ export class CompanyService {
     currentCompanyId: number,
     companyId: number
   ): Promise<IGetCompanyDataResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId
+      },
+      include: {
+        currentCompany: {
+          include: { relatedToUsers: true, teamInvitations: true }
+        }
+      }
+    });
+    const currentCompany = user.currentCompany;
+
     const company = await this.prisma.company.findUnique({
       where: { id: companyId },
       include: { relatedToUsers: true }
@@ -90,6 +101,19 @@ export class CompanyService {
       where: { companyId: companyId },
       include: { user: true }
     })
+
+    const mapRole = (role: Role): UserRole => {
+      switch (role) {
+        case Role.OWNER:
+          return UserRole.owner;
+        case Role.CHIEF:
+          return UserRole.chief;
+        case Role.BARISTA:
+          return UserRole.barista;
+        default:
+          throw new Error(`Unhandled role: ${role}`);
+      }
+    };
 
     const mapCompanyInfo = (company: any): ICompanyInfoResponse => ({
       companyId: company.id,
@@ -103,7 +127,7 @@ export class CompanyService {
       userName: user.userName,
       userImageURL: user.userImageURL,
       email: user.email,
-      role: UserRole.barista,
+      role: mapRole(currentCompany.relatedToUsers.find((relation) => relation.userId == userId).role),
       about: user.about
     });
 
@@ -188,6 +212,65 @@ export class CompanyService {
       },
     });
 
+    await this._createDefaultCompanyRules(createdCompany.id)
+
     return createdCompany;
+  }
+
+  async _createDefaultCompanyRules(companyId: number): Promise<void> {
+    const defaultRules = [
+      {
+        name: "Am i Chief",
+        value: false,
+        companyRuleType: CompanyRuleType.isOwnerChief,
+        ruleForRole: Role.OWNER,
+      },
+      {
+        name: "Can Chief Make Chief",
+        value: false,
+        companyRuleType: CompanyRuleType.canChiefMakeChief,
+        ruleForRole: Role.CHIEF,
+      },
+      {
+        name: "Can Chief invite User",
+        value: false,
+        companyRuleType: CompanyRuleType.canChiefInviteUser,
+        ruleForRole: Role.CHIEF,
+      },
+      {
+        name: "Can Chief create cupping",
+        value: false,
+        companyRuleType: CompanyRuleType.canChiefCreateCupping,
+        ruleForRole: Role.CHIEF,
+      },
+      {
+        name: "Is Chief rates preferred",
+        value: false,
+        companyRuleType: CompanyRuleType.isChiefRatesPreferred,
+        ruleForRole: Role.CHIEF,
+      },
+      {
+        name: "Can Barista invite users",
+        value: false,
+        companyRuleType: CompanyRuleType.canBaristaInviteUsers,
+        ruleForRole: Role.BARISTA,
+      },
+      {
+        name: "Can Barista create cupping",
+        value: false,
+        companyRuleType: CompanyRuleType.canBaristaCreateCupping,
+        ruleForRole: Role.BARISTA,
+      },
+    ];
+
+    await this.prisma.companyRule.createMany({
+      data: defaultRules.map(rule => ({
+        name: rule.name,
+        value: rule.value,
+        companyId,
+        companyRuleType: rule.companyRuleType,
+        ruleForRole: rule.ruleForRole,
+      }))
+    });
   }
 }

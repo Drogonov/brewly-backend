@@ -136,6 +136,29 @@ model Company {
   companyName     String
   companyImageURL String?
   teamInvitations TeamInvitation[]        @relation("TeamInvitationCompany")
+  companyRules    CompanyRule[]           @relation("CompanyRuleRelation")
+}
+
+enum CompanyRuleType {
+  isOwnerChief
+  canChiefMakeChief
+  canChiefInviteUser
+  canChiefCreateCupping
+  isChiefRatesPreferred
+  canBaristaInviteUsers
+  canBaristaCreateCupping
+}
+
+model CompanyRule {
+  id              Int             @id @default(autoincrement())
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  name            String
+  value           Boolean
+  company         Company         @relation("CompanyRuleRelation", fields: [companyId], references: [id])
+  companyId       Int
+  companyRuleType CompanyRuleType
+  ruleForRole     Role
 }
 
 //
