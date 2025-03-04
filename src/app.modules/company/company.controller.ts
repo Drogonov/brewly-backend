@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  ParseIntPipe,
   Post,
   Query,
 } from '@nestjs/common';
@@ -69,7 +70,7 @@ export class CompanyController {
   changeCurrentCompany(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
-    @Query('companyId') companyId: number
+    @Query('companyId', ParseIntPipe) companyId: number
   ): Promise<IStatusResponse> {
     return this.companyService.changeCurrentCompany(userId, currentCompanyId, companyId)
   }

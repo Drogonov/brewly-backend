@@ -25,6 +25,8 @@ import {
   GetUserNotificationsResponseDto,
   IGetUserNotificationsResponse,
   SaveEditUserRequest,
+  RequestTypeEnum,
+  RejectUserSendedRequestRequest,
 } from './dto';
 import { GetCurrentUserCompanyId, GetCurrentUserId, Public } from 'src/app.common/decorators';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
@@ -112,9 +114,9 @@ export class UserController {
   rejectUserSendedRequest(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
-    @Query('requestId') requestId: number
+    @Query() dto: RejectUserSendedRequestRequest,
   ): Promise<IStatusResponse> {
-    return this.userService.rejectUserSendedRequest(userId, currentCompanyId, requestId);
+    return this.userService.rejectUserSendedRequest(userId, currentCompanyId, dto);
   }
 
   @Post('edit')

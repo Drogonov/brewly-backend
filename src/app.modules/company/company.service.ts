@@ -5,17 +5,16 @@ import {
   IGetCompanyDataResponse,
   IGetUserCompaniesResponse,
   StatusResponseDto,
-  StatusType,
-  ICompanyInfoResponse,
-  UserRole,
-  IUserInfoResponse
+  StatusType
 } from './dto';
-import { Company, CompanyRuleType, Role, User } from '@prisma/client';
+import { Company, CompanyRuleType, Role } from '@prisma/client';
+import { MappingService } from 'src/app.common/mapping-services/mapping.service';
 
 @Injectable()
 export class CompanyService {
   constructor(
     private prisma: PrismaService,
+    private mappingService: MappingService,
   ) { }
 
   async getUserCompanies(
@@ -27,19 +26,21 @@ export class CompanyService {
       include: { company: { include: { relatedToUsers: true } } },
     });
 
-    const currentCompany = relations.find((relation) => relation.companyId === currentCompanyId).company;
-    const companies = relations.filter((relation) => relation.companyId !== currentCompanyId);
-
-    const mapCompany = (company: any): ICompanyInfoResponse => ({
-      companyId: company.id,
-      ownerId: company.relatedToUsers.find((relation) => relation.role === Role.OWNER).id,
-      companyName: company.companyName, // Assumes this field exists in your DB
-      companyImageURL: company.companyImageURL, // Optional: adjust if needed
-    });
+    const currentRelation = relations.find(
+      (relation) => relation.companyId === currentCompanyId,
+    );
+    const currentCompany = currentRelation?.company;
+    const otherCompanies = relations.filter(
+      (relation) => relation.companyId !== currentCompanyId,
+    );
 
     return {
-      currentCompany: currentCompany ? mapCompany(currentCompany) : null,
-      companies: companies.map(relation => mapCompany(relation.company)),
+      currentCompany: currentCompany
+        ? this.mappingService.mapCompany(currentCompany)
+        : null,
+      companies: otherCompanies.map((relation) =>
+        this.mappingService.mapCompany(relation.company),
+      ),
     };
   }
 
@@ -49,28 +50,24 @@ export class CompanyService {
     companyId: number
   ): Promise<StatusResponseDto> {
     const deletedCompany = await this.prisma.company.findUnique({
-      where: { id: companyId }
+      where: { id: companyId },
     });
 
     if (companyId === currentCompanyId || deletedCompany?.isPersonal) {
       return {
         status: StatusType.DENIED,
-        description: "We can't delete your company because it is Current or Personal"
+        description: "We can't delete your company because it is Current or Personal",
       };
     } else {
-      // First, delete all related UserToCompanyRelation records
       await this.prisma.userToCompanyRelation.deleteMany({
         where: { companyId: companyId },
       });
-
-      // Now, delete the company
       await this.prisma.company.delete({
-        where: { id: companyId }
+        where: { id: companyId },
       });
-
       return {
         status: StatusType.SUCCESS,
-        description: "We have deleted all info about this company"
+        description: "We have deleted all info about this company",
       };
     }
   }
@@ -81,60 +78,27 @@ export class CompanyService {
     companyId: number
   ): Promise<IGetCompanyDataResponse> {
     const user = await this.prisma.user.findUnique({
-      where: {
-        id: userId
-      },
-      include: {
-        currentCompany: {
-          include: { relatedToUsers: true, teamInvitations: true }
-        }
-      }
+      where: { id: userId },
+      include: { currentCompany: { include: { relatedToUsers: true, teamInvitations: true } } },
     });
     const currentCompany = user.currentCompany;
 
     const company = await this.prisma.company.findUnique({
       where: { id: companyId },
-      include: { relatedToUsers: true }
+      include: { relatedToUsers: true },
     });
 
     const relatedTeam = await this.prisma.userToCompanyRelation.findMany({
       where: { companyId: companyId },
-      include: { user: true }
-    })
-
-    const mapRole = (role: Role): UserRole => {
-      switch (role) {
-        case Role.OWNER:
-          return UserRole.owner;
-        case Role.CHIEF:
-          return UserRole.chief;
-        case Role.BARISTA:
-          return UserRole.barista;
-        default:
-          throw new Error(`Unhandled role: ${role}`);
-      }
-    };
-
-    const mapCompanyInfo = (company: any): ICompanyInfoResponse => ({
-      companyId: company.id,
-      ownerId: company.relatedToUsers.find((relation) => relation.role === Role.OWNER).id,
-      companyName: company.companyName,
-      companyImageURL: company.companyImageURL
-    })
-
-    const mapUser = (user: User): IUserInfoResponse => ({
-      userId: user.id,
-      userName: user.userName,
-      userImageURL: user.userImageURL,
-      email: user.email,
-      role: mapRole(currentCompany.relatedToUsers.find((relation) => relation.userId == userId).role),
-      about: user.about
+      include: { user: true },
     });
 
     return {
-      companyInfo: mapCompanyInfo(company),
-      team: relatedTeam.map((relation) => mapUser(relation.user))
-    }
+      companyInfo: this.mappingService.mapCompany(company),
+      team: relatedTeam.map((relation) =>
+        this.mappingService.mapUser(relation.user, this.mappingService.mapRole(relation.role)),
+      ),
+    };
   }
 
   async changeCurrentCompany(
@@ -142,18 +106,20 @@ export class CompanyService {
     currentCompanyId: number,
     companyId: number
   ): Promise<StatusResponseDto> {
+    console.log(currentCompanyId);
+    console.log(companyId);
 
     await this.prisma.user.update({
       where: { id: userId },
       data: {
         currentCompany: { connect: { id: companyId } },
-      }
+      },
     });
 
     return {
       status: StatusType.SUCCESS,
-      description: "We have changed your current company"
-    }
+      description: "We have changed your current company",
+    };
   }
 
   async editCompany(
@@ -161,20 +127,19 @@ export class CompanyService {
     currentCompanyId: number,
     dto: EditCompanyRequestDto
   ): Promise<StatusResponseDto> {
-
-    var description: string
+    let description: string;
     if (dto.companyId) {
-      const updatedCompany = await this._updateCompany(userId, dto)
-      description = `We have updated your ${updatedCompany.companyName} company`
+      const updatedCompany = await this._updateCompany(userId, dto);
+      description = `We have updated your ${updatedCompany.companyName} company`;
     } else {
       const createdCompany = await this._createCompany(userId, dto);
-      description = `We have created your ${createdCompany.companyName} company`
+      description = `We have created your ${createdCompany.companyName} company`;
     }
 
     return {
       status: StatusType.SUCCESS,
-      description: description
-    }
+      description: description,
+    };
   }
 
   // Private Methods
@@ -185,7 +150,7 @@ export class CompanyService {
   ): Promise<Company> {
     return await this.prisma.company.update({
       where: { id: dto.companyId },
-      data: { companyName: dto.companyName }
+      data: { companyName: dto.companyName },
     });
   }
 
@@ -194,7 +159,7 @@ export class CompanyService {
     dto: EditCompanyRequestDto
   ): Promise<Company> {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
 
     const createdCompany = await this.prisma.company.create({
@@ -208,11 +173,11 @@ export class CompanyService {
       data: {
         userId: user.id,
         companyId: createdCompany.id,
-        role: Role.OWNER
+        role: Role.OWNER,
       },
     });
 
-    await this._createDefaultCompanyRules(createdCompany.id)
+    await this._createDefaultCompanyRules(createdCompany.id);
 
     return createdCompany;
   }
@@ -270,7 +235,7 @@ export class CompanyService {
         companyId,
         companyRuleType: rule.companyRuleType,
         ruleForRole: rule.ruleForRole,
-      }))
+      })),
     });
   }
 }

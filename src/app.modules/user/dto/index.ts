@@ -14,6 +14,7 @@ export * from './request/get-user.request.dto';
 export * from './request/make-user-action.request.dto';
 export * from './request/save-edit-user.request.dto';
 export * from './request/search-users-request.dto';
+export * from './request/reject-user-sended-request.request.dto';
 
 export * from './response/get-user-card.response.dto';
 export * from './response/get-user-notifications.response.dto';
