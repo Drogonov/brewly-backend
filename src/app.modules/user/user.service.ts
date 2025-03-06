@@ -21,7 +21,7 @@ import {
   IGetUserAction,
   IGetUserSendedRequestResponse,
 } from './dto';
-import { User, Friendship, TeamInvitation, Role as PrismaRole } from '@prisma/client';
+import { User, Friendship, TeamInvitation, Role as PrismaRole, Role } from '@prisma/client';
 import { FriendshipType, TeamInvitationType } from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
@@ -32,7 +32,7 @@ export class UserService {
     private prisma: PrismaService,
     private mappingService: MappingService,
     private companyRulesService: CompanyRulesService
-  ) {}
+  ) { }
 
   async searchUsers(
     userId: number,
@@ -111,7 +111,7 @@ export class UserService {
     if (!targetUser) {
       throw new Error('User not found');
     }
-    
+
     const userInfo = this.mappingService.mapUser(targetUser);
     const friendship = await this.prisma.friendship.findFirst({
       where: {
@@ -121,47 +121,80 @@ export class UserService {
         ],
       },
     });
-
-    const isFriend = friendship ? friendship.type === FriendshipType.FRIEND : false;
+    const teamInvitation = await this.prisma.teamInvitation.findFirst({
+      where: {
+        OR: [
+          { senderId: userId, receiverId: dto.userId },
+          { senderId: dto.userId, receiverId: userId },
+        ],
+      },
+    });
     const targetUserRelation = await this.prisma.userToCompanyRelation.findFirst({
       where: { userId: dto.userId, companyId: currentCompanyId },
     });
-    const isTeammate = targetUserRelation ? true : false;  
+    const currentUserRelation = await this.prisma.userToCompanyRelation.findFirst({
+      where: { userId: userId },
+      include: { company: { include: { relatedToUsers: true } } },
+    });
     const showMakeChief = await this.companyRulesService.shouldShowMakeChiefAction(currentCompanyId);
-  
+
+    const isFriend = friendship ? friendship.type === FriendshipType.FRIEND : false;
+    const isIncomingFriendRequest = friendship ? friendship.type === FriendshipType.REQUEST : false;
+    const isTeammate = targetUserRelation ? true : false;
+    const isIncomingTeamRequest = teamInvitation ? teamInvitation.type === TeamInvitationType.REQUEST : false;
+    const isCompanyPersonal = currentUserRelation.company.isPersonal;
+
     const actions: IGetUserAction[] = [
       {
         type: UserActionType.addToFriends,
         title: 'Add to Friends',
-        isEnabled: isFriend,
+        isEnabled: !isFriend && !isIncomingFriendRequest,
       },
       {
         type: UserActionType.removeFromFriends,
         title: 'Remove from Friends',
-        isEnabled: !isFriend,
+        isEnabled: isFriend,
       },
       {
         type: UserActionType.addToTeam,
         title: 'Add to Team',
-        isEnabled: isTeammate,
+        isEnabled: !isTeammate && !isIncomingTeamRequest && !isCompanyPersonal,
       },
       {
         type: UserActionType.removeFromTeam,
         title: 'Remove from Team',
-        isEnabled: !isTeammate,
+        isEnabled: isTeammate && !isCompanyPersonal,
       },
     ];
-  
+
     // Only include "Make Chief" action if the flag is enabled
-    if (showMakeChief) {
+    if (showMakeChief && !isCompanyPersonal) {
       actions.push({
         type: UserActionType.makeChief,
         title: 'Make Chief',
-        isEnabled: false,
-        switchIsOn: false,
+        isEnabled: true,
+        switchIsOn: !(targetUserRelation.role === Role.CHIEF),
       });
     }
-  
+
+    // If there's an incoming friend request
+    if (isIncomingFriendRequest) {
+      actions.push({
+        type: UserActionType.acceptFriendRequest,
+        title: 'Accept Friend Request',
+        isEnabled: true,
+      });
+    }
+
+    // If there's an incoming team invitation
+    if (isIncomingTeamRequest && !isCompanyPersonal) {
+      actions.push({
+        type: UserActionType.acceptTeamRequest,
+        title: 'Accept Team Request',
+        isEnabled: true,
+      });
+    }
+
     let status = 'Stranger';
     if (isFriend && isTeammate) {
       status = 'Friends, teammates';
@@ -170,7 +203,7 @@ export class UserService {
     } else if (isTeammate) {
       status = 'Teammates';
     }
-  
+
     return {
       userInfo,
       status,
@@ -269,6 +302,19 @@ export class UserService {
           },
         });
         if (existing) {
+          if (existing.type != FriendshipType.FRIEND) {
+            await this.prisma.friendship.updateMany({
+              where: {
+                OR: [
+                  { senderId: userId, receiverId: dto.userId },
+                  { senderId: dto.userId, receiverId: userId },
+                ],
+              },
+              data: {
+                type: FriendshipType.REQUEST
+              }
+            });
+          }
           return {
             status: StatusType.DENIED,
             description: 'Friendship or request already exists',
@@ -284,14 +330,16 @@ export class UserService {
         return { status: StatusType.SUCCESS, description: 'Friend request sent' };
       }
       case UserActionType.removeFromFriends: {
-        await this.prisma.friendship.deleteMany({
+        await this.prisma.friendship.updateMany({
           where: {
             OR: [
               { senderId: userId, receiverId: dto.userId },
               { senderId: dto.userId, receiverId: userId },
             ],
-            type: FriendshipType.FRIEND,
           },
+          data: {
+            type: FriendshipType.ENDED
+          }
         });
         return { status: StatusType.SUCCESS, description: 'Friend removed' };
       }
@@ -338,6 +386,75 @@ export class UserService {
           data: { role: PrismaRole.CHIEF },
         });
         return { status: StatusType.SUCCESS, description: 'User is now Chief' };
+      }
+      case UserActionType.acceptFriendRequest: {
+        const existingRequest = await this.prisma.friendship.findFirst({
+          where: {
+            senderId: dto.userId,
+            receiverId: userId,
+            type: FriendshipType.REQUEST,
+          },
+        });
+        if (!existingRequest) {
+          return {
+            status: StatusType.DENIED,
+            description: 'No friend request to accept.',
+          };
+        }
+        await this.prisma.friendship.update({
+          where: { id: existingRequest.id },
+          data: { type: FriendshipType.FRIEND },
+        });
+        return {
+          status: StatusType.SUCCESS,
+          description: 'Friend request accepted',
+        };
+      }
+      case UserActionType.acceptTeamRequest: {
+        // Find the existing invitation from the target user → me
+        const existingInvitation = await this.prisma.teamInvitation.findFirst({
+          where: {
+            senderId: dto.userId,
+            receiverId: userId,
+            companyId: currentCompanyId,
+            type: TeamInvitationType.REQUEST,
+          },
+        });
+        if (!existingInvitation) {
+          return {
+            status: StatusType.DENIED,
+            description: 'No team invitation to accept.',
+          };
+        }
+
+        // Mark the invitation as TEAM (or just delete it if you prefer)
+        await this.prisma.teamInvitation.update({
+          where: { id: existingInvitation.id },
+          data: { type: TeamInvitationType.TEAM },
+        });
+
+        // Ensure there's a userToCompanyRelation
+        const existingRelation = await this.prisma.userToCompanyRelation.findFirst({
+          where: {
+            userId: userId,
+            companyId: existingInvitation.companyId,
+          },
+        });
+
+        if (!existingRelation) {
+          await this.prisma.userToCompanyRelation.create({
+            data: {
+              userId: userId,
+              companyId: existingInvitation.companyId,
+              role: PrismaRole.BARISTA,
+            },
+          });
+        }
+
+        return {
+          status: StatusType.SUCCESS,
+          description: 'Team invitation accepted.',
+        };
       }
       default:
         return { status: StatusType.DENIED, description: 'Invalid action' };
