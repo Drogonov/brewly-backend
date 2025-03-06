@@ -38,7 +38,7 @@ export class MappingService {
             userName: user.userName,
             userImageURL: user.userImageURL,
             email: user.email,
-            role: role ?? UserRole.barista,
+            role: role,
             about: user.about,
         };
     }
@@ -121,6 +121,7 @@ export class MappingService {
             iconName: 'person',
             description: `Friend request from ${sender.userName}`,
             type: UserNotificationType.friendRequest,
+            senderId: sender.id,
         };
     }
 
@@ -138,6 +139,7 @@ export class MappingService {
             iconName: 'group',
             description: `Team invitation from ${sender.userName}`,
             type: UserNotificationType.teamInvitation,
+            senderId: sender.id,
         };
     }
 }

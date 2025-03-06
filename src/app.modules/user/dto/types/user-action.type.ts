@@ -4,4 +4,6 @@ export enum UserActionType {
     removeFromFriends = 'removeFromFriends',
     removeFromTeam = 'removeFromTeam',
     makeChief = 'makeChief',
+    acceptFriendRequest = 'acceptFriendRequest',
+    acceptTeamRequest = 'acceptTeamRequest',
 }

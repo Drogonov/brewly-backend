@@ -10,6 +10,7 @@ export interface IGetUserNotificationResponse {
     iconName: string;
     description: string;
     type: UserNotificationType;
+    senderId: number;
 }
 
 // MARK: - Swagger class
@@ -30,4 +31,7 @@ export class GetUserNotificationResponseDto implements IGetUserNotificationRespo
 
     @ApiPropertyOptional({ example: UserNotificationType.friendRequest })
     type: UserNotificationType;
+
+    @ApiProperty({ example: 666 })
+    senderId: number;
 }

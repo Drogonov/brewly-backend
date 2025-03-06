@@ -18,16 +18,20 @@ import {
   IUserInfoResponse,
   RequestTypeEnum,
   RejectUserSendedRequestRequest,
+  IGetUserAction,
+  IGetUserSendedRequestResponse,
 } from './dto';
 import { User, Friendship, TeamInvitation, Role as PrismaRole } from '@prisma/client';
 import { FriendshipType, TeamInvitationType } from '@prisma/client';
-import { MappingService } from 'src/app.common/mapping-services/mapping.service';
+import { MappingService } from 'src/app.common/services/mapping.service';
+import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private prisma: PrismaService,
     private mappingService: MappingService,
+    private companyRulesService: CompanyRulesService
   ) {}
 
   async searchUsers(
@@ -107,8 +111,8 @@ export class UserService {
     if (!targetUser) {
       throw new Error('User not found');
     }
+    
     const userInfo = this.mappingService.mapUser(targetUser);
-
     const friendship = await this.prisma.friendship.findFirst({
       where: {
         OR: [
@@ -117,43 +121,48 @@ export class UserService {
         ],
       },
     });
-    const isFriend = friendship && friendship.type === FriendshipType.FRIEND;
 
+    const isFriend = friendship ? friendship.type === FriendshipType.FRIEND : false;
     const targetUserRelation = await this.prisma.userToCompanyRelation.findFirst({
       where: { userId: dto.userId, companyId: currentCompanyId },
     });
-    const isTeammate = !!targetUserRelation;
-
-    const actions = [
+    const isTeammate = targetUserRelation ? true : false;  
+    const showMakeChief = await this.companyRulesService.shouldShowMakeChiefAction(currentCompanyId);
+  
+    const actions: IGetUserAction[] = [
       {
         type: UserActionType.addToFriends,
         title: 'Add to Friends',
-        isEnabled: !isFriend,
+        isEnabled: isFriend,
       },
       {
         type: UserActionType.removeFromFriends,
         title: 'Remove from Friends',
-        isEnabled: isFriend,
+        isEnabled: !isFriend,
       },
       {
         type: UserActionType.addToTeam,
         title: 'Add to Team',
-        isEnabled: !isTeammate,
+        isEnabled: isTeammate,
       },
       {
         type: UserActionType.removeFromTeam,
         title: 'Remove from Team',
-        isEnabled: isTeammate,
+        isEnabled: !isTeammate,
       },
-      {
+    ];
+  
+    // Only include "Make Chief" action if the flag is enabled
+    if (showMakeChief) {
+      actions.push({
         type: UserActionType.makeChief,
         title: 'Make Chief',
         isEnabled: false,
         switchIsOn: false,
-      },
-    ];
-
-    let status = '';
+      });
+    }
+  
+    let status = 'Stranger';
     if (isFriend && isTeammate) {
       status = 'Friends, teammates';
     } else if (isFriend) {
@@ -161,7 +170,7 @@ export class UserService {
     } else if (isTeammate) {
       status = 'Teammates';
     }
-
+  
     return {
       userInfo,
       status,
@@ -186,7 +195,7 @@ export class UserService {
       where: { senderId: userId, type: TeamInvitationType.REQUEST },
     });
 
-    const requests = [];
+    const requests: IGetUserSendedRequestResponse[] = [];
 
     for (const req of friendRequests) {
       const targetUser = await this.prisma.user.findUnique({
@@ -204,7 +213,6 @@ export class UserService {
         this.mappingService.mapTeamInvitation(req, targetUser)
       );
     }
-    requests.sort((a, b) => (a.requestDate < b.requestDate ? 1 : -1));
 
     return { requests };
   }

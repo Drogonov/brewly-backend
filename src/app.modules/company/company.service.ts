@@ -7,14 +7,16 @@ import {
   StatusResponseDto,
   StatusType
 } from './dto';
-import { Company, CompanyRuleType, Role } from '@prisma/client';
-import { MappingService } from 'src/app.common/mapping-services/mapping.service';
+import { Company, Role } from '@prisma/client';
+import { MappingService } from 'src/app.common/services/mapping.service';
+import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
 
 @Injectable()
 export class CompanyService {
   constructor(
     private prisma: PrismaService,
     private mappingService: MappingService,
+    private companyRulesService: CompanyRulesService
   ) { }
 
   async getUserCompanies(
@@ -177,65 +179,8 @@ export class CompanyService {
       },
     });
 
-    await this._createDefaultCompanyRules(createdCompany.id);
+    await this.companyRulesService.createDefaultCompanyRules(createdCompany.id);
 
     return createdCompany;
-  }
-
-  async _createDefaultCompanyRules(companyId: number): Promise<void> {
-    const defaultRules = [
-      {
-        name: "Am i Chief",
-        value: false,
-        companyRuleType: CompanyRuleType.isOwnerChief,
-        ruleForRole: Role.OWNER,
-      },
-      {
-        name: "Can Chief Make Chief",
-        value: false,
-        companyRuleType: CompanyRuleType.canChiefMakeChief,
-        ruleForRole: Role.CHIEF,
-      },
-      {
-        name: "Can Chief invite User",
-        value: false,
-        companyRuleType: CompanyRuleType.canChiefInviteUser,
-        ruleForRole: Role.CHIEF,
-      },
-      {
-        name: "Can Chief create cupping",
-        value: false,
-        companyRuleType: CompanyRuleType.canChiefCreateCupping,
-        ruleForRole: Role.CHIEF,
-      },
-      {
-        name: "Is Chief rates preferred",
-        value: false,
-        companyRuleType: CompanyRuleType.isChiefRatesPreferred,
-        ruleForRole: Role.CHIEF,
-      },
-      {
-        name: "Can Barista invite users",
-        value: false,
-        companyRuleType: CompanyRuleType.canBaristaInviteUsers,
-        ruleForRole: Role.BARISTA,
-      },
-      {
-        name: "Can Barista create cupping",
-        value: false,
-        companyRuleType: CompanyRuleType.canBaristaCreateCupping,
-        ruleForRole: Role.BARISTA,
-      },
-    ];
-
-    await this.prisma.companyRule.createMany({
-      data: defaultRules.map(rule => ({
-        name: rule.name,
-        value: rule.value,
-        companyId,
-        companyRuleType: rule.companyRuleType,
-        ruleForRole: rule.ruleForRole,
-      })),
-    });
   }
 }

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigurationService } from 'src/app.services/config/configuration.service';
 import { SettingsController } from './settings.controller';
 import { SettingsService } from './settings.service';
-import { MappingService } from 'src/app.common/mapping-services/mapping.service';
+import { MappingService } from 'src/app.common/services/mapping.service';
 
 @Module({
   imports: [],

@@ -12,7 +12,7 @@ import {
 } from './dto';
 import { PrismaService } from 'src/app.services/prisma/prisma.service';
 import { FriendshipType, Role, TeamInvitationType, User } from '@prisma/client';
-import { MappingService } from 'src/app.common/mapping-services/mapping.service';
+import { MappingService } from 'src/app.common/services/mapping.service';
 
 @Injectable()
 export class SettingsService {
