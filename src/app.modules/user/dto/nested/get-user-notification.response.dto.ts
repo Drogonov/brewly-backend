@@ -11,6 +11,7 @@ export interface IGetUserNotificationResponse {
     description: string;
     type: UserNotificationType;
     senderId: number;
+    wasLoadedByReceiver: boolean;
 }
 
 // MARK: - Swagger class
@@ -34,4 +35,7 @@ export class GetUserNotificationResponseDto implements IGetUserNotificationRespo
 
     @ApiProperty({ example: 666 })
     senderId: number;
+
+    @ApiProperty({ example: false })
+    wasLoadedByReceiver: boolean;
 }

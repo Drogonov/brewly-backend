@@ -11,6 +11,7 @@ export interface IGetUserSettingsResponse {
     teamMatesBlock?: IIconTextNumberInfoBlockResponse;
     requestsBlock?: IIconTextNumberInfoBlockResponse;
     onboardingBlock?: IIconTextNumberInfoBlockResponse;
+    isUserHaveNewNotifications: boolean;
 }
 
 // MARK: - Swagger class
@@ -33,4 +34,7 @@ export class GetUserSettingsResponseDto implements IGetUserSettingsResponse {
 
     @ApiPropertyOptional({ description: 'Onboarding Info' })
     onboardingBlock?: IIconTextNumberInfoBlockResponse;
+
+    @ApiPropertyOptional({ description: 'True if user have new notifications' })
+    isUserHaveNewNotifications: boolean;
 }

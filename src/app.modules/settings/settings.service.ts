@@ -19,7 +19,7 @@ export class SettingsService {
   constructor(
     private prisma: PrismaService,
     private mappingService: MappingService,
-  ) {}
+  ) { }
 
   async getUserSettings(
     userId: number,
@@ -36,6 +36,7 @@ export class SettingsService {
         sentFriendships: true,
         receivedFriendships: true,
         sentTeamInvitations: true,
+        receivedTeamInvitations: true
       },
     });
 
@@ -74,6 +75,9 @@ export class SettingsService {
       user.sentFriendships.filter((friendShip) => friendShip.type == FriendshipType.REQUEST).length +
       user.sentTeamInvitations.filter((invitations) => invitations.type == TeamInvitationType.REQUEST).length;
 
+    const isUserHaveNewNotifications: boolean = user.receivedFriendships.some(request => request.wasLoadedByReceiver === false) 
+    || user.receivedTeamInvitations.some(request => request.wasLoadedByReceiver === false)
+
     return {
       userInfo: this.mappingService.mapUser(
         user,
@@ -92,19 +96,22 @@ export class SettingsService {
         text: 'Team Mates',
         number: teamCount,
       },
-      ...(requestsCount
-        ? {
+      ...(
+        requestsCount
+          ? {
             requestsBlock: {
               iconName: 'arrow.up.message',
               text: 'Sended Requests',
               number: requestsCount,
             } as IIconTextNumberInfoBlockResponse,
           }
-        : {}),
+          : {}
+      ),
       onboardingBlock: {
         iconName: 'questionmark.bubble',
         text: 'Guide',
       },
+      isUserHaveNewNotifications
     };
   }
 

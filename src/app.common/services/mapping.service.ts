@@ -72,6 +72,7 @@ export class MappingService {
             ownerId: ownerRelation ? ownerRelation.userId : null,
             companyName: company.companyName,
             companyImageURL: company.companyImageURL,
+            isPersonal: company.isPersonal
         };
     }
 
@@ -122,6 +123,7 @@ export class MappingService {
             description: `Friend request from ${sender.userName}`,
             type: UserNotificationType.friendRequest,
             senderId: sender.id,
+            wasLoadedByReceiver: friendship.wasLoadedByReceiver
         };
     }
 
@@ -140,6 +142,7 @@ export class MappingService {
             description: `Team invitation from ${sender.userName}`,
             type: UserNotificationType.teamInvitation,
             senderId: sender.id,
+            wasLoadedByReceiver: invitation.wasLoadedByReceiver
         };
     }
 }

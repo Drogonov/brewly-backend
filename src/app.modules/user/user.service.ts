@@ -283,7 +283,31 @@ export class UserService {
       a.notificationDate < b.notificationDate ? 1 : -1
     );
 
-    return { notifications };
+    friendRequests.forEach(async (request) =>
+      await this.prisma.friendship.update({
+        where: {
+          id: request.id
+        },
+        data: {
+          wasLoadedByReceiver: true
+        }
+      })
+    );
+
+    teamInvitations.forEach(async (request) =>
+      await this.prisma.friendship.update({
+        where: {
+          id: request.id
+        },
+        data: {
+          wasLoadedByReceiver: true
+        }
+      })
+    );
+
+    return { 
+      notifications
+    };
   }
 
   async makeUserAction(
@@ -314,11 +338,12 @@ export class UserService {
                 type: FriendshipType.REQUEST
               }
             });
+          } else {
+            return {
+              status: StatusType.DENIED,
+              description: 'Friendship or request already exists',
+            };
           }
-          return {
-            status: StatusType.DENIED,
-            description: 'Friendship or request already exists',
-          };
         }
         await this.prisma.friendship.create({
           data: {

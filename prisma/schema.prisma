@@ -87,25 +87,27 @@ enum TeamInvitationType {
 }
 
 model Friendship {
-  id         Int            @id @default(autoincrement())
-  sender     User           @relation("FriendshipSender", fields: [senderId], references: [id])
-  senderId   Int
-  receiver   User           @relation("FriendshipReceiver", fields: [receiverId], references: [id])
-  receiverId Int
-  type       FriendshipType
-  createdAt  DateTime       @default(now())
+  id                  Int            @id @default(autoincrement())
+  sender              User           @relation("FriendshipSender", fields: [senderId], references: [id])
+  senderId            Int
+  receiver            User           @relation("FriendshipReceiver", fields: [receiverId], references: [id])
+  receiverId          Int
+  type                FriendshipType
+  createdAt           DateTime       @default(now())
+  wasLoadedByReceiver Boolean        @default(false)
 }
 
 model TeamInvitation {
-  id         Int                @id @default(autoincrement())
-  companyId  Int
-  company    Company            @relation("TeamInvitationCompany", fields: [companyId], references: [id])
-  sender     User               @relation("TeamInvitationSender", fields: [senderId], references: [id])
-  senderId   Int
-  receiver   User               @relation("TeamInvitationReceiver", fields: [receiverId], references: [id])
-  receiverId Int
-  type       TeamInvitationType
-  createdAt  DateTime           @default(now())
+  id                  Int                @id @default(autoincrement())
+  companyId           Int
+  company             Company            @relation("TeamInvitationCompany", fields: [companyId], references: [id])
+  sender              User               @relation("TeamInvitationSender", fields: [senderId], references: [id])
+  senderId            Int
+  receiver            User               @relation("TeamInvitationReceiver", fields: [receiverId], references: [id])
+  receiverId          Int
+  type                TeamInvitationType
+  createdAt           DateTime           @default(now())
+  wasLoadedByReceiver Boolean            @default(false)
 }
 
 //

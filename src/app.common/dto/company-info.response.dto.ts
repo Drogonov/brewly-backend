@@ -9,6 +9,7 @@ export interface ICompanyInfoResponse {
     ownerId: number;
     companyName?: string;
     companyImageURL?: string;
+    isPersonal: boolean;
 }
 
 // MARK: - Swagger class
@@ -27,4 +28,7 @@ export class CompanyInfoResponseDto implements ICompanyInfoResponse {
 
     @ApiPropertyOptional({ description: 'Image of the company', example: "https://picsum.photos/seed/picsum/200/300" })
     companyImageURL?: string;
+
+    @ApiProperty({ example: false })
+    isPersonal: boolean;
 }
