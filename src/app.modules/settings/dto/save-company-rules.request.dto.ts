@@ -3,6 +3,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 export class SaveCompanyRulesRequestDto {
+  @ApiProperty({ description: "Rules to save" })
+  @IsNotEmpty()
+  @Type(() => Number)
+  companyId: number;
 
   @ApiProperty({ description: "Rules to save" })
   @IsNotEmpty()

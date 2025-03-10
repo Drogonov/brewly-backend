@@ -138,11 +138,10 @@ export class SettingsService {
   }
 
   async getCompanyRules(
-    userId: number,
-    currentCompanyId: number
+    companyId: number
   ): Promise<IGetCompanyRulesResponse> {
     const company = await this.prisma.company.findUnique({
-      where: { id: currentCompanyId },
+      where: { id: companyId },
       include: { companyRules: true },
     });
 
@@ -171,8 +170,6 @@ export class SettingsService {
   }
 
   async saveCompanyRules(
-    userId: number,
-    currentCompanyId: number,
     dto: SaveCompanyRulesRequestDto
   ): Promise<StatusResponseDto> {
     await this.prisma.$transaction(async (tx) => {
@@ -180,7 +177,7 @@ export class SettingsService {
         await tx.companyRule.updateMany({
           where: {
             id: ruleDto.id,
-            companyId: currentCompanyId,
+            companyId: dto.companyId,
           },
           data: {
             value: ruleDto.value,

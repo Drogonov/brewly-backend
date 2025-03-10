@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Post,
   Query,
 } from '@nestjs/common';
@@ -27,9 +29,11 @@ import {
   SaveEditUserRequest,
   RequestTypeEnum,
   RejectUserSendedRequestRequest,
+  ErrorResponseDto,
+  OTPRequestDto
 } from './dto';
 import { GetCurrentUserCompanyId, GetCurrentUserId, Public } from 'src/app.common/decorators';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiUnprocessableEntityResponse } from '@nestjs/swagger';
 
 @Controller('user')
 export class UserController {
@@ -127,5 +131,28 @@ export class UserController {
     @Query() dto: SaveEditUserRequest
   ): Promise<IStatusResponse> {
     return this.userService.saveEditUser(userId, dto)
+  }
+
+  @Post('verify-new-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify OTP to change users email' })
+  @ApiOkResponse({ description: 'Returns status of email change', type: StatusResponseDto })
+  @ApiUnprocessableEntityResponse({ description: 'Returns business top layer error', type: ErrorResponseDto })
+  verifyNewEmail(
+    @GetCurrentUserId() userId: number,
+    @Body() dto: OTPRequestDto
+  ): Promise<StatusResponseDto> {
+    return this.userService.verifyNewEmail(userId, dto);
+  }
+
+  @Post('resend-new-email-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Resend OTP and update it for user' })
+  @ApiOkResponse({ description: 'Returns operation status', type: StatusResponseDto })
+  @ApiUnprocessableEntityResponse({ description: 'Returns business top layer error', type: ErrorResponseDto })
+  resendNewEmailOTP(
+    @GetCurrentUserId() userId: number,
+  ): Promise<StatusResponseDto> {
+    return this.userService.resendNewEmailOTP(userId);
   }
 }

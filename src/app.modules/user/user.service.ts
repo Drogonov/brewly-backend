@@ -524,80 +524,124 @@ export class UserService {
     userId: number,
     dto: SaveEditUserRequest,
   ): Promise<StatusResponseDto> {
-    const user = await this.prisma.user.update({
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new BusinessErrorException({
+        errorSubCode: ErrorSubCodes.USER_DOESNT_EXIST,
+        errorMsg: 'User not found',
+      });
+    }
+
+    const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: {
         userName: dto.userName,
-        email: dto.email,
         about: dto.about,
       },
     });
-    return {
-      status: StatusType.SUCCESS,
-      description: `User info updated for ${user.userName}`,
-    };
-  }
 
+    if (dto.email && dto.email !== user.email) {
+      await this._confirmEmailChange(userId);
+
+      return {
+        status: StatusType.SUCCESS,
+        description: `We sent email to your old email ${updatedUser.email} enter OTP to change it to you new ${dto.email}`,
+      };
+    } else {
+      return {
+        status: StatusType.SUCCESS,
+        description: `User info updated for ${updatedUser.userName}`,
+      };
+    }
+  }
+    
   async verifyNewEmail(
     userId: number,
     dto: OTPRequestDto,
   ): Promise<StatusResponseDto> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new BusinessErrorException({
+        errorSubCode: ErrorSubCodes.USER_DOESNT_EXIST,
+        errorMsg: 'User not found',
+      });
+    }
+
+    const isOtpValid = await argon.verify(user.otpHash, dto.otp);
+
+    if (!isOtpValid) {
+      return { status: StatusType.DENIED, description: 'Incorrect OTP. Please try again.' };
+    }
+
+    // Update email and clear OTP data
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        email: dto.email,
+        otpHash: null,
+      },
+    });
+
+    return {
+      status: StatusType.SUCCESS,
+      description: 'Email successfully updated.',
+    };
+  }
+  
+  async resendNewEmailOTP(userId: number): Promise<StatusResponseDto> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new BusinessErrorException({
+        errorSubCode: ErrorSubCodes.USER_DOESNT_EXIST,
+        errorMsg: 'User not found',
+      });
+    }
+
+    // const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otp = "666666";
     const hashedOtp = await argon.hash(otp);
 
+    // Store new OTP in the database
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { otpHash: hashedOtp },
+    });
 
-    try {
-      const user = await this.prisma.$transaction(async (prisma) => {
-        // Step 1: Create the user
-        const createdUser = await this.prisma.user.create({
-          data: {
-            email: dto.email,
-            hash,
-            otpHash: hashedOtp,
-            isVerificated: false,
-          },
-        });
+    // Resend OTP to the old email
+    // await this.mailService.sendOtpEmail(user.email, otp);
+
+    return { status: StatusType.SUCCESS, description: 'OTP resent to your old email' };
+  }
+
+  // MARK: Private Methods
+
+  private async _confirmEmailChange(userId: number): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new BusinessErrorException({
+        errorSubCode: ErrorSubCodes.USER_DOESNT_EXIST,
+        errorMsg: 'User not found',
       });
-
-      // await this.mailService.sendOtpEmail(user.email, otp);
-      return { status: StatusType.SUCCESS };
-    } catch (error) {
-      // if (
-      //   error instanceof Prisma.PrismaClientKnownRequestError &&
-      //   error.code === 'P2002'
-      // ) {
-      //   throw new BusinessErrorException({
-      //     errorSubCode: ErrorSubCodes.USER_ALREADY_EXIST,
-      //     errorFields: [
-      //       {
-      //         fieldCode: 'email',
-      //         errorMsg: 'Email is already registered, please sign in.',
-      //       },
-      //     ],
-      //   });
-      // }
-      throw error;
     }
 
+    // const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = "666666";
+    const hashedOtp = await argon.hash(otp);
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiration
 
-    // const user = await this.prisma.user.findUnique({
-    //   where: { email: dto.email },
-    // });
+    // Store OTP and new email in database
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        otpHash: hashedOtp,
+      },
+    });
 
-    // if (!user || !await argon.verify(user.otpHash, dto.otp)) {
-    //   throw new BusinessErrorException({
-    //     errorSubCode: ErrorSubCodes.INCORRECT_OTP,
-    //     errorMsg: 'Incorrect OTP, please try again',
-    //   });
-    // }
-
-    // await this.prisma.user.update({
-    //   where: { email: dto.email },
-    //   data: { otpHash: null, isVerificated: true },
-    // });
-
-    // // Delegate session/token creation to JWTSessionService
-    // const tokens = await this.jwtSessionService.createSession(user);
-    // return tokens;
+    // Send OTP to old email
+    // await this.mailService.sendOtpEmail(user.email, otp);
   }
 }

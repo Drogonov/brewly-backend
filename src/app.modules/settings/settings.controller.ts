@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  ParseIntPipe,
   Post,
   Query,
 } from '@nestjs/common';
@@ -22,7 +23,8 @@ import {
   StatusResponseDto,
   GetCompanyRulesResponseDto,
   IGetCompanyRulesResponse,
-  SaveCompanyRulesRequestDto
+  SaveCompanyRulesRequestDto,
+  GetCompanyRulesRequestDto
 } from './dto';
 
 @Controller('settings')
@@ -65,9 +67,10 @@ export class SettingsController {
   @ApiOkResponse({ description: 'Returns list of rules for user', type: GetCompanyRulesResponseDto })
   getCompanyRules(
     @GetCurrentUserId() userId: number,
-    @GetCurrentUserCompanyId() currentCompanyId: number
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Query() dto: GetCompanyRulesRequestDto
   ): Promise<IGetCompanyRulesResponse> {
-    return this.settingsService.getCompanyRules(userId, currentCompanyId)
+    return this.settingsService.getCompanyRules(dto.companyId)
   }
 
   @Post('save-company-rules')
@@ -79,6 +82,6 @@ export class SettingsController {
     @GetCurrentUserCompanyId() currentCompanyId: number,
     @Body() dto: SaveCompanyRulesRequestDto
   ): Promise<IStatusResponse> {
-    return this.settingsService.saveCompanyRules(userId, currentCompanyId, dto)
+    return this.settingsService.saveCompanyRules(dto)
   }
 }
