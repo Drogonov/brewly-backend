@@ -20,11 +20,14 @@ import {
   RejectUserSendedRequestRequest,
   IGetUserAction,
   IGetUserSendedRequestResponse,
+  OTPRequestDto,
 } from './dto';
-import { User, Friendship, TeamInvitation, Role as PrismaRole, Role } from '@prisma/client';
+import { User, Friendship, TeamInvitation, Role as PrismaRole, Role, Prisma } from '@prisma/client';
 import { FriendshipType, TeamInvitationType } from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
+import { BusinessErrorException, ErrorSubCodes } from 'src/app.common/exceptions';
+import * as argon from 'argon2';
 
 @Injectable()
 export class UserService {
@@ -305,7 +308,7 @@ export class UserService {
       })
     );
 
-    return { 
+    return {
       notifications
     };
   }
@@ -533,5 +536,68 @@ export class UserService {
       status: StatusType.SUCCESS,
       description: `User info updated for ${user.userName}`,
     };
+  }
+
+  async verifyNewEmail(
+    userId: number,
+    dto: OTPRequestDto,
+  ): Promise<StatusResponseDto> {
+    const otp = "666666";
+    const hashedOtp = await argon.hash(otp);
+
+
+    try {
+      const user = await this.prisma.$transaction(async (prisma) => {
+        // Step 1: Create the user
+        const createdUser = await this.prisma.user.create({
+          data: {
+            email: dto.email,
+            hash,
+            otpHash: hashedOtp,
+            isVerificated: false,
+          },
+        });
+      });
+
+      // await this.mailService.sendOtpEmail(user.email, otp);
+      return { status: StatusType.SUCCESS };
+    } catch (error) {
+      // if (
+      //   error instanceof Prisma.PrismaClientKnownRequestError &&
+      //   error.code === 'P2002'
+      // ) {
+      //   throw new BusinessErrorException({
+      //     errorSubCode: ErrorSubCodes.USER_ALREADY_EXIST,
+      //     errorFields: [
+      //       {
+      //         fieldCode: 'email',
+      //         errorMsg: 'Email is already registered, please sign in.',
+      //       },
+      //     ],
+      //   });
+      // }
+      throw error;
+    }
+
+
+    // const user = await this.prisma.user.findUnique({
+    //   where: { email: dto.email },
+    // });
+
+    // if (!user || !await argon.verify(user.otpHash, dto.otp)) {
+    //   throw new BusinessErrorException({
+    //     errorSubCode: ErrorSubCodes.INCORRECT_OTP,
+    //     errorMsg: 'Incorrect OTP, please try again',
+    //   });
+    // }
+
+    // await this.prisma.user.update({
+    //   where: { email: dto.email },
+    //   data: { otpHash: null, isVerificated: true },
+    // });
+
+    // // Delegate session/token creation to JWTSessionService
+    // const tokens = await this.jwtSessionService.createSession(user);
+    // return tokens;
   }
 }

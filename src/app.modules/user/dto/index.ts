@@ -1,6 +1,7 @@
 export * from 'src/app.common/dto/user-info.response.dto';
 export * from 'src/app.common/dto/company-info.response.dto';
 export * from 'src/app.common/dto/status-response.dto';
+export * from 'src/app.common/dto/otp-request.dto';
 
 export * from './types/search-user-type';
 export * from './types/user-notification-type';

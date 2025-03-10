@@ -1,3 +1,3 @@
 export * from './auth-request.dto';
-export * from './otp-request.dto';
-export * from '../../../app.common/dto/status-response.dto';
+export * from 'src/app.common/dto/otp-request.dto';
+export * from 'src/app.common/dto/status-response.dto';
