@@ -1,13 +1,13 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Company, Prisma, Role, User } from '@prisma/client';
 import * as argon from 'argon2';
-import { PrismaService } from 'src/app.services/prisma/prisma.service';
+import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
 import { AuthRequestDto, IStatusResponse, OTPRequestDto, StatusResponseDto, StatusType } from './dto';
 import { ITokensResponse } from 'src/app.common/dto';
-import { JWTSessionService } from 'src/app.services/jwt-session/jwt-session.service';
-import { MailService } from 'src/app.services/mail/mail.service';
-import { BusinessErrorException, ErrorSubCodes } from 'src/app.common/exceptions';
-import { LocalizationStringsService } from 'src/app.services/services/localization-strings-service';
+import { JWTSessionService } from 'src/app.common/services/jwt-session/jwt-session.service';
+import { MailService } from 'src/app.common/services/mail/mail.service';
+import { BusinessErrorException, ErrorSubCodes } from 'src/app.common/error-handling/exceptions';
+import { LocalizationStringsService } from 'src/app.common/services/localization-strings-service';
 
 @Injectable()
 export class AuthService {

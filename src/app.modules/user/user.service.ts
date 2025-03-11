@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/app.services/prisma/prisma.service';
+import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
 import {
   IStatusResponse,
   SearchUserType,
@@ -24,9 +24,9 @@ import {
 } from './dto';
 import { User, Friendship, TeamInvitation, Role as PrismaRole, Role, Prisma } from '@prisma/client';
 import { FriendshipType, TeamInvitationType } from '@prisma/client';
-import { MappingService } from 'src/app.services/services/mapping.service';
-import { CompanyRulesService } from 'src/app.services/services/company-rules.service';
-import { BusinessErrorException, ErrorSubCodes } from 'src/app.common/exceptions';
+import { MappingService } from 'src/app.common/services/mapping.service';
+import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
+import { BusinessErrorException, ErrorSubCodes } from 'src/app.common/error-handling/exceptions';
 import * as argon from 'argon2';
 
 @Injectable()

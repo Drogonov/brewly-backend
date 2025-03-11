@@ -1,8 +1,8 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { LocalizationStringsService } from 'src/app.services/services/localization-strings-service';
-import { IErrorResponse } from '../dto';
-import { ErrorHandlingService } from 'src/app.services/services/error-handling.service';
+import { LocalizationStringsService } from 'src/app.common/services/localization-strings-service';
+import { IErrorResponse } from 'src/app.common/dto';
+import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {

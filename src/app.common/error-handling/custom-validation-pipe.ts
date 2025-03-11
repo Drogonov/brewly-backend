@@ -1,6 +1,6 @@
 import { ArgumentMetadata, BadRequestException, Injectable, ValidationPipe, ValidationError } from '@nestjs/common';
 import { BusinessErrorException, ErrorSubCodes } from './exceptions';
-import { LocalizationStringsService } from 'src/app.services/services/localization-strings-service';
+import { LocalizationStringsService } from 'src/app.common/services/localization-strings-service';
 
 @Injectable()
 export class CustomValidationPipe extends ValidationPipe {

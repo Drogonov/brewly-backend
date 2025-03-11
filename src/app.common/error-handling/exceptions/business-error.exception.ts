@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { ErrorResponseDto } from '../dto';
+import { ErrorResponseDto } from '../../dto';
 
 export class BusinessErrorException extends HttpException {
   constructor(
