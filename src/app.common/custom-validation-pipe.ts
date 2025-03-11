@@ -1,16 +1,10 @@
-import {
-  ArgumentMetadata,
-  BadRequestException,
-  Injectable,
-  ValidationPipe,
-  ValidationError,
-} from '@nestjs/common';
+import { ArgumentMetadata, BadRequestException, Injectable, ValidationPipe, ValidationError } from '@nestjs/common';
 import { BusinessErrorException, ErrorSubCodes } from './exceptions';
-import { error } from 'console';
+import { LocalizationStringsService } from 'src/app.services/services/localization-strings-service';
 
 @Injectable()
 export class CustomValidationPipe extends ValidationPipe {
-  constructor() {
+  constructor(private readonly localizationStringsService: LocalizationStringsService) {
     super({
       whitelist: true,
       forbidNonWhitelisted: true,
@@ -19,7 +13,7 @@ export class CustomValidationPipe extends ValidationPipe {
   }
 
   override createExceptionFactory() {
-    return (validationErrors: ValidationError[] = []) => {
+    return async (validationErrors: ValidationError[] = []) => {
       const errors = validationErrors.map((error) => {
         const constraints = Object.values(error.constraints || {});
         return {
@@ -28,21 +22,20 @@ export class CustomValidationPipe extends ValidationPipe {
         };
       });
 
-      const businessErrorException = this._checkBusinessErrorException(errors);
+      const businessErrorException = await this._checkBusinessErrorException(errors);
       if (businessErrorException) {
         return businessErrorException;
       } else {
+        const localizedValidationFailed = await this.localizationStringsService.getMessage('validation.VALIDATION_FAILED');
         return new BadRequestException({
-          message: 'Validation failed',
+          message: localizedValidationFailed || 'Validation failed',
           errors,
         });
       }
     };
   }
 
-  // MARK: - Private Methods
-  
-  _checkBusinessErrorException(
+  async _checkBusinessErrorException(
     errors: {
       property: string;
       constraints: string[];
@@ -56,14 +49,15 @@ export class CustomValidationPipe extends ValidationPipe {
     );
 
     if (emailError) {
+      const localizedErrorMsg = await this.localizationStringsService.getAuthMessage('auth.ERROR_INCORRECT_EMAIL');
       return new BusinessErrorException({
         errorSubCode: ErrorSubCodes.INCORRECT_EMAIL,
-        errorMsg: "Email is incorrect",
+        errorMsg: localizedErrorMsg || "Email is incorrect",
         errorFields: [{
           fieldCode: "email",
-          errorMsg: "Email isnt email pls check"
-        }]
+          errorMsg: localizedErrorMsg || "Email isn't valid, please check",
+        }],
       });
-    };
+    }
   }
 }

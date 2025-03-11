@@ -17,6 +17,8 @@ import { CompanyModule } from 'src/app.modules/company/company.module';
 import { CuppingModule } from 'src/app.modules/cupping/cupping.module';
 import { TestingModule } from '@nestjs/testing';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
+import { ErrorHandlingService } from 'src/app.services/services/error-handling.service';
+import { LocalizationStringsService } from 'src/app.services/services/localization-strings-service';
 
 @Module({
   imports: [
@@ -53,9 +55,13 @@ import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
     UserModule,
   ],
   controllers: [],
-  providers: [{
-    provide: APP_GUARD,
-    useClass: AtGuard,
-  }],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AtGuard,
+    },
+    LocalizationStringsService,
+    ErrorHandlingService,
+  ],
 })
 export class AppModule { }
