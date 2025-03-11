@@ -7,13 +7,15 @@ import { ITokensResponse } from 'src/app.common/dto';
 import { JWTSessionService } from 'src/app.services/jwt-session/jwt-session.service';
 import { MailService } from 'src/app.services/mail/mail.service';
 import { BusinessErrorException, ErrorSubCodes } from 'src/app.common/exceptions';
+import { LocalizationStringsService } from 'src/app.services/services/localization-strings-service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtSessionService: JWTSessionService,
-    private mailService: MailService
+    private mailService: MailService,
+    private localizationStringsService: LocalizationStringsService
   ) { }
 
   async signUpLocal(dto: AuthRequestDto): Promise<IStatusResponse> {
@@ -136,6 +138,10 @@ export class AuthService {
       where: { email: dto.email },
       include: { sessions: true, currentCompany: true },
     });
+
+    this.localizationStringsService.setLanguage('ru')
+    const text = await this.localizationStringsService.getAuthMessage('auth.errorUserAlreadyExists');
+    console.log(text);
 
     if (!user) {
       throw new BusinessErrorException({

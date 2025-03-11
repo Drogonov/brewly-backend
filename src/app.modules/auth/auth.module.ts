@@ -6,10 +6,11 @@ import { AtStrategy, RtStrategy } from './strategies';
 import { ConfigurationService } from 'src/app.services/config/configuration.service';
 import { JWTSessionService } from 'src/app.services//jwt-session/jwt-session.service';
 import { MailService } from 'src/app.services/mail/mail.service';
+import { LocalizationStringsService } from 'src/app.services/services/localization-strings-service';
 
 @Module({
   imports: [JwtModule.register({})],
   controllers: [AuthController],
-  providers: [AuthService, AtStrategy, RtStrategy, ConfigurationService, JWTSessionService, MailService],
+  providers: [AuthService, AtStrategy, RtStrategy, ConfigurationService, JWTSessionService, MailService, LocalizationStringsService],
 })
 export class AuthModule {}

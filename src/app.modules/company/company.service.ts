@@ -8,8 +8,8 @@ import {
   StatusType
 } from './dto';
 import { Company, Role } from '@prisma/client';
-import { MappingService } from 'src/app.common/services/mapping.service';
-import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
+import { MappingService } from 'src/app.services/services/mapping.service';
+import { CompanyRulesService } from 'src/app.services/services/company-rules.service';
 
 @Injectable()
 export class CompanyService {

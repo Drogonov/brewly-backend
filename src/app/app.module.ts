@@ -16,6 +16,7 @@ import { UserModule } from 'src/app.modules/user/user.module';
 import { CompanyModule } from 'src/app.modules/company/company.module';
 import { CuppingModule } from 'src/app.modules/cupping/cupping.module';
 import { TestingModule } from '@nestjs/testing';
+import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 
 @Module({
   imports: [
@@ -25,6 +26,17 @@ import { TestingModule } from '@nestjs/testing';
       isGlobal: true,
       load: [configuration],
       validationSchema,
+    }),
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: `${process.cwd()}/src/i18n/`,
+        watch: true,
+      },
+      resolvers: [
+        { use: QueryResolver, options: ['lang'] },
+        AcceptLanguageResolver,
+      ],
     }),
     ConfigurationModule,
     JWTSessionModule,
