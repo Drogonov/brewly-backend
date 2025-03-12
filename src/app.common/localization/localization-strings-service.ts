@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { AuthKeys } from './generated/auth.enum';
+import { LocalizationKey } from './generated/localization-key.enum';
+import { BusinessErrorKeys } from './generated/business-error.enum';
+import { ValidationErrorKeys } from './generated/validation-error.enum';
 
 @Injectable()
 export class LocalizationStringsService {
@@ -16,15 +19,15 @@ export class LocalizationStringsService {
     return this.currentLang;
   }
 
-  /**
-   * Retrieves a localized message for the app modules.
-   * @param key The message key defined in your translation file (e.g., "errorUserAlreadyExists").
-   * @returns The localized message string.
-   */
-  async getAuthMessage(key: AuthKeys): Promise<string> {
-    return this.i18n.translate(`auth.${key}`, { lang: this.currentLang });
+  async getAuthText(key: AuthKeys): Promise<string> {
+    return this.i18n.translate(`${LocalizationKey.auth}.${key}`, { lang: this.currentLang });
   }
 
+  async getBusinessErrorText(key: BusinessErrorKeys): Promise<string> {
+    return this.i18n.translate(`${LocalizationKey.businessError}.${key}`, { lang: this.currentLang });
+  }
 
+  async getValidationErrorText(key: ValidationErrorKeys): Promise<string> {
+    return this.i18n.translate(`${LocalizationKey.validationError}.${key}`, { lang: this.currentLang });
+  }
 }
-
