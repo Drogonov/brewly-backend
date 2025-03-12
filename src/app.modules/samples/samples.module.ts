@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigurationService } from 'src/app.services/config/configuration.service';
+import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 import { SamplesController } from './samples.controller';
 import { SamplesService } from './samples.service';
 

@@ -1,6 +1,6 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { LocalizationStringsService } from 'src/app.common/services/localization-strings-service';
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
 import { IErrorResponse } from 'src/app.common/dto';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 
@@ -35,9 +35,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // Use error handling service to get localized error message if available.
     if (errorResponse.errorSubCode) {
-      const localizedMessage = await this.errorHandlingService.getLocalizedErrorMessage(errorResponse.errorSubCode);
-      if (localizedMessage) {
-        errorResponse.errorMsg = localizedMessage;
+      try {
+        const localizedMessage = await this.errorHandlingService.getLocalizedErrorMessage(errorResponse.errorSubCode);
+        if (localizedMessage) {
+          errorResponse.errorMsg = localizedMessage;
+        }
+      } catch (localizationError) {
+        // Log localization error but proceed with original error message
+        this.logger.error('Localization failed', localizationError);
       }
     }
 

@@ -1,6 +1,7 @@
 import { ArgumentMetadata, BadRequestException, Injectable, ValidationPipe, ValidationError } from '@nestjs/common';
 import { BusinessErrorException, ErrorSubCodes } from './exceptions';
-import { LocalizationStringsService } from 'src/app.common/services/localization-strings-service';
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
+import { AuthKeys } from '../localization/generated/auth.enum';
 
 @Injectable()
 export class CustomValidationPipe extends ValidationPipe {
@@ -26,7 +27,8 @@ export class CustomValidationPipe extends ValidationPipe {
       if (businessErrorException) {
         return businessErrorException;
       } else {
-        const localizedValidationFailed = await this.localizationStringsService.getMessage('validation.VALIDATION_FAILED');
+        const localizedValidationFailed = ""
+        // const localizedValidationFailed = await this.localizationStringsService.getMessage('validation.VALIDATION_FAILED');
         return new BadRequestException({
           message: localizedValidationFailed || 'Validation failed',
           errors,
@@ -49,7 +51,13 @@ export class CustomValidationPipe extends ValidationPipe {
     );
 
     if (emailError) {
-      const localizedErrorMsg = await this.localizationStringsService.getAuthMessage('auth.ERROR_INCORRECT_EMAIL');
+      let localizedErrorMsg = '';
+      try {
+        localizedErrorMsg = await this.localizationStringsService.getAuthMessage(AuthKeys.UserNotFound);
+      } catch (err) {
+        // Fallback if localization fails
+        localizedErrorMsg = '';
+      }
       return new BusinessErrorException({
         errorSubCode: ErrorSubCodes.INCORRECT_EMAIL,
         errorMsg: localizedErrorMsg || "Email is incorrect",

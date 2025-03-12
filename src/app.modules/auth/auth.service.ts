@@ -7,7 +7,7 @@ import { ITokensResponse } from 'src/app.common/dto';
 import { JWTSessionService } from 'src/app.common/services/jwt-session/jwt-session.service';
 import { MailService } from 'src/app.common/services/mail/mail.service';
 import { BusinessErrorException, ErrorSubCodes } from 'src/app.common/error-handling/exceptions';
-import { LocalizationStringsService } from 'src/app.common/services/localization-strings-service';
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
 
 @Injectable()
 export class AuthService {
@@ -140,7 +140,8 @@ export class AuthService {
     });
 
     this.localizationStringsService.setLanguage('ru')
-    const text = await this.localizationStringsService.getAuthMessage('auth.errorUserAlreadyExists');
+    // const text = await this.localizationStringsService.getAuthMessage('auth.errorUserAlreadyExists');
+    const text = "await this.localizationStringsService.getAuthMessage('auth.errorUserAlreadyExists');";
     console.log(text);
 
     if (!user) {

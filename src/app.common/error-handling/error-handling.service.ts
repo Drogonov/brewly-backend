@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { LocalizationStringsService } from 'src/app.common/services/localization-strings-service';
-import { ErrorSubCodes } from 'src/app.common/error-handling/exceptions';
-
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
+import { ErrorSubCodes, ErrorSubCodeType } from 'src/app.common/error-handling/exceptions';
 
 @Injectable()
 export class ErrorHandlingService {
-  constructor(private readonly localizationStringsService: LocalizationStringsService) {}
+  constructor(
+    private readonly localizationStringsService: LocalizationStringsService
+  ) {}
 
   /**
    * Given an error subcode, returns a localized error message.
@@ -13,11 +14,18 @@ export class ErrorHandlingService {
    */
   async getLocalizedErrorMessage(errorSubCode: string): Promise<string> {
     try {
-      const localized = await this.localizationStringsService.getAuthMessage(`auth.${errorSubCode}`);
+      // const localized = await this.localizationStringsService.getAuthMessage(`auth.${errorSubCode}`);
+      const localized = "";
+
       return localized || '';
     } catch (err) {
       // Fallback to empty string if localization fails
       return '';
     }
+  }
+
+  async getLocalizedErrorMessageType(errorSubCodeType: ErrorSubCodeType): Promise<string> {
+    return errorSubCodeType
+
   }
 }

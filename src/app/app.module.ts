@@ -18,7 +18,7 @@ import { CuppingModule } from 'src/app.modules/cupping/cupping.module';
 import { TestingModule } from '@nestjs/testing';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
-import { LocalizationStringsService } from 'src/app.common/services/localization-strings-service';
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
 
 @Module({
   imports: [
