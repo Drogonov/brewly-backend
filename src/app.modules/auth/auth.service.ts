@@ -7,8 +7,6 @@ import { ITokensResponse } from 'src/app.common/dto';
 import { JWTSessionService } from 'src/app.common/services/jwt-session/jwt-session.service';
 import { MailService } from 'src/app.common/services/mail/mail.service';
 import { BusinessErrorException, ErrorSubCode } from 'src/app.common/error-handling/exceptions';
-import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
-import { AuthKeys, Languages } from 'src/app.common/localization/generated';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +14,6 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtSessionService: JWTSessionService,
     private mailService: MailService,
-    private localizationStringsService: LocalizationStringsService
   ) { }
 
   async signUpLocal(dto: AuthRequestDto): Promise<IStatusResponse> {
