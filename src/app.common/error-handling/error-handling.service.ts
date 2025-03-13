@@ -22,7 +22,7 @@ export class ErrorHandlingService {
     const errorFields: ErrorFieldResponseDto[] = await Promise.all(
       errors.map(async (error) => ({
         fieldCode: error.errorFieldsCode,
-        errorMsg: await this.localizationStringsService.getValidationErrorText(error.errorSubCode as any),
+        errorMsg: await this.localizationStringsService.getValidationErrorText(error.validationErrorKey),
       }))
     );
   

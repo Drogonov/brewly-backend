@@ -142,7 +142,7 @@ export class AuthService {
 
     if (!user) {
       throw new BusinessErrorException({
-        errorSubCode: ErrorSubCode.USER_DOESNT_EXIST,
+        errorSubCode: ErrorSubCode.VALIDATION_ERROR,
         errorFields: [{ fieldCode: 'email', errorMsg: 'Cannot find such user' }],
       });
     }

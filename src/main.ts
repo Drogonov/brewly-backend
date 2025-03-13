@@ -3,7 +3,6 @@ import { AppModule } from './app/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 import { CustomValidationPipe } from 'src/app.common/error-handling/custom-validation-pipe';
-// import { AllExceptionsFilter } from 'src/app.common/error-handling/exceptions/all-exceptions.filter';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 
@@ -15,9 +14,6 @@ async function bootstrap() {
 
   // Use our custom validation pipe globally.
   app.useGlobalPipes(new CustomValidationPipe(errorHandlingService));
-
-  // Use our global exception filter.
-  // app.useGlobalFilters(new AllExceptionsFilter(localizationService, errorHandlingService));
 
   if (configService.getAppPort() !== 'production') {
     const config = new DocumentBuilder()

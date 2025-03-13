@@ -1,7 +1,7 @@
+import { ValidationErrorKeys } from "src/app.common/localization/generated"
 import { ErrorFieldCodeType } from "./error-fieldcodes"
-import { ErrorSubCodeType } from "./error-subcodes"
 
 export interface ValidationErrorCodes {
-  errorSubCode: ErrorSubCodeType
   errorFieldsCode: ErrorFieldCodeType
+  validationErrorKey: ValidationErrorKeys
 } 

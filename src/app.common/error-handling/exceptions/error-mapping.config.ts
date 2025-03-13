@@ -1,7 +1,11 @@
-import { ErrorSubCode, ErrorSubCodeType } from "./error-subcodes";
+import { ValidationErrorKeys } from "src/app.common/localization/generated";
+import { ErrorFieldCodeType } from "./error-fieldcodes";
 
-export const constraintToErrorMapping: Record<string, ErrorSubCodeType> = {
-    isEmail: ErrorSubCode.INCORRECT_EMAIL,
-    minLength: ErrorSubCode.INCORRECT_PASSWORD,
-    // add more mappings as needed
-  };
+export const constraintToErrorMapping: Record<ErrorFieldCodeType, Record<string, ValidationErrorKeys>> = {
+  email: {
+    isEmail: ValidationErrorKeys.INCORRECT_EMAIL,
+  },
+  password: {
+    minLength: ValidationErrorKeys.INCORRECT_PASSWORD,
+  },
+};
