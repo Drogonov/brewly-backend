@@ -1,17 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
-import { AuthKeys } from './generated/auth.enum';
-import { LocalizationKey } from './generated/localization-key.enum';
-import { BusinessErrorKeys } from './generated/business-error.enum';
-import { ValidationErrorKeys } from './generated/validation-error.enum';
+import { AuthKeys, BusinessErrorKeys, Languages, LocalizationKey, ValidationErrorKeys } from './generated';
 
 @Injectable()
 export class LocalizationStringsService {
-  private currentLang: string = 'en';
 
-  constructor(private readonly i18n: I18nService) {}
+  // MARK: Private Methods
 
-  setLanguage(lang: string): void {
+  private currentLang: Languages = Languages.en;
+
+  // MARK: Construction
+
+  constructor(
+    private readonly i18n: I18nService
+  ) {}
+
+  // MARK: Methods
+
+  setLanguage(lang: Languages): void {
     this.currentLang = lang;
   }
 

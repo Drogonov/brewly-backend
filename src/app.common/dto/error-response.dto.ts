@@ -10,7 +10,7 @@ export interface IErrorFieldResponse {
 export interface IErrorResponse {
     errorMsg?: string;
     errorSubCode: string;
-    errorFields?: [IErrorFieldResponse];
+    errorFields?: IErrorFieldResponse[];
 };
 
 // MARK: - Swagger class
@@ -40,5 +40,5 @@ export class ErrorResponseDto implements IErrorResponse {
             errorMsg: "This email isnt email please check it"
         }]
     })
-    errorFields?: [ErrorFieldResponseDto];
+    errorFields?: ErrorFieldResponseDto[];
 }

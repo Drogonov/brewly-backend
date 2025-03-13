@@ -6,8 +6,9 @@ import { AuthRequestDto, IStatusResponse, OTPRequestDto, StatusResponseDto, Stat
 import { ITokensResponse } from 'src/app.common/dto';
 import { JWTSessionService } from 'src/app.common/services/jwt-session/jwt-session.service';
 import { MailService } from 'src/app.common/services/mail/mail.service';
-import { BusinessErrorException, ErrorSubCodes } from 'src/app.common/error-handling/exceptions';
+import { BusinessErrorException, ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
+import { AuthKeys, Languages } from 'src/app.common/localization/generated';
 
 @Injectable()
 export class AuthService {
@@ -70,7 +71,7 @@ export class AuthService {
         error.code === 'P2002'
       ) {
         throw new BusinessErrorException({
-          errorSubCode: ErrorSubCodes.USER_ALREADY_EXIST,
+          errorSubCode: ErrorSubCode.USER_ALREADY_EXIST,
           errorFields: [
             {
               fieldCode: 'email',
@@ -90,7 +91,7 @@ export class AuthService {
 
     if (!user || !await argon.verify(user.otpHash, dto.otp)) {
       throw new BusinessErrorException({
-        errorSubCode: ErrorSubCodes.INCORRECT_OTP,
+        errorSubCode: ErrorSubCode.INCORRECT_OTP,
         errorMsg: 'Incorrect OTP, please try again',
       });
     }
@@ -114,7 +115,7 @@ export class AuthService {
       const passwordMatches = await argon.verify(user.hash, dto.password);
       if (!passwordMatches) {
         throw new BusinessErrorException({
-          errorSubCode: ErrorSubCodes.INCORRECT_PASSWORD,
+          errorSubCode: ErrorSubCode.INCORRECT_PASSWORD,
           errorFields: [
             { fieldCode: 'password', errorMsg: 'Incorrect password' },
           ],
@@ -139,21 +140,16 @@ export class AuthService {
       include: { sessions: true, currentCompany: true },
     });
 
-    this.localizationStringsService.setLanguage('ru')
-    // const text = await this.localizationStringsService.getAuthMessage('auth.errorUserAlreadyExists');
-    const text = "await this.localizationStringsService.getAuthMessage('auth.errorUserAlreadyExists');";
-    console.log(text);
-
     if (!user) {
       throw new BusinessErrorException({
-        errorSubCode: ErrorSubCodes.USER_DOESNT_EXIST,
+        errorSubCode: ErrorSubCode.USER_DOESNT_EXIST,
         errorFields: [{ fieldCode: 'email', errorMsg: 'Cannot find such user' }],
       });
     }
 
     if (!user.isVerificated) {
       throw new BusinessErrorException({
-        errorSubCode: ErrorSubCodes.USER_NOT_VERIFIED,
+        errorSubCode: ErrorSubCode.USER_NOT_VERIFIED,
         errorMsg: 'User is not verified. Please complete the registration process.',
       });
     }
@@ -161,7 +157,7 @@ export class AuthService {
     const passwordMatches = await argon.verify(user.hash, dto.password);
     if (!passwordMatches) {
       throw new BusinessErrorException({
-        errorSubCode: ErrorSubCodes.INCORRECT_PASSWORD,
+        errorSubCode: ErrorSubCode.INCORRECT_PASSWORD,
         errorFields: [{ fieldCode: 'password', errorMsg: 'Incorrect password' }],
       });
     }

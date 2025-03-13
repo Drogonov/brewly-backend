@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as sgMail from '@sendgrid/mail';
-import { BusinessErrorException, ErrorSubCodes } from 'src/app.common/error-handling/exceptions';
+import { BusinessErrorException, ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 
 @Injectable()
@@ -37,7 +37,7 @@ export class MailService {
       await sgMail.send(msg);
     } catch (error) {
       throw new BusinessErrorException({
-        errorSubCode: ErrorSubCodes.CANT_DELIVER_VERIFICATION_EMAIL,
+        errorSubCode: ErrorSubCode.CANT_DELIVER_VERIFICATION_EMAIL,
         errorMsg: "Cant deliver verification email pls try again later or use other email"
       });
     }

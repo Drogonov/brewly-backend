@@ -1,11 +1,14 @@
 import { ArgumentMetadata, BadRequestException, Injectable, ValidationPipe, ValidationError } from '@nestjs/common';
-import { BusinessErrorException, ErrorSubCodes } from './exceptions';
+import { BusinessErrorException, ErrorFieldCodeType, ErrorFieldCode, ErrorSubCodeType, ErrorSubCode, ValidationErrorCodes, constraintToErrorMapping } from './exceptions';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
 import { AuthKeys } from '../localization/generated/auth.enum';
+import { ErrorHandlingService } from './error-handling.service';
 
 @Injectable()
 export class CustomValidationPipe extends ValidationPipe {
-  constructor(private readonly localizationStringsService: LocalizationStringsService) {
+  constructor(
+    private readonly errorHandlingService: ErrorHandlingService
+  ) {
     super({
       whitelist: true,
       forbidNonWhitelisted: true,
@@ -15,57 +18,58 @@ export class CustomValidationPipe extends ValidationPipe {
 
   override createExceptionFactory() {
     return async (validationErrors: ValidationError[] = []) => {
-      const errors = validationErrors.map((error) => {
-        const constraints = Object.values(error.constraints || {});
-        return {
-          property: error.property,
-          constraints,
-        };
-      });
+      const errorProperties = validationErrors.map((error) => error.property);
+      const validationError = await this._validationFieldErrors(errorProperties);
 
-      const businessErrorException = await this._checkBusinessErrorException(errors);
-      if (businessErrorException) {
-        return businessErrorException;
+      console.log(validationErrors);
+
+      if (validationError) {
+        return validationError;
       } else {
-        const localizedValidationFailed = ""
-        // const localizedValidationFailed = await this.localizationStringsService.getMessage('validation.VALIDATION_FAILED');
         return new BadRequestException({
-          message: localizedValidationFailed || 'Validation failed',
-          errors,
+          message: `Validation failed in ${errorProperties.join(', ')}`,
+          validationErrors,
         });
       }
     };
   }
 
-  async _checkBusinessErrorException(
-    errors: {
-      property: string;
-      constraints: string[];
-    }[]
-  ) {
-    const emailError = errors.find(
-      (error) =>
-        error.property === 'email' &&
-        error.constraints &&
-        Object.values(error.constraints).length > 0
+  async _validationFieldErrors(fields: string[]): Promise<BusinessErrorException | null> {
+    const fieldCodes: ErrorFieldCodeType[] = fields.filter(
+      (field): field is ErrorFieldCodeType => Object.values(ErrorFieldCode).includes(field as ErrorFieldCodeType)
     );
 
-    if (emailError) {
-      let localizedErrorMsg = '';
-      try {
-        localizedErrorMsg = await this.localizationStringsService.getAuthMessage(AuthKeys.UserNotFound);
-      } catch (err) {
-        // Fallback if localization fails
-        localizedErrorMsg = '';
-      }
-      return new BusinessErrorException({
-        errorSubCode: ErrorSubCodes.INCORRECT_EMAIL,
-        errorMsg: localizedErrorMsg || "Email is incorrect",
-        errorFields: [{
-          fieldCode: "email",
-          errorMsg: localizedErrorMsg || "Email isn't valid, please check",
-        }],
-      });
+    if (fieldCodes.length === 0) {
+      return null;
+    }
+  
+    const validationErrorCodes: ValidationErrorCodes[] = await Promise.all(
+      fieldCodes.map(async (fieldCode) => ({
+        errorSubCode: await this._getErrorSubCodeForField(fieldCode),
+        errorFieldsCode: fieldCode
+      }))
+    );
+
+    return await this.errorHandlingService.getValidationError(validationErrorCodes);  
+  }
+
+  async _getErrorSubCodeForField(field: ErrorFieldCodeType, constraintKey?: string): Promise<ErrorSubCodeType> {
+    switch (field) {
+      case ErrorFieldCode.email:
+        return ErrorSubCode.INCORRECT_EMAIL;
+
+      case ErrorFieldCode.password:
+        return ErrorSubCode.INCORRECT_PASSWORD;
+
+      default:
+        return ErrorSubCode.VALIDATION_ERROR;
     }
   }
+
+  // async _getErrorSubCodeForError(field: ErrorFieldCodeType, constraintKey?: string): Promise<ErrorSubCodeType> {
+  //   if (constraintKey && constraintToErrorMapping[constraintKey]) {
+  //     return constraintToErrorMapping[constraintKey];
+  //   }
+  //   return ErrorSubCode.VALIDATION_ERROR;
+  // }
 }

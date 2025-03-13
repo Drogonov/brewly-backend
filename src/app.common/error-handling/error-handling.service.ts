@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
-import { ErrorSubCodes, ErrorSubCodeType } from 'src/app.common/error-handling/exceptions';
+import { ErrorFieldCodeType, ValidationErrorCodes, BusinessErrorException, ErrorSubCodeType, ErrorSubCode } from './exceptions';
+import { ErrorFieldResponseDto } from '../dto';
 
 @Injectable()
 export class ErrorHandlingService {
@@ -8,24 +9,26 @@ export class ErrorHandlingService {
     private readonly localizationStringsService: LocalizationStringsService
   ) {}
 
-  /**
-   * Given an error subcode, returns a localized error message.
-   * Assumes that your localization keys follow a pattern (e.g., "auth.ERROR_INCORRECT_EMAIL").
-   */
-  async getLocalizedErrorMessage(errorSubCode: string): Promise<string> {
-    try {
-      // const localized = await this.localizationStringsService.getAuthMessage(`auth.${errorSubCode}`);
-      const localized = "";
-
-      return localized || '';
-    } catch (err) {
-      // Fallback to empty string if localization fails
-      return '';
-    }
+  async getBusinessError(errorSubCode: ErrorSubCodeType): Promise<BusinessErrorException> {
+    // Cast errorSubCode to any (or to BusinessErrorKeys if you’re sure it’s valid) for localization
+    const errorMsg = await this.localizationStringsService.getBusinessErrorText(errorSubCode as any);
+    return new BusinessErrorException({
+      errorSubCode,
+      errorMsg,
+    });
   }
 
-  async getLocalizedErrorMessageType(errorSubCodeType: ErrorSubCodeType): Promise<string> {
-    return errorSubCodeType
-
+  async getValidationError(errors: ValidationErrorCodes[]): Promise<BusinessErrorException> {
+    const errorFields: ErrorFieldResponseDto[] = await Promise.all(
+      errors.map(async (error) => ({
+        fieldCode: error.errorFieldsCode,
+        errorMsg: await this.localizationStringsService.getValidationErrorText(error.errorSubCode as any),
+      }))
+    );
+  
+    return new BusinessErrorException({
+      errorSubCode: ErrorSubCode.VALIDATION_ERROR,
+      errorFields,
+    });
   }
 }

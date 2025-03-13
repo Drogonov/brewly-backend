@@ -13,7 +13,7 @@ import {
 import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
 import { FriendshipType, Role, TeamInvitationType, User } from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
-import { BusinessErrorException, ErrorSubCodes } from 'src/app.common/error-handling/exceptions';
+import { BusinessErrorException, ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 
 @Injectable()
 export class SettingsService {
@@ -148,7 +148,7 @@ export class SettingsService {
 
     if (!company) {
       throw new BusinessErrorException({
-        errorSubCode: ErrorSubCodes.COMPANY_NOT_FOUND,
+        errorSubCode: ErrorSubCode.COMPANY_NOT_FOUND,
         errorMsg: 'Company not found',
       });
     }

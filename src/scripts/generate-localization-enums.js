@@ -1,8 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-// Input directory with your English localization JSON files
+// Input directory with your localization JSON files (English)
 const inputDir = path.join(__dirname, '..', 'i18n', 'en');
+// Base i18n directory to look for languages (e.g. "en", "ru", etc.)
+const i18nDir = path.join(__dirname, '..', 'i18n');
 // Output directory for the generated enums
 const outputDir = path.join(__dirname, '..', 'app.common', 'localization', 'generated');
 
@@ -13,12 +15,10 @@ if (!fs.existsSync(outputDir)) {
 
 // Helper to convert a string to PascalCase
 const toPascalCase = (str) =>
-  str
-    .replace(/(^\w|[-_]\w)/g, (match) => match.replace(/[-_]/, '').toUpperCase());
+  str.replace(/(^\w|[-_]\w)/g, (match) => match.replace(/[-_]/, '').toUpperCase());
 
 // Helper to decide how to generate enum property names for keys in per‑file enums
 const toEnumProperty = (str) => {
-  // If the key is already in all uppercase and contains underscores, keep it unchanged.
   if (str === str.toUpperCase() && str.includes('_')) {
     return str;
   }
@@ -34,8 +34,9 @@ const toCamelCase = (str) => {
 // Get all JSON files in the input directory
 const files = fs.readdirSync(inputDir).filter(file => file.endsWith('.json'));
 
-// Array to collect base file names for the LocalizationKey enum
+// Arrays to collect file names and generated enum file names
 const fileNames = [];
+const generatedEnumFiles = [];
 
 files.forEach(file => {
   const filePath = path.join(inputDir, file);
@@ -47,36 +48,28 @@ files.forEach(file => {
     return;
   }
 
-  // Get all keys from the JSON file
   const keys = Object.keys(jsonData);
-
-  // Store the base file name (e.g. "auth", "business-error", etc.)
   const baseName = path.basename(file, '.json');
   fileNames.push(baseName);
 
-  // Generate an enum name based on the file name (e.g., auth.json => AuthKeys)
   const enumName = `${toPascalCase(baseName)}Keys`;
-
-  // Generate enum entries: convert each key to proper enum property
   const enumEntries = keys
     .map(key => `  ${toEnumProperty(key)} = '${key}'`)
     .join(',\n');
 
-  // Compose the complete enum content
   const enumContent = `// This file is auto-generated. Do not edit manually.
 export enum ${enumName} {
 ${enumEntries}
 }
 `;
-
-  // Write the generated enum file to the output directory
   const outputFilePath = path.join(outputDir, `${baseName}.enum.ts`);
   fs.writeFileSync(outputFilePath, enumContent, 'utf8');
   console.log(`${enumName} generated with ${keys.length} keys at ${outputFilePath}`);
+
+  generatedEnumFiles.push(`${baseName}.enum`);
 });
 
 // Generate the LocalizationKey enum using file names
-// The key is generated as camelCase, while the value remains the original file name.
 const localizationEnumEntries = fileNames
   .map(name => `  ${toCamelCase(name)} = '${name}'`)
   .join(',\n');
@@ -86,8 +79,36 @@ export enum LocalizationKey {
 ${localizationEnumEntries}
 }
 `;
-
-// Write the LocalizationKey enum file
 const localizationEnumPath = path.join(outputDir, 'localization-key.enum.ts');
 fs.writeFileSync(localizationEnumPath, localizationEnumContent, 'utf8');
 console.log(`LocalizationKey enum generated with ${fileNames.length} entries at ${localizationEnumPath}`);
+generatedEnumFiles.push('localization-key.enum');
+
+// Generate the Languages enum from directories in i18n folder
+const languages = fs.readdirSync(i18nDir, { withFileTypes: true })
+  .filter(dirent => dirent.isDirectory())
+  .map(dirent => dirent.name)
+  .sort(); // Optional: sort the languages alphabetically
+
+const languagesEnumEntries = languages
+  .map(lang => `  ${lang} = '${lang}'`)
+  .join(',\n');
+
+const languagesEnumContent = `// This file is auto-generated. Do not edit manually.
+export enum Languages {
+${languagesEnumEntries}
+}
+`;
+const languagesEnumPath = path.join(outputDir, 'languages.enum.ts');
+fs.writeFileSync(languagesEnumPath, languagesEnumContent, 'utf8');
+console.log(`Languages enum generated with ${languages.length} entries at ${languagesEnumPath}`);
+generatedEnumFiles.push('languages.enum');
+
+// Generate the index.ts file re-exporting all generated enums
+const indexContent = generatedEnumFiles
+  .map(file => `export * from './${file}';`)
+  .join('\n') + '\n';
+
+const indexFilePath = path.join(outputDir, 'index.ts');
+fs.writeFileSync(indexFilePath, indexContent, 'utf8');
+console.log(`Index file generated at ${indexFilePath}`);
