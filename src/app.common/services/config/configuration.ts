@@ -10,5 +10,8 @@ export const configuration = () => ({
     jwt: {
         at: process.env.AT_SECRET,
         rt: process.env.RT_SECRET
-    }
+    },
+    otp: {
+        dev: process.env.OTP_DEV || "666666",
+      },
 });

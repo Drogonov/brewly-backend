@@ -5,6 +5,10 @@ import { ConfigService } from '@nestjs/config';
 export class ConfigurationService {
     constructor(private configService: ConfigService) { }
 
+    getEnv(): string {
+        return this.configService.get('env');
+      }
+
     getDatabaseURL(): string {
         return this.configService.get('db.url');;
     }
@@ -23,5 +27,9 @@ export class ConfigurationService {
 
     getRefreshTokenSecret():string {
         return this.configService.get('jwt.rt')
+    }
+
+    getOtpDevCode(): string {
+        return this.configService.get('otp.dev') || "666666";
     }
 }

@@ -6,20 +6,37 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-
-import { Public, GetCurrentUserId, GetCurrentUser } from 'src/app.common/decorators';
+import {
+  Public,
+  GetCurrentUserId,
+  GetCurrentUser
+} from 'src/app.common/decorators';
 import { RtGuard } from 'src/app.common/guards';
 import { AuthService } from './auth.service';
-import { AuthRequestDto, OTPRequestDto, StatusResponseDto } from './dto';
-import { ErrorResponseDto, TokensResponseDto } from 'src/app.common/dto';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiUnprocessableEntityResponse } from '@nestjs/swagger';
+import {
+  AuthRequestDto,
+  OTPRequestDto,
+  StatusResponseDto
+} from './dto';
+import {
+  ErrorResponseDto,
+  TokensResponseDto
+} from 'src/app.common/dto';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnprocessableEntityResponse
+} from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Public()
-  @Post('local/signUp')
+  @Post('local/sign-up')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Sign up with email and password' })
   @ApiOkResponse({ description: 'Returns status if successful', type: StatusResponseDto })
@@ -29,7 +46,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('local/verifyOTP')
+  @Post('local/verify-otp')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify OTP and authenticate user' })
   @ApiOkResponse({ description: 'Returns access and refresh tokens', type: TokensResponseDto })
@@ -39,7 +56,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('local/resendOTP')
+  @Post('local/resend-otp')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Resend OTP and update it for user' })
   @ApiOkResponse({ description: 'Returns operation status', type: StatusResponseDto })
@@ -49,7 +66,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('local/signIn')
+  @Post('local/sign-in')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Sign in with email and password' })
   @ApiOkResponse({ description: 'Returns access and refresh tokens', type: TokensResponseDto })
@@ -60,7 +77,7 @@ export class AuthController {
 
   @Public()
   @UseGuards(RtGuard)
-  @Post('logout')
+  @Post('local/logout')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('refresh-token')
   @ApiOperation({ summary: 'Log out from current session' })

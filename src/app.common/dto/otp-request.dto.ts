@@ -3,13 +3,12 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class OTPRequestDto {
   @IsNotEmpty()
-  @IsString()
   @IsEmail()
-  @ApiProperty({ description: 'The users email', example: 'test@test.com' })
+  @ApiProperty({ description: 'The user\'s email', example: 'test@test.com' })
   email: string;
 
   @IsNotEmpty()
   @IsString()
-  @ApiProperty({ description: 'The users password', example: '666666' })
+  @ApiProperty({ description: 'One Time Password', example: '123456' })
   otp: string;
 }

@@ -17,8 +17,8 @@ import { CompanyModule } from 'src/app.modules/company/company.module';
 import { CuppingModule } from 'src/app.modules/cupping/cupping.module';
 import { TestingModule } from '@nestjs/testing';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
-import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
+import { ErrorHandlingModule } from 'src/app.common/error-handling/error-handling.module';
 
 @Module({
   imports: [
@@ -41,6 +41,7 @@ import { LocalizationStringsService } from 'src/app.common/localization/localiza
       ],
     }),
     ConfigurationModule,
+    ErrorHandlingModule,
     JWTSessionModule,
     MailModule,
     PrismaModule,
@@ -61,7 +62,6 @@ import { LocalizationStringsService } from 'src/app.common/localization/localiza
       useClass: AtGuard,
     },
     LocalizationStringsService,
-    ErrorHandlingService,
   ],
 })
 export class AppModule { }
