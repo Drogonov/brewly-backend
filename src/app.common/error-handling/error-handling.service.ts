@@ -11,7 +11,7 @@ export class ErrorHandlingService {
   ) {}
 
   async getBusinessError(errorSubCode: ErrorSubCodeType): Promise<BusinessErrorException> {
-    const key = await this._getBusinessErrorKey(errorSubCode);
+    const key = await this.getBusinessErrorKey(errorSubCode);
     const errorMsg = await this.localizationStringsService.getBusinessErrorText(key);
     return new BusinessErrorException({
       errorSubCode,
@@ -19,8 +19,8 @@ export class ErrorHandlingService {
     });
   }
 
-  async getForbiddenError(): Promise<ForbiddenException> {
-    const errorMsg = await this.localizationStringsService.getErrorText(ErrorsKeys.SESSION_EXPIRED);
+  async getForbiddenError(key: ErrorsKeys): Promise<ForbiddenException> {
+    const errorMsg = await this.localizationStringsService.getErrorText(key);
     return new ForbiddenException(errorMsg);
   }
 
@@ -40,15 +40,15 @@ export class ErrorHandlingService {
 
   // MARK: - Private Methods
   
-  private _getBusinessErrorKey(errorSubCode: ErrorSubCodeType): Promise<BusinessErrorKeys> {
+  private getBusinessErrorKey(errorSubCode: ErrorSubCodeType): Promise<BusinessErrorKeys> {
     return Promise.resolve(
-      this._isBusinessErrorKey(errorSubCode)
+      this.isBusinessErrorKey(errorSubCode)
         ? errorSubCode
         : BusinessErrorKeys.UNEXPECTED_ERROR
     );
   }
 
-  private _isBusinessErrorKey(key: string): key is BusinessErrorKeys {
+  private isBusinessErrorKey(key: string): key is BusinessErrorKeys {
     return Object.values(BusinessErrorKeys).includes(key as BusinessErrorKeys);
   }
 }

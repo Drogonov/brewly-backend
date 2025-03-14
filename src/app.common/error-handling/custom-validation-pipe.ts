@@ -19,7 +19,7 @@ export class CustomValidationPipe extends ValidationPipe {
 
   override createExceptionFactory() {
     return async (validationErrors: ValidationError[] = []) => {
-      const validationError = await this._validationFieldErrors(validationErrors);
+      const validationError = await this.validationFieldErrors(validationErrors);
 
       if (validationError) {
         return validationError;
@@ -33,7 +33,9 @@ export class CustomValidationPipe extends ValidationPipe {
     };
   }
 
-  async _validationFieldErrors(errors: ValidationError[]): Promise<BusinessErrorException | null> {
+  // MARK: - Private Methods
+
+  private async validationFieldErrors(errors: ValidationError[]): Promise<BusinessErrorException | null> {
     const validErrors = errors.filter((error) =>
       Object.values(ErrorFieldCode).includes(error.property as ErrorFieldCodeType)
     );
@@ -48,7 +50,7 @@ export class CustomValidationPipe extends ValidationPipe {
         const constraintKey = constraintKeys[0];
   
         const errorFieldsCode = error.property as ErrorFieldCodeType;
-        const validationErrorKey = await this._getValidationErrorKey(errorFieldsCode, constraintKey);
+        const validationErrorKey = await this.getValidationErrorKey(errorFieldsCode, constraintKey);
   
         return {
           errorFieldsCode,
@@ -60,7 +62,7 @@ export class CustomValidationPipe extends ValidationPipe {
     return await this.errorHandlingService.getValidationError(validationErrorCodes);
   }
 
-  async _getValidationErrorKey(field: ErrorFieldCodeType, constraintKey?: string): Promise<ValidationErrorKeys> {
+  private async getValidationErrorKey(field: ErrorFieldCodeType, constraintKey?: string): Promise<ValidationErrorKeys> {
     const mappingForField = constraintToErrorMapping[field];
     if (mappingForField && constraintKey && mappingForField[constraintKey]) {
       return mappingForField[constraintKey];

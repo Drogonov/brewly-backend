@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './types';
@@ -8,14 +8,17 @@ import { ITokensResponse } from 'src/app.common/dto';
 import * as argon from 'argon2';
 import { User, Session } from '@prisma/client';
 import * as ms from 'ms';
+import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
+import { ErrorsKeys } from 'src/app.common/localization/generated';
 
 @Injectable()
 export class JWTSessionService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-    private config: ConfigurationService
-  ) {}
+    private config: ConfigurationService,
+    private errorHandlingService: ErrorHandlingService
+  ) { }
 
   /**
    * Creates a new session by generating tokens, storing the hashed refresh token,
@@ -33,12 +36,15 @@ export class JWTSessionService {
     });
 
     // Cleanup expired sessions for the user
-    await this._cleanupOldSessions(user.id);
+    await this.cleanupOldSessions(user.id);
     return tokens;
   }
 
+  /**
+   * Updates the refresh token hash for an active session.
+   */
   async updateRtHash(user: User & { sessions?: Session[] }, oldRt: string, newRt: string): Promise<void> {
-    const currentSession = await this._findCurrentSession(user, oldRt);
+    const currentSession = await this.findCurrentSession(user, oldRt);
     const newHash = await argon.hash(newRt);
 
     await this.prisma.session.update({
@@ -47,23 +53,33 @@ export class JWTSessionService {
     });
   }
 
+  /**
+   * Ends the user session by deleting the corresponding session record.
+   */
   async endSession(user: User & { sessions?: Session[] }, rt: string): Promise<void> {
-    const currentSession = await this._findCurrentSession(user, rt);
+    const currentSession = await this.findCurrentSession(user, rt);
     await this.prisma.session.delete({
       where: { id: currentSession.id },
     });
   }
 
+  /**
+   * Verifies that the provided refresh token matches the stored hashed token.
+   */
   async verifyRtMatch(user: User & { sessions?: Session[] }, rt: string): Promise<boolean> {
-    const currentSession = await this._findCurrentSession(user, rt);
+    const currentSession = await this.findCurrentSession(user, rt);
     const rtMatches = await argon.verify(currentSession.hashedRt, rt);
 
     if (!rtMatches) {
-      throw new ForbiddenException('Session expired.');
+      // Throws a localized ForbiddenException (status 403)
+      throw await this.errorHandlingService.getForbiddenError(ErrorsKeys.SESSION_EXPIRED);
     }
     return rtMatches;
   }
 
+  /**
+   * Generates access and refresh tokens.
+   */
   async getTokens(userId: number, currentCompanyId: number, email: string): Promise<ITokensResponse> {
     const jwtPayload: JwtPayload = { userId, currentCompanyId, email };
 
@@ -84,29 +100,29 @@ export class JWTSessionService {
     };
   }
 
-  // Private Methods
+  // MARK: Private Methods
 
   /**
    * Finds the session corresponding to the provided refresh token.
+   * Throws a localized ForbiddenException if no session is found.
    */
-  async _findCurrentSession(user: User & { sessions?: Session[] }, rt: string): Promise<Session> {
-    // Ensure sessions exist and are non-empty
+  private async findCurrentSession(user: User & { sessions?: Session[] }, rt: string): Promise<Session> {
     if (!user || !user.sessions || user.sessions.length === 0) {
-      throw new ForbiddenException('No active sessions found.');
+      throw await this.errorHandlingService.getForbiddenError(ErrorsKeys.SESSION_EXPIRED);
     }
-  
+
     for (const session of user.sessions) {
       if (await argon.verify(session.hashedRt, rt)) {
         return session;
       }
     }
-    throw new ForbiddenException('Cannot find the matching session.');
+    throw await this.errorHandlingService.getForbiddenError(ErrorsKeys.SESSION_EXPIRED);
   }
 
   /**
    * Deletes sessions older than the refresh token expiration period.
    */
-  async _cleanupOldSessions(userId: number): Promise<void> {
+  private async cleanupOldSessions(userId: number): Promise<void> {
     const expirationTimeMs = ms(REFRESH_TOKEN_EXPIRATION);
     const expiredThreshold = new Date(Date.now() - expirationTimeMs);
 
