@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
 import { ErrorFieldCodeType, ValidationErrorCodes, BusinessErrorException, ErrorSubCodeType, ErrorSubCode } from './exceptions';
 import { ErrorFieldResponseDto } from '../dto';
-import { BusinessErrorKeys } from '../localization/generated';
+import { BusinessErrorKeys, ErrorsKeys } from '../localization/generated';
 
 @Injectable()
 export class ErrorHandlingService {
@@ -17,6 +17,11 @@ export class ErrorHandlingService {
       errorSubCode,
       errorMsg,
     });
+  }
+
+  async getForbiddenError(): Promise<ForbiddenException> {
+    const errorMsg = await this.localizationStringsService.getErrorText(ErrorsKeys.SESSION_EXPIRED);
+    return new ForbiddenException(errorMsg);
   }
 
   async getValidationError(errors: ValidationErrorCodes[]): Promise<BusinessErrorException> {

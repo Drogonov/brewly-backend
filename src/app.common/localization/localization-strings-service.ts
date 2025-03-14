@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
-import { AuthKeys, BusinessErrorKeys, Languages, LocalizationKey, ValidationErrorKeys } from './generated';
+import { AuthKeys, BusinessErrorKeys, ErrorsKeys, Languages, LocalizationKey, ValidationErrorKeys } from './generated';
 
 @Injectable()
 export class LocalizationStringsService {
@@ -31,6 +31,10 @@ export class LocalizationStringsService {
 
   async getBusinessErrorText(key: BusinessErrorKeys): Promise<string> {
     return this.i18n.translate(`${LocalizationKey.businessError}.${key}`, { lang: this.currentLang });
+  }
+
+  async getErrorText(key: ErrorsKeys): Promise<string> {
+    return this.i18n.translate(`${LocalizationKey.errors}.${key}`, { lang: this.currentLang })
   }
 
   async getValidationErrorText(key: ValidationErrorKeys): Promise<string> {
