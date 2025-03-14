@@ -1,16 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import * as sgMail from '@sendgrid/mail';
-import { BusinessErrorException, ErrorSubCode } from 'src/app.common/error-handling/exceptions';
+import sgMail from '@sendgrid/mail'
+import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
+import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 
 @Injectable()
 export class MailService {
   constructor(
-    private config: ConfigurationService
+    private config: ConfigurationService,
+    private errorHandlingService: ErrorHandlingService
   ) {
     sgMail.setApiKey(config.getEmailAPI());
   }
 
+  async sendOtpToUpdateEmail(currentEmail: string, newEmail: string, otp: string) {
+    
+  }
+  
   async sendOtpEmail(email: string, otp: string) {
     const msg = {
       to: email,
@@ -27,7 +33,7 @@ export class MailService {
           <p style="font-size: 24px; font-weight: bold; color: #F05032;">${otp}</p>
           <p style="font-size: 16px; color: #333;">Enter this verification code on our app form to get started.</p>
           <p style="font-size: 14px; color: #555;">If you didn’t request this email, please ignore it or let us know.</p>
-          <p style="font-size: 14px; color: #777;">Follow us on <a href="https://github.com/Drogonov/brewly-backend" target="_blank" style="color: #F05032; text-decoration: none;">GitHub</a></p>
+          <p style="font-size: 14px; color: #777;">Follow us on <a href=${MailServiceConst.followUsLink} target="_blank" style="color: #F05032; text-decoration: none;">GitHub</a></p>
           <p style="font-size: 12px; color: #999;">&copy; 2025 Brewly. All rights reserved.</p>
         </div>
       `
@@ -36,10 +42,11 @@ export class MailService {
     try {
       await sgMail.send(msg);
     } catch (error) {
-      throw new BusinessErrorException({
-        errorSubCode: ErrorSubCode.CANT_DELIVER_VERIFICATION_EMAIL,
-        errorMsg: "Cant deliver verification email pls try again later or use other email"
-      });
+      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.CANT_DELIVER_VERIFICATION_EMAIL);
     }
   }
 }
+
+const MailServiceConst = {
+  followUsLink: 'https://github.com/Drogonov/brewly-backend',
+} as const;

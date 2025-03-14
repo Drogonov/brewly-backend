@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
 import { ErrorFieldCodeType, ValidationErrorCodes, BusinessErrorException, ErrorSubCodeType, ErrorSubCode } from './exceptions';
 import { ErrorFieldResponseDto } from '../dto';
+import { BusinessErrorKeys } from '../localization/generated';
 
 @Injectable()
 export class ErrorHandlingService {
@@ -10,8 +11,8 @@ export class ErrorHandlingService {
   ) {}
 
   async getBusinessError(errorSubCode: ErrorSubCodeType): Promise<BusinessErrorException> {
-    // Cast errorSubCode to any (or to BusinessErrorKeys if you’re sure it’s valid) for localization
-    const errorMsg = await this.localizationStringsService.getBusinessErrorText(errorSubCode as any);
+    const key = await this._getBusinessErrorKey(errorSubCode);
+    const errorMsg = await this.localizationStringsService.getBusinessErrorText(key);
     return new BusinessErrorException({
       errorSubCode,
       errorMsg,
@@ -30,5 +31,19 @@ export class ErrorHandlingService {
       errorSubCode: ErrorSubCode.VALIDATION_ERROR,
       errorFields,
     });
+  }
+
+  // MARK: - Private Methods
+  
+  private _getBusinessErrorKey(errorSubCode: ErrorSubCodeType): Promise<BusinessErrorKeys> {
+    return Promise.resolve(
+      this._isBusinessErrorKey(errorSubCode)
+        ? errorSubCode
+        : BusinessErrorKeys.UNEXPECTED_ERROR
+    );
+  }
+
+  private _isBusinessErrorKey(key: string): key is BusinessErrorKeys {
+    return Object.values(BusinessErrorKeys).includes(key as BusinessErrorKeys);
   }
 }

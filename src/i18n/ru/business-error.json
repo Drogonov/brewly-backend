@@ -1,3 +1,13 @@
 {
-    "USER_ALREADY_EXIST": "User alredy exist"
-}
+    "USER_NOT_VERIFIED": "User not verified",
+    "USER_ALREADY_EXIST": "User already exists",
+    "USER_DOESNT_EXIST": "User doesn't exist",
+    "INCORRECT_PASSWORD": "Incorrect password",
+    "INCORRECT_EMAIL": "Incorrect email",
+    "INCORRECT_OTP": "Incorrect OTP",
+    "CANT_DELIVER_VERIFICATION_EMAIL": "Cannot deliver verification email",
+    "COMPANY_NOT_FOUND": "Company not found",
+    "VALIDATION_ERROR": "Validation error",
+    "REQUEST_VALIDATION_ERROR": "Request validation error",
+    "UNEXPECTED_ERROR": "You have some unexpected error"
+  }
