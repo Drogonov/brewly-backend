@@ -9,5 +9,6 @@
     "COMPANY_NOT_FOUND": "Company not found",
     "VALIDATION_ERROR": "Validation error",
     "REQUEST_VALIDATION_ERROR": "Request validation error",
-    "UNEXPECTED_ERROR": "You have some unexpected error"
+    "UNEXPECTED_ERROR": "You have some unexpected error",
+    "COMPANY_DELETE_DENIED": "We cant delete your company"
   }

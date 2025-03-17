@@ -1,0 +1,6 @@
+{
+  "DeleteUserCompanySuccess": "We have deleted all info about this company",
+  "ChangeCurrentCompanySuccess": "We have changed your current company",
+  "EditCompanyUpdateSuccess": "We have updated your {{ companyName }} company",
+  "EditCompanyCreateSuccess": "We have created your {{ companyName }} company"
+}

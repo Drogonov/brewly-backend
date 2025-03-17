@@ -9,7 +9,6 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { GetCurrentUserId, GetCurrentUserCompanyId } from 'src/app.common/decorators';
 import {
@@ -46,7 +45,7 @@ export class CompanyController {
   deleteCompany(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
-    @Query('companyId') companyId: number
+    @Query('companyId', ParseIntPipe) companyId: number
   ): Promise<IStatusResponse> {
     return this.companyService.deleteUserCompany(userId, currentCompanyId, companyId)
   }
@@ -58,7 +57,7 @@ export class CompanyController {
   getCompanyData(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
-    @Query('companyId') companyId: number
+    @Query('companyId', ParseIntPipe) companyId: number
   ): Promise<IGetCompanyDataResponse> {
     return this.companyService.getCompanyData(userId, currentCompanyId, companyId)
   }

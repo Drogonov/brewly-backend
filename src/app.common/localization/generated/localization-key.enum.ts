@@ -2,6 +2,10 @@
 export enum LocalizationKey {
   auth = 'auth',
   businessError = 'business-error',
+  company = 'company',
   errors = 'errors',
+  onboarding = 'onboarding',
+  settings = 'settings',
+  user = 'user',
   validationError = 'validation-error'
 }
