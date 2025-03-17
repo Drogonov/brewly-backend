@@ -7,7 +7,7 @@ import { ConfigurationService } from 'src/app.common/services/config/configurati
 import { ITokensResponse } from 'src/app.common/dto';
 import * as argon from 'argon2';
 import { User, Session } from '@prisma/client';
-import * as ms from 'ms';
+import ms from 'ms';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { ErrorsKeys } from 'src/app.common/localization/generated';
 
