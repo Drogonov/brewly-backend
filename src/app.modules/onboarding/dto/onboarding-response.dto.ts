@@ -4,12 +4,12 @@ import { IOnboardingPageResponse, OnboardingPageResponseDto } from './onboarding
 // MARK: - Project implementation
 
 export interface IOnboardingResponse {
-    pages: [IOnboardingPageResponse];
+  pages: IOnboardingPageResponse[];
 }
 
 // MARK: - Swagger class
 
 export class OnboardingResponseDto implements IOnboardingResponse {
-    @ApiProperty({ description: 'Страницы из которых состоит Онбоардинг' })
-    pages: [OnboardingPageResponseDto];
+  @ApiProperty({ description: 'Страницы из которых состоит Онбоардинг', type: [OnboardingPageResponseDto] })
+  pages: OnboardingPageResponseDto[];
 }

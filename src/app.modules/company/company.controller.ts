@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetCurrentUserId, GetCurrentUserCompanyId } from 'src/app.common/decorators';
 import {
   IGetCompanyDataResponse,
@@ -23,6 +23,8 @@ import {
 
 import { CompanyService } from './company.service';
 
+@ApiTags('company')
+@ApiBearerAuth('access-token')
 @Controller('company')
 export class CompanyController {
   constructor(private companyService: CompanyService) {}
