@@ -7,7 +7,6 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-
 import { UserService } from './user.service';
 import {
   ISearchUsersResponse,
@@ -33,9 +32,11 @@ import {
   OTPRequestDto
 } from './dto';
 import { GetCurrentUserCompanyId, GetCurrentUserId, Public } from 'src/app.common/decorators';
-import { ApiOkResponse, ApiOperation, ApiUnprocessableEntityResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags, ApiUnprocessableEntityResponse } from '@nestjs/swagger';
 import { ResendNewEmailOTPRequest } from './dto/request/resend-new-email-otp.request.dto';
 
+@ApiTags('user')
+@ApiBearerAuth('access-token')
 @Controller('user')
 export class UserController {
   constructor(private userService: UserService) { }
@@ -108,7 +109,7 @@ export class UserController {
   makeUserAction(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
-    @Query() dto: MakeUserActionRequest
+    @Body() dto: MakeUserActionRequest
   ): Promise<IStatusResponse> {
     return this.userService.makeUserAction(userId, currentCompanyId, dto);
   }
@@ -119,7 +120,7 @@ export class UserController {
   rejectUserSendedRequest(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
-    @Query() dto: RejectUserSendedRequestRequest,
+    @Body() dto: RejectUserSendedRequestRequest,
   ): Promise<IStatusResponse> {
     return this.userService.rejectUserSendedRequest(userId, currentCompanyId, dto);
   }
@@ -129,7 +130,7 @@ export class UserController {
   @ApiOkResponse({ description: 'Returns DTO with status of edit operation', type: StatusResponseDto })
   saveEditUser(
     @GetCurrentUserId() userId: number,
-    @Query() dto: SaveEditUserRequest
+    @Body() dto: SaveEditUserRequest
   ): Promise<IStatusResponse> {
     return this.userService.saveEditUser(userId, dto)
   }
@@ -153,7 +154,7 @@ export class UserController {
   @ApiUnprocessableEntityResponse({ description: 'Returns business top layer error', type: ErrorResponseDto })
   resendNewEmailOTP(
     @GetCurrentUserId() userId: number,
-    @Query() dto: ResendNewEmailOTPRequest
+    @Body() dto: ResendNewEmailOTPRequest
   ): Promise<StatusResponseDto> {
     return this.userService.resendNewEmailOTP(userId, dto.email);
   }

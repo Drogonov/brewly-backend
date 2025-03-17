@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 
 import { SettingsService } from './settings.service';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetCurrentUserId, GetCurrentUserCompanyId } from 'src/app.common/decorators';
 import {
   GetDefaultCuppingSettingsResponseDto,
@@ -27,6 +27,8 @@ import {
   GetCompanyRulesRequestDto
 } from './dto';
 
+@ApiTags('settings')
+@ApiBearerAuth('access-token')
 @Controller('settings')
 export class SettingsController {
   constructor(private settingsService: SettingsService) { }
