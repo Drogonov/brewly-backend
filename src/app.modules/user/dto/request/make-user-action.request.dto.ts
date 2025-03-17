@@ -16,5 +16,6 @@ export class MakeUserActionRequest {
 
   @ApiProperty({ example: false })
   @IsOptional()
+  @Type(() => Boolean)
   switchIsOn?: boolean;
 }

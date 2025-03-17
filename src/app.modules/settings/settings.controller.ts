@@ -46,7 +46,9 @@ export class SettingsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Save default cupping settings' })
   @ApiOkResponse({ description: 'Save new cupping settings', type: StatusResponseDto })
-  saveDefaultCuppingSettings(@Body() dto: SaveDefaultCuppingSettingsRequestDto): Promise<IStatusResponse> {
+  saveDefaultCuppingSettings(
+    @Body() dto: SaveDefaultCuppingSettingsRequestDto
+  ): Promise<IStatusResponse> {
     return this.settingsService.saveDefaultCuppingSettings(dto);
   }
 

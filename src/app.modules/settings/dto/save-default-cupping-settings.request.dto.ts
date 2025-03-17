@@ -1,5 +1,6 @@
 import { IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class SaveDefaultCuppingSettingsRequestDto {
 
@@ -9,17 +10,21 @@ export class SaveDefaultCuppingSettingsRequestDto {
 
   @IsNotEmpty()
   @ApiProperty({ example: true })
+  @Type(() => Boolean)
   randomSamplesOrder: boolean;
 
   @IsNotEmpty()
   @ApiProperty({ example: true })
+  @Type(() => Boolean)
   openSampleNameCupping: boolean;
 
   @IsNotEmpty()
   @ApiProperty({ example: true })
+  @Type(() => Boolean)
   singleUserCupping: boolean;
 
   @IsNotEmpty()
   @ApiProperty({ example: true })
+  @Type(() => Boolean)
   inviteAllTeammates: boolean;
 }
