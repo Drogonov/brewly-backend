@@ -56,34 +56,52 @@ export class UserService {
     currentCompanyId: number,
     dto: SearchUsersRequestDto,
   ): Promise<ISearchUsersResponse> {
-    if (dto.type === SearchUserType.friendsList) {
-      return await this.searchFriends(userId, dto);
-    } else {
-      return await this.searchGlobal(userId, dto);
+    switch (dto.type) {
+      case SearchUserType.friendsList:
+        return await this.searchFriends(userId, dto);
+
+      case SearchUserType.teamList:
+        return await this.searchTeam(userId, currentCompanyId, dto);
+
+      case SearchUserType.friendsGlobalSearch:
+        return await this.searchGlobal(userId, dto);
     }
   }
 
-  // Update logic so we will see changes
   async getUsersList(
     userId: number,
     currentCompanyId: number,
     type: SearchUserType,
   ): Promise<ISearchUsersResponse> {
-    const friendships = await this.prisma.friendship.findMany({
-      where: {
-        OR: [
-          { senderId: userId, type: FriendshipType.FRIEND },
-          { receiverId: userId, type: FriendshipType.FRIEND },
-        ],
-      },
-    });
-    const friendIds = friendships.map(fs =>
-      fs.senderId === userId ? fs.receiverId : fs.senderId,
-    );
-    const users = await this.prisma.user.findMany({
-      where: { id: { in: friendIds } },
-    });
-    return { users: users.map(user => this.mappingService.mapUser(user)) };
+    switch (type) {
+      case SearchUserType.friendsList:
+        const friendships = await this.prisma.friendship.findMany({
+          where: {
+            OR: [
+              { senderId: userId, type: FriendshipType.FRIEND },
+              { receiverId: userId, type: FriendshipType.FRIEND },
+            ],
+          },
+        });
+        const friendIds = friendships.map(fs =>
+          fs.senderId === userId ? fs.receiverId : fs.senderId,
+        );
+        const users = await this.prisma.user.findMany({
+          where: { id: { in: friendIds } },
+        });
+        return { users: users.map(user => this.mappingService.mapUser(user)) };
+
+      case SearchUserType.teamList:
+        const relations = await this.prisma.userToCompanyRelation.findMany({
+          where: { companyId: currentCompanyId },
+          include: { user: true },
+        });
+        const team = relations.map(relation => relation.user);
+        return { users: team.map(user => this.mappingService.mapUser(user)) };
+
+      case SearchUserType.friendsGlobalSearch:
+        return { users: [] };
+    }
   }
 
   async getUserCard(
@@ -272,7 +290,7 @@ export class UserService {
     if (!user) {
       throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
     }
-    
+
     const { otp, hashedOtp } = await this.generateOtp();
     await this.prisma.user.update({
       where: { id: userId },
@@ -310,6 +328,27 @@ export class UserService {
       },
     });
     return { users: users.map(user => this.mappingService.mapUser(user)) };
+  }
+
+  private async searchTeam(currentUserId:number, currentCompanyId: number, dto: SearchUsersRequestDto): Promise<ISearchUsersResponse> {
+    // Get all users related to the current company (team members)
+    const relations = await this.prisma.userToCompanyRelation.findMany({
+      where: { companyId: currentCompanyId },
+      include: { user: true },
+    });
+    // Filter out the current user and apply the search string filter if provided
+    const filteredUsers = relations
+      .map(relation => relation.user)
+      .filter(user => {
+        if (user.id === currentUserId) { // assuming dto.currentUserId contains the caller's id
+          return false;
+        }
+        if (!dto.searchStr) return true;
+        const searchLower = dto.searchStr.toLowerCase();
+        return (user.userName && user.userName.toLowerCase().includes(searchLower)) ||
+               (user.email && user.email.toLowerCase().includes(searchLower));
+      });
+    return { users: filteredUsers.map(user => this.mappingService.mapUser(user)) };
   }
 
   private async searchGlobal(userId: number, dto: SearchUsersRequestDto): Promise<ISearchUsersResponse> {
@@ -454,7 +493,7 @@ export class UserService {
       }
     }
     notifications.sort((a, b) => (a.notificationDate < b.notificationDate ? 1 : -1));
-    
+
     // Use Promise.all to update notifications concurrently
     await Promise.all([
       ...friendRequests.map(request =>
@@ -464,7 +503,7 @@ export class UserService {
         this.prisma.teamInvitation.update({ where: { id: request.id }, data: { wasLoadedByReceiver: true } })
       )
     ]);
-    
+
     return notifications;
   }
 
