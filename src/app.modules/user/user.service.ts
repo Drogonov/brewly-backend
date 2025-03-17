@@ -5,7 +5,6 @@ import {
   SearchUserType,
   UserActionType,
   StatusType,
-  UserNotificationType,
   StatusResponseDto,
   SearchUsersRequestDto,
   ISearchUsersResponse,
@@ -22,68 +21,53 @@ import {
   IGetUserSendedRequestResponse,
   OTPRequestDto,
 } from './dto';
-import { User, Friendship, TeamInvitation, Role as PrismaRole, Role, Prisma } from '@prisma/client';
-import { FriendshipType, TeamInvitationType } from '@prisma/client';
+import {
+  Friendship,
+  TeamInvitation,
+  Role as PrismaRole,
+  Role,
+  FriendshipType,
+  TeamInvitationType,
+} from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
-import { BusinessErrorException, ErrorSubCode } from 'src/app.common/error-handling/exceptions';
+import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
+import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
+import { UserKeys } from 'src/app.common/localization/generated/user.enum';
+import { MailService } from 'src/app.common/services/mail/mail.service';
 import * as argon from 'argon2';
+import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private prisma: PrismaService,
     private mappingService: MappingService,
-    private companyRulesService: CompanyRulesService
+    private companyRulesService: CompanyRulesService,
+    private errorHandlingService: ErrorHandlingService,
+    private localizationStringsService: LocalizationStringsService,
+    private mailService: MailService,
+    private configService: ConfigurationService
   ) { }
 
   async searchUsers(
     userId: number,
     currentCompanyId: number,
-    dto: SearchUsersRequestDto
+    dto: SearchUsersRequestDto,
   ): Promise<ISearchUsersResponse> {
     if (dto.type === SearchUserType.friendsList) {
-      const friendships = await this.prisma.friendship.findMany({
-        where: {
-          OR: [
-            { senderId: userId, type: FriendshipType.FRIEND },
-            { receiverId: userId, type: FriendshipType.FRIEND },
-          ],
-        },
-      });
-      const friendIds = friendships.map(fs =>
-        fs.senderId === userId ? fs.receiverId : fs.senderId
-      );
-      const users = await this.prisma.user.findMany({
-        where: {
-          id: { in: friendIds },
-          OR: [
-            { userName: { contains: dto.searchStr, mode: 'insensitive' } },
-            { email: { contains: dto.searchStr, mode: 'insensitive' } },
-          ],
-        },
-      });
-      const mappedUsers = users.map(user => this.mappingService.mapUser(user));
-      return { users: mappedUsers };
+      return await this.searchFriends(userId, dto);
     } else {
-      const users = await this.prisma.user.findMany({
-        where: {
-          id: { not: userId },
-          OR: [
-            { userName: { contains: dto.searchStr, mode: 'insensitive' } },
-            { email: { contains: dto.searchStr, mode: 'insensitive' } },
-          ],
-        },
-      });
-      const mappedUsers = users.map(user => this.mappingService.mapUser(user));
-      return { users: mappedUsers };
+      return await this.searchGlobal(userId, dto);
     }
   }
 
+  // Update logic so we will see changes
   async getUsersList(
     userId: number,
     currentCompanyId: number,
-    type: SearchUserType
+    type: SearchUserType,
   ): Promise<ISearchUsersResponse> {
     const friendships = await this.prisma.friendship.findMany({
       where: {
@@ -94,129 +78,34 @@ export class UserService {
       },
     });
     const friendIds = friendships.map(fs =>
-      fs.senderId === userId ? fs.receiverId : fs.senderId
+      fs.senderId === userId ? fs.receiverId : fs.senderId,
     );
     const users = await this.prisma.user.findMany({
       where: { id: { in: friendIds } },
     });
-    const mappedUsers = users.map(user => this.mappingService.mapUser(user));
-    return { users: mappedUsers };
+    return { users: users.map(user => this.mappingService.mapUser(user)) };
   }
 
   async getUserCard(
     userId: number,
     currentCompanyId: number,
-    dto: GetUserCardRequestDto
+    dto: GetUserCardRequestDto,
   ): Promise<IGetUserCardResponse> {
-    const targetUser = await this.prisma.user.findUnique({
-      where: { id: dto.userId },
-    });
+    const targetUser = await this.prisma.user.findUnique({ where: { id: dto.userId } });
     if (!targetUser) {
-      throw new Error('User not found');
+      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
     }
-
     const userInfo = this.mappingService.mapUser(targetUser);
-    const friendship = await this.prisma.friendship.findFirst({
-      where: {
-        OR: [
-          { senderId: userId, receiverId: dto.userId },
-          { senderId: dto.userId, receiverId: userId },
-        ],
-      },
-    });
-    const teamInvitation = await this.prisma.teamInvitation.findFirst({
-      where: {
-        OR: [
-          { senderId: userId, receiverId: dto.userId },
-          { senderId: dto.userId, receiverId: userId },
-        ],
-      },
-    });
-    const targetUserRelation = await this.prisma.userToCompanyRelation.findFirst({
-      where: { userId: dto.userId, companyId: currentCompanyId },
-    });
-    const currentUserRelation = await this.prisma.userToCompanyRelation.findFirst({
-      where: { userId: userId },
-      include: { company: { include: { relatedToUsers: true } } },
-    });
-    const showMakeChief = await this.companyRulesService.shouldShowMakeChiefAction(currentCompanyId);
-
-    const isFriend = friendship ? friendship.type === FriendshipType.FRIEND : false;
-    const isIncomingFriendRequest = friendship ? friendship.type === FriendshipType.REQUEST : false;
-    const isTeammate = targetUserRelation ? true : false;
-    const isIncomingTeamRequest = teamInvitation ? teamInvitation.type === TeamInvitationType.REQUEST : false;
-    const isCompanyPersonal = currentUserRelation.company.isPersonal;
-
-    const actions: IGetUserAction[] = [
-      {
-        type: UserActionType.addToFriends,
-        title: 'Add to Friends',
-        isEnabled: !isFriend && !isIncomingFriendRequest,
-      },
-      {
-        type: UserActionType.removeFromFriends,
-        title: 'Remove from Friends',
-        isEnabled: isFriend,
-      },
-      {
-        type: UserActionType.addToTeam,
-        title: 'Add to Team',
-        isEnabled: !isTeammate && !isIncomingTeamRequest && !isCompanyPersonal,
-      },
-      {
-        type: UserActionType.removeFromTeam,
-        title: 'Remove from Team',
-        isEnabled: isTeammate && !isCompanyPersonal,
-      },
-    ];
-
-    // Only include "Make Chief" action if the flag is enabled
-    if (showMakeChief && !isCompanyPersonal) {
-      actions.push({
-        type: UserActionType.makeChief,
-        title: 'Make Chief',
-        isEnabled: true,
-        switchIsOn: !(targetUserRelation.role === Role.CHIEF),
-      });
-    }
-
-    // If there's an incoming friend request
-    if (isIncomingFriendRequest) {
-      actions.push({
-        type: UserActionType.acceptFriendRequest,
-        title: 'Accept Friend Request',
-        isEnabled: true,
-      });
-    }
-
-    // If there's an incoming team invitation
-    if (isIncomingTeamRequest && !isCompanyPersonal) {
-      actions.push({
-        type: UserActionType.acceptTeamRequest,
-        title: 'Accept Team Request',
-        isEnabled: true,
-      });
-    }
-
-    let status = 'Stranger';
-    if (isFriend && isTeammate) {
-      status = 'Friends, teammates';
-    } else if (isFriend) {
-      status = 'Friends';
-    } else if (isTeammate) {
-      status = 'Teammates';
-    }
-
-    return {
-      userInfo,
-      status,
-      actions,
-    };
+    const actions = await this.buildUserActions(userId, currentCompanyId, dto.userId);
+    const status = await this.buildUserStatus(userId, currentCompanyId, dto.userId);
+    return { userInfo, status, actions };
   }
 
   async getUserInfo(userId: number): Promise<IUserInfoResponse> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new Error('User not found');
+    if (!user) {
+      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+    }
     return this.mappingService.mapUser(user);
   }
 
@@ -230,26 +119,19 @@ export class UserService {
     const teamRequests = await this.prisma.teamInvitation.findMany({
       where: { senderId: userId, type: TeamInvitationType.REQUEST },
     });
-
     const requests: IGetUserSendedRequestResponse[] = [];
-
     for (const req of friendRequests) {
-      const targetUser = await this.prisma.user.findUnique({
-        where: { id: req.receiverId },
-      });
-      requests.push(
-        this.mappingService.mapFriendRequest(req, targetUser)
-      );
+      const targetUser = await this.prisma.user.findUnique({ where: { id: req.receiverId } });
+      if (targetUser) {
+        requests.push(this.mappingService.mapFriendRequest(req, targetUser));
+      }
     }
     for (const req of teamRequests) {
-      const targetUser = await this.prisma.user.findUnique({
-        where: { id: req.receiverId },
-      });
-      requests.push(
-        this.mappingService.mapTeamInvitation(req, targetUser)
-      );
+      const targetUser = await this.prisma.user.findUnique({ where: { id: req.receiverId } });
+      if (targetUser) {
+        requests.push(this.mappingService.mapTeamInvitation(req, targetUser));
+      }
     }
-
     return { requests };
   }
 
@@ -263,229 +145,35 @@ export class UserService {
     const teamInvitations = await this.prisma.teamInvitation.findMany({
       where: { receiverId: userId, type: TeamInvitationType.REQUEST },
     });
-
-    const notifications = [];
-
-    for (const req of friendRequests) {
-      const sender = await this.prisma.user.findUnique({
-        where: { id: req.senderId },
-      });
-      notifications.push(
-        this.mappingService.mapFriendRequestNotification(req, sender)
-      );
-    }
-    for (const req of teamInvitations) {
-      const sender = await this.prisma.user.findUnique({
-        where: { id: req.senderId },
-      });
-      notifications.push(
-        this.mappingService.mapTeamInvitationNotification(req, sender)
-      );
-    }
-    notifications.sort((a, b) =>
-      a.notificationDate < b.notificationDate ? 1 : -1
-    );
-
-    friendRequests.forEach(async (request) =>
-      await this.prisma.friendship.update({
-        where: {
-          id: request.id
-        },
-        data: {
-          wasLoadedByReceiver: true
-        }
-      })
-    );
-
-    teamInvitations.forEach(async (request) =>
-      await this.prisma.friendship.update({
-        where: {
-          id: request.id
-        },
-        data: {
-          wasLoadedByReceiver: true
-        }
-      })
-    );
-
-    return {
-      notifications
-    };
+    const notifications = await this.buildNotifications(friendRequests, teamInvitations);
+    return { notifications };
   }
 
   async makeUserAction(
     userId: number,
     currentCompanyId: number,
-    dto: MakeUserActionRequest
+    dto: MakeUserActionRequest,
   ): Promise<IStatusResponse> {
     switch (dto.type) {
-      case UserActionType.addToFriends: {
-        const existing = await this.prisma.friendship.findFirst({
-          where: {
-            OR: [
-              { senderId: userId, receiverId: dto.userId },
-              { senderId: dto.userId, receiverId: userId },
-            ],
-          },
-        });
-        if (existing) {
-          if (existing.type != FriendshipType.FRIEND) {
-            await this.prisma.friendship.updateMany({
-              where: {
-                OR: [
-                  { senderId: userId, receiverId: dto.userId },
-                  { senderId: dto.userId, receiverId: userId },
-                ],
-              },
-              data: {
-                type: FriendshipType.REQUEST
-              }
-            });
-          } else {
-            return {
-              status: StatusType.DENIED,
-              description: 'Friendship or request already exists',
-            };
-          }
-        }
-        await this.prisma.friendship.create({
-          data: {
-            senderId: userId,
-            receiverId: dto.userId,
-            type: FriendshipType.REQUEST,
-          },
-        });
-        return { status: StatusType.SUCCESS, description: 'Friend request sent' };
-      }
-      case UserActionType.removeFromFriends: {
-        await this.prisma.friendship.updateMany({
-          where: {
-            OR: [
-              { senderId: userId, receiverId: dto.userId },
-              { senderId: dto.userId, receiverId: userId },
-            ],
-          },
-          data: {
-            type: FriendshipType.ENDED
-          }
-        });
-        return { status: StatusType.SUCCESS, description: 'Friend removed' };
-      }
-      case UserActionType.addToTeam: {
-        const existing = await this.prisma.teamInvitation.findFirst({
-          where: {
-            senderId: userId,
-            receiverId: dto.userId,
-            type: TeamInvitationType.REQUEST,
-          },
-        });
-        if (existing) {
-          return {
-            status: StatusType.DENIED,
-            description: 'Team invitation already sent',
-          };
-        }
-        await this.prisma.teamInvitation.create({
-          data: {
-            companyId: currentCompanyId,
-            senderId: userId,
-            receiverId: dto.userId,
-            type: TeamInvitationType.REQUEST,
-          },
-        });
-        return { status: StatusType.SUCCESS, description: 'Team invitation sent' };
-      }
-      case UserActionType.removeFromTeam: {
-        await this.prisma.teamInvitation.deleteMany({
-          where: {
-            senderId: userId,
-            receiverId: dto.userId,
-            type: TeamInvitationType.TEAM,
-          },
-        });
-        return { status: StatusType.SUCCESS, description: 'Removed from team' };
-      }
-      case UserActionType.makeChief: {
-        await this.prisma.userToCompanyRelation.updateMany({
-          where: {
-            userId: dto.userId,
-            companyId: currentCompanyId,
-          },
-          data: { role: PrismaRole.CHIEF },
-        });
-        return { status: StatusType.SUCCESS, description: 'User is now Chief' };
-      }
-      case UserActionType.acceptFriendRequest: {
-        const existingRequest = await this.prisma.friendship.findFirst({
-          where: {
-            senderId: dto.userId,
-            receiverId: userId,
-            type: FriendshipType.REQUEST,
-          },
-        });
-        if (!existingRequest) {
-          return {
-            status: StatusType.DENIED,
-            description: 'No friend request to accept.',
-          };
-        }
-        await this.prisma.friendship.update({
-          where: { id: existingRequest.id },
-          data: { type: FriendshipType.FRIEND },
-        });
-        return {
-          status: StatusType.SUCCESS,
-          description: 'Friend request accepted',
-        };
-      }
-      case UserActionType.acceptTeamRequest: {
-        // Find the existing invitation from the target user → me
-        const existingInvitation = await this.prisma.teamInvitation.findFirst({
-          where: {
-            senderId: dto.userId,
-            receiverId: userId,
-            companyId: currentCompanyId,
-            type: TeamInvitationType.REQUEST,
-          },
-        });
-        if (!existingInvitation) {
-          return {
-            status: StatusType.DENIED,
-            description: 'No team invitation to accept.',
-          };
-        }
-
-        // Mark the invitation as TEAM (or just delete it if you prefer)
-        await this.prisma.teamInvitation.update({
-          where: { id: existingInvitation.id },
-          data: { type: TeamInvitationType.TEAM },
-        });
-
-        // Ensure there's a userToCompanyRelation
-        const existingRelation = await this.prisma.userToCompanyRelation.findFirst({
-          where: {
-            userId: userId,
-            companyId: existingInvitation.companyId,
-          },
-        });
-
-        if (!existingRelation) {
-          await this.prisma.userToCompanyRelation.create({
-            data: {
-              userId: userId,
-              companyId: existingInvitation.companyId,
-              role: PrismaRole.BARISTA,
-            },
-          });
-        }
-
-        return {
-          status: StatusType.SUCCESS,
-          description: 'Team invitation accepted.',
-        };
-      }
+      case UserActionType.addToFriends:
+        return await this.handleAddToFriends(userId, dto);
+      case UserActionType.removeFromFriends:
+        return await this.handleRemoveFromFriends(userId, dto);
+      case UserActionType.addToTeam:
+        return await this.handleAddToTeam(userId, currentCompanyId, dto);
+      case UserActionType.removeFromTeam:
+        return await this.handleRemoveFromTeam(userId, dto);
+      case UserActionType.makeChief:
+        return await this.handleMakeChief(currentCompanyId, dto);
+      case UserActionType.acceptFriendRequest:
+        return await this.handleAcceptFriendRequest(userId, dto);
+      case UserActionType.acceptTeamRequest:
+        return await this.handleAcceptTeamRequest(userId, currentCompanyId, dto);
       default:
-        return { status: StatusType.DENIED, description: 'Invalid action' };
+        return {
+          status: StatusType.DENIED,
+          description: await this.localizationStringsService.getUserText(UserKeys.INVALID_ACTION),
+        };
     }
   }
 
@@ -503,7 +191,10 @@ export class UserService {
         },
       });
       if (result.count > 0) {
-        return { status: StatusType.SUCCESS, description: 'Friend request cancelled' };
+        return {
+          status: StatusType.SUCCESS,
+          description: await this.localizationStringsService.getUserText(UserKeys.FRIEND_REMOVED),
+        };
       }
     } else if (dto.requestType === RequestTypeEnum.TEAM) {
       const result = await this.prisma.teamInvitation.deleteMany({
@@ -514,10 +205,16 @@ export class UserService {
         },
       });
       if (result.count > 0) {
-        return { status: StatusType.SUCCESS, description: 'Team invitation cancelled' };
+        return {
+          status: StatusType.SUCCESS,
+          description: await this.localizationStringsService.getUserText(UserKeys.TEAM_INVITATION_CANCELLED),
+        };
       }
     }
-    return { status: StatusType.DENIED, description: 'Request not found' };
+    return {
+      status: StatusType.DENIED,
+      description: await this.localizationStringsService.getUserText(UserKeys.REQUEST_NOT_FOUND)
+    };
   }
 
   async saveEditUser(
@@ -525,123 +222,455 @@ export class UserService {
     dto: SaveEditUserRequest,
   ): Promise<StatusResponseDto> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-
     if (!user) {
-      throw new BusinessErrorException({
-        errorSubCode: ErrorSubCode.USER_DOESNT_EXIST,
-        errorMsg: 'User not found',
-      });
+      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
     }
-
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
-      data: {
-        userName: dto.userName,
-        about: dto.about,
-      },
+      data: { userName: dto.userName, about: dto.about },
     });
-
     if (dto.email && dto.email !== user.email) {
-      await this._confirmEmailChange(userId);
-
+      await this.confirmEmailChange(userId, dto.email);
       return {
         status: StatusType.SUCCESS,
-        description: `We sent email to your old email ${updatedUser.email} enter OTP to change it to you new ${dto.email}`,
-      };
-    } else {
-      return {
-        status: StatusType.SUCCESS,
-        description: `User info updated for ${updatedUser.userName}`,
+        description: await this.localizationStringsService.getUserText(UserKeys.OTP_SENT_FOR_EMAIL_CHANGE),
       };
     }
+    return {
+      status: StatusType.SUCCESS,
+      description: await this.localizationStringsService.getUserText(UserKeys.USER_INFO_UPDATED),
+    };
   }
-    
+
   async verifyNewEmail(
     userId: number,
     dto: OTPRequestDto,
   ): Promise<StatusResponseDto> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-
     if (!user) {
-      throw new BusinessErrorException({
-        errorSubCode: ErrorSubCode.USER_DOESNT_EXIST,
-        errorMsg: 'User not found',
-      });
+      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
     }
-
     const isOtpValid = await argon.verify(user.otpHash, dto.otp);
-
     if (!isOtpValid) {
-      return { status: StatusType.DENIED, description: 'Incorrect OTP. Please try again.' };
+      return {
+        status: StatusType.DENIED,
+        description: await this.localizationStringsService.getUserText(UserKeys.INCORRECT_OTP),
+      };
     }
-
-    // Update email and clear OTP data
     await this.prisma.user.update({
       where: { id: userId },
-      data: {
-        email: dto.email,
-        otpHash: null,
-      },
+      data: { email: dto.email, otpHash: null },
     });
-
     return {
       status: StatusType.SUCCESS,
-      description: 'Email successfully updated.',
+      description: await this.localizationStringsService.getUserText(UserKeys.EMAIL_UPDATED),
     };
   }
-  
-  async resendNewEmailOTP(userId: number): Promise<StatusResponseDto> {
+
+  async resendNewEmailOTP(userId: number, newEmail: string): Promise<StatusResponseDto> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-
     if (!user) {
-      throw new BusinessErrorException({
-        errorSubCode: ErrorSubCode.USER_DOESNT_EXIST,
-        errorMsg: 'User not found',
-      });
+      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
     }
-
-    // const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otp = "666666";
-    const hashedOtp = await argon.hash(otp);
-
-    // Store new OTP in the database
+    
+    const { otp, hashedOtp } = await this.generateOtp();
     await this.prisma.user.update({
       where: { id: userId },
       data: { otpHash: hashedOtp },
     });
+    await this.sendOtp(user.email, newEmail, otp);
 
-    // Resend OTP to the old email
-    // await this.mailService.sendOtpEmail(user.email, otp);
-
-    return { status: StatusType.SUCCESS, description: 'OTP resent to your old email' };
+    return {
+      status: StatusType.SUCCESS,
+      description: await this.localizationStringsService.getUserText(UserKeys.OTP_RESENT),
+    };
   }
 
-  // MARK: Private Methods
+  // MARK: - Private Methods
 
-  private async _confirmEmailChange(userId: number): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-
-    if (!user) {
-      throw new BusinessErrorException({
-        errorSubCode: ErrorSubCode.USER_DOESNT_EXIST,
-        errorMsg: 'User not found',
-      });
-    }
-
-    // const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otp = "666666";
-    const hashedOtp = await argon.hash(otp);
-    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiration
-
-    // Store OTP and new email in database
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        otpHash: hashedOtp,
+  private async searchFriends(userId: number, dto: SearchUsersRequestDto): Promise<ISearchUsersResponse> {
+    const friendships = await this.prisma.friendship.findMany({
+      where: {
+        OR: [
+          { senderId: userId, type: FriendshipType.FRIEND },
+          { receiverId: userId, type: FriendshipType.FRIEND },
+        ],
       },
     });
+    const friendIds = friendships.map(fs =>
+      fs.senderId === userId ? fs.receiverId : fs.senderId,
+    );
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: { in: friendIds },
+        OR: [
+          { userName: { contains: dto.searchStr, mode: 'insensitive' } },
+          { email: { contains: dto.searchStr, mode: 'insensitive' } },
+        ],
+      },
+    });
+    return { users: users.map(user => this.mappingService.mapUser(user)) };
+  }
 
-    // Send OTP to old email
-    // await this.mailService.sendOtpEmail(user.email, otp);
+  private async searchGlobal(userId: number, dto: SearchUsersRequestDto): Promise<ISearchUsersResponse> {
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: { not: userId },
+        OR: [
+          { userName: { contains: dto.searchStr, mode: 'insensitive' } },
+          { email: { contains: dto.searchStr, mode: 'insensitive' } },
+        ],
+      },
+    });
+    return { users: users.map(user => this.mappingService.mapUser(user)) };
+  }
+
+  private async buildUserActions(
+    currentUserId: number,
+    currentCompanyId: number,
+    targetUserId: number,
+  ): Promise<IGetUserAction[]> {
+    const actions: IGetUserAction[] = [];
+    const friendship = await this.prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { senderId: currentUserId, receiverId: targetUserId },
+          { senderId: targetUserId, receiverId: currentUserId },
+        ],
+      },
+    });
+    const teamInvitation = await this.prisma.teamInvitation.findFirst({
+      where: {
+        OR: [
+          { senderId: currentUserId, receiverId: targetUserId },
+          { senderId: targetUserId, receiverId: currentUserId },
+        ],
+      },
+    });
+    const targetUserRelation = await this.prisma.userToCompanyRelation.findFirst({
+      where: { userId: targetUserId, companyId: currentCompanyId },
+    });
+    const currentUserRelation = await this.prisma.userToCompanyRelation.findFirst({
+      where: { userId: currentUserId },
+      include: { company: true },
+    });
+    const showMakeChief = await this.companyRulesService.shouldShowMakeChiefAction(currentCompanyId);
+    const isFriend = friendship ? friendship.type === FriendshipType.FRIEND : false;
+    const isIncomingFriendRequest = friendship ? friendship.type === FriendshipType.REQUEST : false;
+    const isTeammate = !!targetUserRelation;
+    const isIncomingTeamRequest = teamInvitation ? teamInvitation.type === TeamInvitationType.REQUEST : false;
+    const isCompanyPersonal = currentUserRelation?.company?.isPersonal;
+
+    actions.push({
+      type: UserActionType.addToFriends,
+      title: await this.localizationStringsService.getUserText(UserKeys.ADD_TO_FRIENDS),
+      isEnabled: !isFriend && !isIncomingFriendRequest,
+    });
+    actions.push({
+      type: UserActionType.removeFromFriends,
+      title: await this.localizationStringsService.getUserText(UserKeys.REMOVE_FROM_FRIENDS),
+      isEnabled: isFriend,
+    });
+    actions.push({
+      type: UserActionType.addToTeam,
+      title: await this.localizationStringsService.getUserText(UserKeys.ADD_TO_TEAM),
+      isEnabled: !isTeammate && !isIncomingTeamRequest && !isCompanyPersonal,
+    });
+    actions.push({
+      type: UserActionType.removeFromTeam,
+      title: await this.localizationStringsService.getUserText(UserKeys.REMOVE_FROM_TEAM),
+      isEnabled: isTeammate && !isCompanyPersonal,
+    });
+    if (showMakeChief && !isCompanyPersonal) {
+      actions.push({
+        type: UserActionType.makeChief,
+        title: await this.localizationStringsService.getUserText(UserKeys.MAKE_CHIEF),
+        isEnabled: true,
+        switchIsOn: !(targetUserRelation?.role === Role.CHIEF),
+      });
+    }
+    if (isIncomingFriendRequest) {
+      actions.push({
+        type: UserActionType.acceptFriendRequest,
+        title: await this.localizationStringsService.getUserText(UserKeys.ACCEPT_FRIEND_REQUEST),
+        isEnabled: true,
+      });
+    }
+    if (isIncomingTeamRequest && !isCompanyPersonal) {
+      actions.push({
+        type: UserActionType.acceptTeamRequest,
+        title: await this.localizationStringsService.getUserText(UserKeys.ACCEPT_TEAM_REQUEST),
+        isEnabled: true,
+      });
+    }
+    return actions;
+  }
+
+  // FIXED: Now builds status based on friendship and team relation.
+  private async buildUserStatus(
+    currentUserId: number,
+    currentCompanyId: number,
+    targetUserId: number,
+  ): Promise<string> {
+    const friendship = await this.prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { senderId: currentUserId, receiverId: targetUserId },
+          { senderId: targetUserId, receiverId: currentUserId },
+        ],
+      },
+    });
+    const targetUserRelation = await this.prisma.userToCompanyRelation.findFirst({
+      where: { userId: targetUserId, companyId: currentCompanyId },
+    });
+    const isFriend = friendship ? friendship.type === FriendshipType.FRIEND : false;
+    const isTeammate = !!targetUserRelation;
+    let status = 'Stranger';
+    if (isFriend && isTeammate) {
+      status = 'Friends, teammates';
+    } else if (isFriend) {
+      status = 'Friends';
+    } else if (isTeammate) {
+      status = 'Teammates';
+    }
+    return status;
+  }
+
+  private async buildNotifications(
+    friendRequests: Friendship[],
+    teamInvitations: TeamInvitation[],
+  ): Promise<any[]> {
+    const notifications = [];
+    for (const req of friendRequests) {
+      const sender = await this.prisma.user.findUnique({ where: { id: req.senderId } });
+      if (sender) {
+        notifications.push(this.mappingService.mapFriendRequestNotification(req, sender));
+      }
+    }
+    for (const req of teamInvitations) {
+      const sender = await this.prisma.user.findUnique({ where: { id: req.senderId } });
+      if (sender) {
+        notifications.push(this.mappingService.mapTeamInvitationNotification(req, sender));
+      }
+    }
+    notifications.sort((a, b) => (a.notificationDate < b.notificationDate ? 1 : -1));
+    
+    // Use Promise.all to update notifications concurrently
+    await Promise.all([
+      ...friendRequests.map(request =>
+        this.prisma.friendship.update({ where: { id: request.id }, data: { wasLoadedByReceiver: true } })
+      ),
+      ...teamInvitations.map(request =>
+        this.prisma.teamInvitation.update({ where: { id: request.id }, data: { wasLoadedByReceiver: true } })
+      )
+    ]);
+    
+    return notifications;
+  }
+
+  private async handleAddToFriends(userId: number, dto: MakeUserActionRequest): Promise<IStatusResponse> {
+    const existing = await this.prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { senderId: userId, receiverId: dto.userId },
+          { senderId: dto.userId, receiverId: userId },
+        ],
+      },
+    });
+    if (existing) {
+      if (existing.type !== FriendshipType.FRIEND) {
+        await this.prisma.friendship.updateMany({
+          where: {
+            OR: [
+              { senderId: userId, receiverId: dto.userId },
+              { senderId: dto.userId, receiverId: userId },
+            ],
+          },
+          data: { type: FriendshipType.REQUEST },
+        });
+      } else {
+        return {
+          status: StatusType.DENIED,
+          description: await this.localizationStringsService.getUserText(UserKeys.FRIEND_REQUEST_SENT),
+        };
+      }
+    } else {
+      await this.prisma.friendship.create({
+        data: {
+          senderId: userId,
+          receiverId: dto.userId,
+          type: FriendshipType.REQUEST,
+        },
+      });
+    }
+    return {
+      status: StatusType.SUCCESS,
+      description: await this.localizationStringsService.getUserText(UserKeys.FRIEND_REQUEST_SENT),
+    };
+  }
+
+  private async handleRemoveFromFriends(userId: number, dto: MakeUserActionRequest): Promise<IStatusResponse> {
+    await this.prisma.friendship.updateMany({
+      where: {
+        OR: [
+          { senderId: userId, receiverId: dto.userId },
+          { senderId: dto.userId, receiverId: userId },
+        ],
+      },
+      data: { type: FriendshipType.ENDED },
+    });
+    return {
+      status: StatusType.SUCCESS,
+      description: await this.localizationStringsService.getUserText(UserKeys.FRIEND_REMOVED),
+    };
+  }
+
+  private async handleAddToTeam(userId: number, currentCompanyId: number, dto: MakeUserActionRequest): Promise<IStatusResponse> {
+    const existing = await this.prisma.teamInvitation.findFirst({
+      where: {
+        senderId: userId,
+        receiverId: dto.userId,
+        type: TeamInvitationType.REQUEST,
+      },
+    });
+    if (existing) {
+      return {
+        status: StatusType.DENIED,
+        description: await this.localizationStringsService.getUserText(UserKeys.TEAM_INVITATION_ALREADY_SENT),
+      };
+    }
+    await this.prisma.teamInvitation.create({
+      data: {
+        companyId: currentCompanyId,
+        senderId: userId,
+        receiverId: dto.userId,
+        type: TeamInvitationType.REQUEST,
+      },
+    });
+    return {
+      status: StatusType.SUCCESS,
+      description: await this.localizationStringsService.getUserText(UserKeys.TEAM_INVITATION_SENT),
+    };
+  }
+
+  private async handleRemoveFromTeam(userId: number, dto: MakeUserActionRequest): Promise<IStatusResponse> {
+    await this.prisma.teamInvitation.deleteMany({
+      where: {
+        senderId: userId,
+        receiverId: dto.userId,
+        type: TeamInvitationType.TEAM,
+      },
+    });
+    return {
+      status: StatusType.SUCCESS,
+      description: await this.localizationStringsService.getUserText(UserKeys.REMOVED_FROM_TEAM),
+    };
+  }
+
+  private async handleMakeChief(currentCompanyId: number, dto: MakeUserActionRequest): Promise<IStatusResponse> {
+    await this.prisma.userToCompanyRelation.updateMany({
+      where: { userId: dto.userId, companyId: currentCompanyId },
+      data: { role: PrismaRole.CHIEF },
+    });
+    return {
+      status: StatusType.SUCCESS,
+      description: await this.localizationStringsService.getUserText(UserKeys.USER_NOW_CHIEF),
+    };
+  }
+
+  private async handleAcceptFriendRequest(userId: number, dto: MakeUserActionRequest): Promise<IStatusResponse> {
+    const existingRequest = await this.prisma.friendship.findFirst({
+      where: { senderId: dto.userId, receiverId: userId, type: FriendshipType.REQUEST },
+    });
+    if (!existingRequest) {
+      return {
+        status: StatusType.DENIED,
+        description: await this.localizationStringsService.getUserText(UserKeys.NO_FRIEND_REQUEST),
+      };
+    }
+    await this.prisma.friendship.update({
+      where: { id: existingRequest.id },
+      data: { type: FriendshipType.FRIEND },
+    });
+    return {
+      status: StatusType.SUCCESS,
+      description: await this.localizationStringsService.getUserText(UserKeys.FRIEND_REQUEST_ACCEPTED),
+    };
+  }
+
+  private async handleAcceptTeamRequest(userId: number, currentCompanyId: number, dto: MakeUserActionRequest): Promise<IStatusResponse> {
+    const existingInvitation = await this.prisma.teamInvitation.findFirst({
+      where: {
+        senderId: dto.userId,
+        receiverId: userId,
+        companyId: currentCompanyId,
+        type: TeamInvitationType.REQUEST,
+      },
+    });
+    if (!existingInvitation) {
+      return {
+        status: StatusType.DENIED,
+        description: await this.localizationStringsService.getUserText(UserKeys.NO_TEAM_INVITATION),
+      };
+    }
+    await this.prisma.teamInvitation.update({
+      where: { id: existingInvitation.id },
+      data: { type: TeamInvitationType.TEAM },
+    });
+    const existingRelation = await this.prisma.userToCompanyRelation.findFirst({
+      where: { userId: userId, companyId: existingInvitation.companyId },
+    });
+    if (!existingRelation) {
+      await this.prisma.userToCompanyRelation.create({
+        data: {
+          userId: userId,
+          companyId: existingInvitation.companyId,
+          role: PrismaRole.BARISTA,
+        },
+      });
+    }
+    return {
+      status: StatusType.SUCCESS,
+      description: await this.localizationStringsService.getUserText(UserKeys.TEAM_INVITATION_ACCEPTED),
+    };
+  }
+
+  private async confirmEmailChange(userId: number, newEmail: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+    }
+    const { otp, hashedOtp } = await this.generateOtp();
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { otpHash: hashedOtp },
+    });
+    await this.sendOtp(user.email, newEmail, otp);
+  }
+
+  /**
+   * Sends the OTP email.
+   * In development mode, it skips calling the mail service.
+   */
+  private async sendOtp(currentEmail: string, newEmail: string, otp: string): Promise<void> {
+    if (this.configService.getEnv() !== 'development') {
+      await this.mailService.sendOtpToUpdateEmail(currentEmail, newEmail, otp);
+    }
+  }
+
+  /**
+   * Generates an OTP and its hashed version.
+   * In development, returns a fixed OTP from configuration.
+   * In production, generates a random 6-digit OTP.
+   */
+  private async generateOtp(): Promise<{ otp: string; hashedOtp: string }> {
+    let otp: string;
+    if (this.configService.getEnv() === 'development') {
+      otp = this.configService.getOtpDevCode();
+    } else {
+      otp = Math.floor(100000 + Math.random() * 900000).toString();
+    }
+    const hashedOtp = await argon.hash(otp);
+    return { otp, hashedOtp };
   }
 }

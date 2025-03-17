@@ -34,6 +34,7 @@ import {
 } from './dto';
 import { GetCurrentUserCompanyId, GetCurrentUserId, Public } from 'src/app.common/decorators';
 import { ApiOkResponse, ApiOperation, ApiUnprocessableEntityResponse } from '@nestjs/swagger';
+import { ResendNewEmailOTPRequest } from './dto/request/resend-new-email-otp.request.dto';
 
 @Controller('user')
 export class UserController {
@@ -152,7 +153,8 @@ export class UserController {
   @ApiUnprocessableEntityResponse({ description: 'Returns business top layer error', type: ErrorResponseDto })
   resendNewEmailOTP(
     @GetCurrentUserId() userId: number,
+    @Query() dto: ResendNewEmailOTPRequest
   ): Promise<StatusResponseDto> {
-    return this.userService.resendNewEmailOTP(userId);
+    return this.userService.resendNewEmailOTP(userId, dto.email);
   }
 }

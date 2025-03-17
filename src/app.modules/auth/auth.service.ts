@@ -19,7 +19,7 @@ export class AuthService {
     private mailService: MailService,
     private configService: ConfigurationService,
     private errorHandlingService: ErrorHandlingService,
-  ) {}
+  ) { }
 
   async signUpLocal(dto: AuthRequestDto): Promise<IStatusResponse> {
     const hash = await argon.hash(dto.password);
@@ -172,6 +172,16 @@ export class AuthService {
   // MARK: - Private Methods
 
   /**
+   * Sends the OTP email.
+   * In development mode, it skips calling the mail service.
+   */
+  private async sendOtp(email: string, otp: string): Promise<void> {
+    if (this.configService.getEnv() !== 'development') {
+      await this.mailService.sendOtpEmail(email, otp);
+    }
+  }
+
+  /**
    * Generates an OTP and its hashed version.
    * In development, returns a fixed OTP from configuration.
    * In production, generates a random 6-digit OTP.
@@ -185,15 +195,5 @@ export class AuthService {
     }
     const hashedOtp = await argon.hash(otp);
     return { otp, hashedOtp };
-  }
-
-  /**
-   * Sends the OTP email.
-   * In development mode, it skips calling the mail service.
-   */
-  private async sendOtp(email: string, otp: string): Promise<void> {
-    if (this.configService.getEnv() !== 'development') {
-      await this.mailService.sendOtpEmail(email, otp);
-    }
   }
 }
