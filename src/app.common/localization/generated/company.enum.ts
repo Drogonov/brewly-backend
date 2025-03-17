@@ -1,7 +1,7 @@
 // This file is auto-generated. Do not edit manually.
 export enum CompanyKeys {
-  DeleteUserCompanySuccess = 'DeleteUserCompanySuccess',
-  ChangeCurrentCompanySuccess = 'ChangeCurrentCompanySuccess',
-  EditCompanyUpdateSuccess = 'EditCompanyUpdateSuccess',
-  EditCompanyCreateSuccess = 'EditCompanyCreateSuccess'
+  DELETE_USER_COMPANY_SUCCESS = 'DELETE_USER_COMPANY_SUCCESS',
+  CHANGE_CURRENT_COMPANY_SUCCESS = 'CHANGE_CURRENT_COMPANY_SUCCESS',
+  EDIT_COMPANY_UPDATE_SUCCESS = 'EDIT_COMPANY_UPDATE_SUCCESS',
+  EDIT_COMPANY_CREATE_SUCCESS = 'EDIT_COMPANY_CREATE_SUCCESS'
 }

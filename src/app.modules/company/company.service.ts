@@ -80,7 +80,7 @@ export class CompanyService {
 
       return {
         status: StatusType.SUCCESS,
-        description: await this.localizationStringsService.getCompanyText(CompanyKeys.DeleteUserCompanySuccess),
+        description: await this.localizationStringsService.getCompanyText(CompanyKeys.DELETE_USER_COMPANY_SUCCESS),
       };
     } catch (error) {
       throw error;
@@ -149,7 +149,7 @@ export class CompanyService {
 
       return {
         status: StatusType.SUCCESS,
-        description: await this.localizationStringsService.getCompanyText(CompanyKeys.ChangeCurrentCompanySuccess),
+        description: await this.localizationStringsService.getCompanyText(CompanyKeys.CHANGE_CURRENT_COMPANY_SUCCESS),
       };
     } catch (error) {
       throw error;
@@ -166,13 +166,13 @@ export class CompanyService {
       if (dto.companyId) {
         const updatedCompany = await this.updateCompany(userId, dto);
         description = await this.localizationStringsService.getCompanyText(
-          CompanyKeys.EditCompanyUpdateSuccess,
+          CompanyKeys.EDIT_COMPANY_UPDATE_SUCCESS,
           { companyName: updatedCompany }
         );
       } else {
         const createdCompany = await this.createCompany(userId, dto);
         description = await this.localizationStringsService.getCompanyText(
-          CompanyKeys.EditCompanyCreateSuccess,
+          CompanyKeys.EDIT_COMPANY_CREATE_SUCCESS,
           { companyName: createdCompany }
         );
       }

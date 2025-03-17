@@ -1,13 +1,14 @@
 {
-    "USER_NOT_VERIFIED": "User not verified",
-    "USER_ALREADY_EXIST": "User already exists",
-    "USER_DOESNT_EXIST": "User doesn't exist",
-    "INCORRECT_PASSWORD": "Incorrect password",
-    "INCORRECT_EMAIL": "Incorrect email",
-    "INCORRECT_OTP": "Incorrect OTP",
-    "CANT_DELIVER_VERIFICATION_EMAIL": "Cannot deliver verification email",
-    "COMPANY_NOT_FOUND": "Company not found",
-    "VALIDATION_ERROR": "Validation error",
-    "REQUEST_VALIDATION_ERROR": "Request validation error",
-    "UNEXPECTED_ERROR": "You have some unexpected error"
-  }
+  "USER_NOT_VERIFIED": "Пользователь не подтверждён",
+  "USER_ALREADY_EXIST": "Пользователь уже существует",
+  "USER_DOESNT_EXIST": "Пользователь не существует",
+  "INCORRECT_PASSWORD": "Неверный пароль",
+  "INCORRECT_EMAIL": "Неверный email",
+  "INCORRECT_OTP": "Неверный OTP",
+  "CANT_DELIVER_VERIFICATION_EMAIL": "Не удаётся отправить письмо подтверждения",
+  "COMPANY_NOT_FOUND": "Компания не найдена",
+  "VALIDATION_ERROR": "Ошибка валидации",
+  "REQUEST_VALIDATION_ERROR": "Ошибка валидации запроса",
+  "UNEXPECTED_ERROR": "Неожиданная ошибка",
+  "COMPANY_DELETE_DENIED": "Нельзя удалить вашу компанию"
+}
