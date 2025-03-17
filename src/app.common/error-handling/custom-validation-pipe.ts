@@ -20,6 +20,7 @@ export class CustomValidationPipe extends ValidationPipe {
   override createExceptionFactory() {
     return async (validationErrors: ValidationError[] = []) => {
       const validationError = await this.validationFieldErrors(validationErrors);
+      console.log(validationErrors);
 
       if (validationError) {
         return validationError;

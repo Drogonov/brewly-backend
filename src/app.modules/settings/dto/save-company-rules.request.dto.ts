@@ -1,6 +1,6 @@
-import { IsNotEmpty, IsString, IsEmail, IsOptional } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class SaveCompanyRulesRequestDto {
   @ApiProperty({ description: "Rules to save" })
@@ -10,6 +10,7 @@ export class SaveCompanyRulesRequestDto {
 
   @ApiProperty({ description: "Rules to save" })
   @IsNotEmpty()
+  @Type(() => CompanyRuleRequestDto)
   rules: CompanyRuleRequestDto[];
 }
 
@@ -25,5 +26,6 @@ export class CompanyRuleRequestDto {
 
   @ApiProperty({ description: 'Value of the rule', example: true })
   @IsNotEmpty()
+  @Type(() => Boolean)
   value: boolean;
 }

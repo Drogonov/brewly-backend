@@ -5,6 +5,7 @@ import { OS } from './os.enum';
 import * as iosIcons from './sources/ios.json';
 import * as androidIcons from './sources/android.json';
 import * as browserIcons from './sources/browser.json';
+import { IconKey } from './icon-keys.enum';
 
 @Injectable()
 export class IconsService {
@@ -35,7 +36,7 @@ export class IconsService {
    * @param key - The key of the icon to retrieve (could be string or a generated enum type)
    * @returns A promise that resolves with the icon string.
    */
-  async getOSIcon(key: string): Promise<string> {
+  async getOSIcon(key: IconKey): Promise<string> {
     const icons = this.iconsMap[this.currentOS];
     const icon = icons[key];
     if (!icon) {

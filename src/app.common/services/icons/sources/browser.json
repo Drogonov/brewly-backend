@@ -1,3 +1,6 @@
 {
-    "person" : "person"
+    "user": "person",
+    "team": "person.3.sequence",
+    "request": "arrow.up.message",
+    "guide": "questionmark.bubble"
 }

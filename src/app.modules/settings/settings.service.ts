@@ -11,188 +11,241 @@ import {
   IIconTextNumberInfoBlockResponse,
 } from './dto';
 import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
-import { FriendshipType, Role, TeamInvitationType, User } from '@prisma/client';
+import { FriendshipType, Role, TeamInvitationType } from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
-import { BusinessErrorException, ErrorSubCode } from 'src/app.common/error-handling/exceptions';
+import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
+import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
+import { IconsService } from 'src/app.common/services/icons/icons.service';
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
+import { SettingsKeys } from 'src/app.common/localization/generated/settings.enum';
+import { IconKey } from 'src/app.common/services/icons/icon-keys.enum';
 
 @Injectable()
 export class SettingsService {
   constructor(
     private prisma: PrismaService,
     private mappingService: MappingService,
+    private errorHandlingService: ErrorHandlingService,
+    private iconsService: IconsService,
+    private localizationStringsService: LocalizationStringsService,
   ) { }
 
   async getUserSettings(
     userId: number,
     currentCompanyId: number
   ): Promise<IGetUserSettingsResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-      include: {
-        currentCompany: {
-          include: { relatedToUsers: true, teamInvitations: true },
-        },
-        sentFriendships: true,
-        receivedFriendships: true,
-        sentTeamInvitations: true,
-        receivedTeamInvitations: true
-      },
-    });
-
-    let currentCompany = user.currentCompany;
-    if (!currentCompany) {
-      const relation = await this.prisma.userToCompanyRelation.findFirst({
-        where: { userId: userId },
-        include: { company: { include: { relatedToUsers: true, teamInvitations: true } } },
-      });
-
-      await this.prisma.user.update({
+    try {
+      const user = await this.prisma.user.findUnique({
         where: { id: userId },
-        data: {
-          currentCompany: { connect: { id: relation.company.id } },
+        include: {
+          currentCompany: {
+            include: { relatedToUsers: true, teamInvitations: true },
+          },
+          sentFriendships: true,
+          receivedFriendships: true,
+          sentTeamInvitations: true,
+          receivedTeamInvitations: true,
         },
       });
-      currentCompany = relation.company;
-    }
+      if (!user) {
+        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+      }
 
-    const teamInvitations = await this.prisma.teamInvitation.findMany({
-      where: {
-        OR: [
-          { companyId: currentCompany.id },
-          { type: TeamInvitationType.TEAM },
-        ],
-      },
-    });
+      const currentCompany = await this.resolveCurrentCompany(user, userId);
+      const { friendsCount, teamCount, requestsCount, isUserHaveNewNotifications } = await this.getCountsAndNotifications(user, currentCompany);
 
-    const friendsCount =
-      user.sentFriendships.filter((friendShip) => friendShip.type == FriendshipType.FRIEND).length +
-      user.receivedFriendships.filter((friendShip) => friendShip.type == FriendshipType.FRIEND).length;
+      // Get localized labels from settings.json via localization service.
+      const friendsLabel = await this.localizationStringsService.getSettingsText(SettingsKeys.FRIENDS_LABEL);
+      const teamMatesLabel = await this.localizationStringsService.getSettingsText(SettingsKeys.TEAMMATES_LABEL);
+      const requestsLabel = await this.localizationStringsService.getSettingsText(SettingsKeys.REQUESTS_LABEL);
+      const guideLabel = await this.localizationStringsService.getSettingsText(SettingsKeys.GUIDE_LABEL);
 
-    const teamCount = currentCompany.teamInvitations.filter((invitations) => invitations.type == TeamInvitationType.TEAM).length;
+      // Map the user's role using the relation in the company.
+      const userRelation = currentCompany.relatedToUsers.find(rel => rel.userId === userId);
+      if (!userRelation) {
+        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.COMPANY_NOT_FOUND);
+      }
 
-    const requestsCount =
-      user.sentFriendships.filter((friendShip) => friendShip.type == FriendshipType.REQUEST).length +
-      user.sentTeamInvitations.filter((invitations) => invitations.type == TeamInvitationType.REQUEST).length;
-
-    const isUserHaveNewNotifications: boolean = user.receivedFriendships.some(request => request.wasLoadedByReceiver === false) 
-    || user.receivedTeamInvitations.some(request => request.wasLoadedByReceiver === false)
-
-    return {
-      userInfo: this.mappingService.mapUser(
-        user,
-        this.mappingService.mapRole(
-          currentCompany.relatedToUsers.find((relation) => relation.userId == userId).role,
+      return {
+        userInfo: this.mappingService.mapUser(
+          user,
+          this.mappingService.mapRole(userRelation.role),
         ),
-      ),
-      companyInfo: this.mappingService.mapCompany(currentCompany),
-      friendsBlock: {
-        iconName: 'person',
-        text: 'Friends',
-        number: friendsCount,
-      },
-      teamMatesBlock: {
-        iconName: 'person.3.sequence',
-        text: 'Team Mates',
-        number: teamCount,
-      },
-      ...(
-        requestsCount
+        companyInfo: this.mappingService.mapCompany(currentCompany),
+        friendsBlock: {
+          iconName: await this.iconsService.getOSIcon(IconKey.user),
+          text: friendsLabel,
+          number: friendsCount,
+        },
+        teamMatesBlock: {
+          iconName: await this.iconsService.getOSIcon(IconKey.team),
+          text: teamMatesLabel,
+          number: teamCount,
+        },
+        ...(requestsCount
           ? {
             requestsBlock: {
-              iconName: 'arrow.up.message',
-              text: 'Sended Requests',
+              iconName: await this.iconsService.getOSIcon(IconKey.request),
+              text: requestsLabel,
               number: requestsCount,
             } as IIconTextNumberInfoBlockResponse,
           }
-          : {}
-      ),
-      onboardingBlock: {
-        iconName: 'questionmark.bubble',
-        text: 'Guide',
-      },
-      isUserHaveNewNotifications
-    };
+          : {}),
+        onboardingBlock: {
+          iconName: await this.iconsService.getOSIcon(IconKey.guide),
+          text: guideLabel,
+        },
+        isUserHaveNewNotifications,
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 
+  // TODO: - add settings from real cupping
   async saveDefaultCuppingSettings(
-    dto: SaveDefaultCuppingSettingsRequestDto
+    dto: SaveDefaultCuppingSettingsRequestDto,
   ): Promise<IStatusResponse> {
-    return {
-      status: StatusType.SUCCESS,
-      description: "We save your data, thanks for your time",
-    };
+    try {
+      const successMsg = await this.localizationStringsService.getSettingsText(SettingsKeys.DEFAULT_CUPPING_SETTINGS_SAVE_SUCCESS);
+      return {
+        status: StatusType.SUCCESS,
+        description: successMsg,
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 
+  // TODO: - add settings from real cupping
   async getDefaultCuppingSettings(
     userId: number,
-    currentCompanyId: number
+    currentCompanyId: number,
   ): Promise<IGetDefaultCuppingSettingsResponse> {
-    return {
-      defaultCuppingName: "Cupping Name",
-      randomSamplesOrder: true,
-      openSampleNameCupping: false,
-      singleUserCupping: false,
-      inviteAllTeammates: true,
-    };
+    try {
+      return {
+        defaultCuppingName: await this.localizationStringsService.getSettingsText(SettingsKeys.DEFAULT_CUPPING_NAME),
+        randomSamplesOrder: true,
+        openSampleNameCupping: false,
+        singleUserCupping: false,
+        inviteAllTeammates: true,
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 
-  async getCompanyRules(
-    companyId: number
-  ): Promise<IGetCompanyRulesResponse> {
-    const company = await this.prisma.company.findUnique({
-      where: { id: companyId },
-      include: { companyRules: true },
-    });
-
-    if (!company) {
-      throw new BusinessErrorException({
-        errorSubCode: ErrorSubCode.COMPANY_NOT_FOUND,
-        errorMsg: 'Company not found',
+  async getCompanyRules(companyId: number): Promise<IGetCompanyRulesResponse> {
+    try {
+      const company = await this.prisma.company.findUnique({
+        where: { id: companyId },
+        include: { companyRules: true },
       });
+
+      if (!company) {
+        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.COMPANY_NOT_FOUND);
+      }
+
+      const rulesForOwner = company.companyRules
+        .filter(rule => rule.ruleForRole === Role.OWNER)
+        .map(rule => ({ id: rule.id, name: rule.name, value: rule.value }));
+
+      const rulesForChief = company.companyRules
+        .filter(rule => rule.ruleForRole === Role.CHIEF)
+        .map(rule => ({ id: rule.id, name: rule.name, value: rule.value }));
+
+      const rulesForBarista = company.companyRules
+        .filter(rule => rule.ruleForRole === Role.BARISTA)
+        .map(rule => ({ id: rule.id, name: rule.name, value: rule.value }));
+
+      return {
+        companyName: company.companyName,
+        rulesForOwner,
+        rulesForChief,
+        rulesForBarista,
+      };
+    } catch (error) {
+      throw error;
     }
-
-    const rulesForOwner = company.companyRules
-      .filter(rule => rule.ruleForRole === Role.OWNER)
-      .map(rule => ({ id: rule.id, name: rule.name, value: rule.value }));
-
-    const rulesForChief = company.companyRules
-      .filter(rule => rule.ruleForRole === Role.CHIEF)
-      .map(rule => ({ id: rule.id, name: rule.name, value: rule.value }));
-
-    const rulesForBarista = company.companyRules
-      .filter(rule => rule.ruleForRole === Role.BARISTA)
-      .map(rule => ({ id: rule.id, name: rule.name, value: rule.value }));
-
-    return {
-      companyName: company.companyName,
-      rulesForOwner,
-      rulesForChief,
-      rulesForBarista,
-    };
   }
 
   async saveCompanyRules(
-    dto: SaveCompanyRulesRequestDto
+    dto: SaveCompanyRulesRequestDto,
   ): Promise<StatusResponseDto> {
-    await this.prisma.$transaction(async (tx) => {
-      for (const ruleDto of dto.rules) {
-        await tx.companyRule.updateMany({
-          where: {
-            id: ruleDto.id,
-            companyId: dto.companyId,
-          },
-          data: {
-            value: ruleDto.value,
-          },
-        });
-      }
-    });
+    console.log(dto);
+    try {
+      console.log(dto);
+      await this.prisma.$transaction(async (tx) => {
+        for (const ruleDto of dto.rules) {
+          await tx.companyRule.updateMany({
+            where: {
+              id: ruleDto.id,
+              companyId: dto.companyId,
+            },
+            data: { value: ruleDto.value },
+          });
+        }
+      });
 
-    return {
-      status: StatusType.SUCCESS,
-      description: `${dto.rules.length} company rules updated successfully`,
-    };
+      const rulesUpdatedMsg = await this.localizationStringsService.getSettingsText(SettingsKeys.COMPANY_RULES_SAVE_SUCCESS);
+      return {
+        status: StatusType.SUCCESS,
+        description: `${dto.rules.length} ${rulesUpdatedMsg}`,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // PRIVATE METHODS
+
+  /**
+   * Resolves the current company for the user. If no current company exists,
+   * it attempts to get one via the user's company relation.
+   */
+  private async resolveCurrentCompany(user: any, userId: number): Promise<any> {
+    if (user.currentCompany) return user.currentCompany;
+
+    const relation = await this.prisma.userToCompanyRelation.findFirst({
+      where: { userId },
+      include: { company: { include: { relatedToUsers: true, teamInvitations: true } } },
+    });
+    if (!relation) {
+      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.COMPANY_NOT_FOUND);
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { currentCompany: { connect: { id: relation.company.id } } },
+    });
+    return relation.company;
+  }
+
+  /**
+   * Computes counts for friends, team mates, requests and checks for new notifications.
+   */
+  private async getCountsAndNotifications(user: any, company: any): Promise<{
+    friendsCount: number;
+    teamCount: number;
+    requestsCount: number;
+    isUserHaveNewNotifications: boolean;
+  }> {
+    const friendsCount =
+      user.sentFriendships.filter((fs) => fs.type === FriendshipType.FRIEND).length +
+      user.receivedFriendships.filter((fs) => fs.type === FriendshipType.FRIEND).length;
+
+    const teamCount = company.teamInvitations.filter(
+      (inv) => inv.type === TeamInvitationType.TEAM,
+    ).length;
+
+    const requestsCount =
+      user.sentFriendships.filter((fs) => fs.type === FriendshipType.REQUEST).length +
+      user.sentTeamInvitations.filter((ti) => ti.type === TeamInvitationType.REQUEST).length;
+
+    const isUserHaveNewNotifications: boolean =
+      user.receivedFriendships.some((req) => req.wasLoadedByReceiver === false) ||
+      user.receivedTeamInvitations.some((req) => req.wasLoadedByReceiver === false);
+
+    return { friendsCount, teamCount, requestsCount, isUserHaveNewNotifications };
   }
 }
