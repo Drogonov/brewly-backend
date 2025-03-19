@@ -119,7 +119,6 @@ export class AuthService {
       await this.sendOtp(dto.email, otp);
       return { status: StatusType.SUCCESS };
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }
@@ -156,14 +155,13 @@ export class AuthService {
     }
   }
 
-  async logout(userId: number, rt: string): Promise<IStatusResponse> {
+  async logout(userId: number, rt: string): Promise<IStatusResponse> {    
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         include: { sessions: true, currentCompany: true },
       });
 
-      // If user is not found, consider the session already ended.
       if (!user) {
         return { status: StatusType.SUCCESS };
       }

@@ -13,7 +13,7 @@ import { CompanyRulesService } from 'src/app.common/services/company-rules.servi
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
-import { CompanyKeys } from 'src/app.common/localization/generated';
+import { CompanyKeys, ErrorsKeys } from 'src/app.common/localization/generated';
 
 @Injectable()
 export class CompanyService {
@@ -74,6 +74,9 @@ export class CompanyService {
       await this.prisma.userToCompanyRelation.deleteMany({
         where: { companyId: companyId },
       });
+      await this.prisma.companyRule.deleteMany({
+        where: { companyId: companyId }
+      })
       await this.prisma.company.delete({
         where: { id: companyId },
       });
@@ -101,16 +104,14 @@ export class CompanyService {
           },
         },
       });
-
       if (!user) {
-        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+        throw await this.errorHandlingService.getForbiddenError(ErrorsKeys.SESSION_EXPIRED);
       }
 
       const company = await this.prisma.company.findUnique({
         where: { id: companyId },
         include: { relatedToUsers: true },
       });
-
       if (!company) {
         throw await this.errorHandlingService.getBusinessError(ErrorSubCode.COMPANY_NOT_FOUND);
       }
@@ -210,9 +211,8 @@ export class CompanyService {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
       });
-
       if (!user) {
-        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+        throw await this.errorHandlingService.getForbiddenError(ErrorsKeys.SESSION_EXPIRED);
       }
 
       const createdCompany = await this.prisma.company.create({
@@ -231,7 +231,6 @@ export class CompanyService {
       });
 
       await this.companyRulesService.createDefaultCompanyRules(createdCompany.id);
-
       return createdCompany;
     } catch (error) {
       throw error;

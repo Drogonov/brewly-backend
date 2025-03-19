@@ -64,7 +64,6 @@ export class CompanyRulesService {
   }
 
   async shouldShowMakeChiefAction(companyId: number): Promise<boolean> {
-    // Retrieve the rule for "Can Chief Make Chief" and use its value as the flag.
     const rule = await this.prisma.companyRule.findFirst({
       where: {
         companyId,

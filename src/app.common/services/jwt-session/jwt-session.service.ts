@@ -6,7 +6,7 @@ import { ACCESS_TOKEN_EXPIRATION, REFRESH_TOKEN_EXPIRATION } from 'src/app.commo
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 import { ITokensResponse } from 'src/app.common/dto';
 import * as argon from 'argon2';
-import { User, Session } from '@prisma/client';
+import { User, Session, SessionType } from '@prisma/client';
 import ms from 'ms';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { ErrorsKeys } from 'src/app.common/localization/generated';
@@ -28,15 +28,16 @@ export class JWTSessionService {
     const tokens = await this.getTokens(user.id, user.currentCompanyId, user.email);
     const hashedRt = await argon.hash(tokens.refresh_token);
 
-    await this.prisma.session.create({
+    const session = await this.prisma.session.create({
       data: {
         userId: user.id,
         hashedRt,
+        type: SessionType.IOS
       },
     });
 
     // Cleanup expired sessions for the user
-    await this.cleanupOldSessions(user.id);
+    await this.cleanupOldSessions(user.id, session.id, session.type);
     return tokens;
   }
 
@@ -58,6 +59,7 @@ export class JWTSessionService {
    */
   async endSession(user: User & { sessions?: Session[] }, rt: string): Promise<void> {
     const currentSession = await this.findCurrentSession(user, rt);
+
     await this.prisma.session.delete({
       where: { id: currentSession.id },
     });
@@ -122,7 +124,11 @@ export class JWTSessionService {
   /**
    * Deletes sessions older than the refresh token expiration period.
    */
-  private async cleanupOldSessions(userId: number): Promise<void> {
+  private async cleanupOldSessions(
+    userId: number,
+    currentSessionId: number,
+    currentSessionType: SessionType
+  ): Promise<void> {
     const expirationTimeMs = ms(REFRESH_TOKEN_EXPIRATION);
     const expiredThreshold = new Date(Date.now() - expirationTimeMs);
 
@@ -132,5 +138,13 @@ export class JWTSessionService {
         createdAt: { lt: expiredThreshold },
       },
     });
+
+    await this.prisma.session.deleteMany({
+      where: {
+        id: { not: currentSessionId },
+        userId,
+        type: currentSessionType,
+      }
+    })
   }
 }

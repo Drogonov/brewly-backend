@@ -19,6 +19,7 @@ import { IconsService } from 'src/app.common/services/icons/icons.service';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
 import { SettingsKeys } from 'src/app.common/localization/generated/settings.enum';
 import { IconKey } from 'src/app.common/services/icons/icon-keys.enum';
+import { ErrorsKeys } from 'src/app.common/localization/generated';
 
 @Injectable()
 export class SettingsService {
@@ -48,7 +49,7 @@ export class SettingsService {
         },
       });
       if (!user) {
-        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+        throw await this.errorHandlingService.getForbiddenError(ErrorsKeys.SESSION_EXPIRED);
       }
 
       const currentCompany = await this.resolveCurrentCompany(user, userId);
@@ -172,9 +173,7 @@ export class SettingsService {
   async saveCompanyRules(
     dto: SaveCompanyRulesRequestDto,
   ): Promise<StatusResponseDto> {
-    console.log(dto);
     try {
-      console.log(dto);
       await this.prisma.$transaction(async (tx) => {
         for (const ruleDto of dto.rules) {
           await tx.companyRule.updateMany({
