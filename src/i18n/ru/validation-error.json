@@ -1,4 +1,6 @@
 {
     "INCORRECT_EMAIL": "Неверный Email",
-    "INCORRECT_PASSWORD": "Неверный пароль"
+    "INCORRECT_PASSWORD": "Неверный пароль",
+    "PASSWORD_IS_SHORT": "Пароль должен быть длиннее 8 символов",
+    "USER_DOESNT_EXIST": "Данный пользователь не зарегестрирован"
 }

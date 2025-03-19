@@ -11,6 +11,7 @@
     "generate:localization": "node src/scripts/generate-localization-enums.js",
     "generate": "npm run generate:localization",
     "start:dev": "NODE_ENV=development nest start --watch",
+    "restart:db": "npm run docker:compose-dev && npm run prisma:generate-dev & npm run prisma:db-push-dev & npm run prisma:studio-dev",
     "prisma:db-pull-dev": "dotenv -e ./config/development.env -- npx prisma db pull",
     "prisma:db-push-dev": "dotenv -e ./config/development.env --  npx prisma db push",
     "prisma:db-push-dev-local": "dotenv -e ./config/prisma-studio.env --  npx prisma db push",

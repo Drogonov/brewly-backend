@@ -6,6 +6,6 @@ export const constraintToErrorMapping: Record<ErrorFieldCodeType, Record<string,
     isEmail: ValidationErrorKeys.INCORRECT_EMAIL,
   },
   password: {
-    minLength: ValidationErrorKeys.INCORRECT_PASSWORD,
+    minLength: ValidationErrorKeys.PASSWORD_IS_SHORT,
   },
 };

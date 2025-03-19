@@ -1,4 +1,6 @@
 {
     "INCORRECT_EMAIL": "Incorrect Email",
-    "INCORRECT_PASSWORD": "Incorrect Password"
+    "INCORRECT_PASSWORD": "Incorrect Password",
+    "PASSWORD_IS_SHORT": "Password should be longer then 8 symbols",
+    "USER_DOESNT_EXIST": "User doesn't exist"
 }

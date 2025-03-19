@@ -6,10 +6,10 @@ import { AuthRequestDto, IStatusResponse, OTPRequestDto, StatusResponseDto, Stat
 import { ITokensResponse } from 'src/app.common/dto';
 import { JWTSessionService } from 'src/app.common/services/jwt-session/jwt-session.service';
 import { MailService } from 'src/app.common/services/mail/mail.service';
-import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
+import { ErrorFieldCode, ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
-import { ErrorsKeys } from 'src/app.common/localization/generated';
+import { ErrorsKeys, ValidationErrorKeys } from 'src/app.common/localization/generated';
 
 @Injectable()
 export class AuthService {
@@ -71,37 +71,44 @@ export class AuthService {
         error.code === 'P2002'
       ) {
         throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_ALREADY_EXIST);
+      } else {
+        throw error;
       }
-      throw error;
     }
   }
 
   async verifyOTP(dto: OTPRequestDto): Promise<ITokensResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+      });
 
-    if (!user || !(await argon.verify(user.otpHash, dto.otp))) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.INCORRECT_OTP);
+      if (!user || !(await argon.verify(user.otpHash, dto.otp))) {
+        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.INCORRECT_OTP);
+      }
+
+      await this.prisma.user.update({
+        where: { email: dto.email },
+        data: { otpHash: null, isVerificated: true },
+      });
+
+      return await this.jwtSessionService.createSession(user);
+    } catch (error) {
+      throw error;
     }
-
-    await this.prisma.user.update({
-      where: { email: dto.email },
-      data: { otpHash: null, isVerificated: true },
-    });
-
-    // Delegate session/token creation to JWTSessionService
-    return await this.jwtSessionService.createSession(user);
   }
 
   async resendOTP(dto: AuthRequestDto): Promise<StatusResponseDto> {
-    const { otp, hashedOtp } = await this.generateOtp();
-
     try {
+      const { otp, hashedOtp } = await this.generateOtp();
       const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+      if (!user) {
+        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+      }
+
       const passwordMatches = await argon.verify(user.hash, dto.password);
       if (!passwordMatches) {
-        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.INCORRECT_PASSWORD);
+        throw await this.errorHandlingService.getForbiddenError(ErrorsKeys.PASSWORDS_DOESNT_MATCH)
       }
 
       await this.prisma.user.update({
@@ -112,61 +119,79 @@ export class AuthService {
       await this.sendOtp(dto.email, otp);
       return { status: StatusType.SUCCESS };
     } catch (error) {
+      console.log(error);
       throw error;
     }
   }
 
   async signInLocal(dto: AuthRequestDto): Promise<ITokensResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-      include: { sessions: true, currentCompany: true },
-    });
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+        include: { sessions: true, currentCompany: true },
+      });
 
-    if (!user) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.VALIDATION_ERROR);
+      if (!user) {
+        throw await this.errorHandlingService.getValidationError([{
+          errorFieldsCode: ErrorFieldCode.email,
+          validationErrorKey: ValidationErrorKeys.USER_DOESNT_EXIST
+        }]);
+      }
+
+      if (!user.isVerificated) {
+        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_NOT_VERIFIED);
+      }
+
+      const passwordMatches = await argon.verify(user.hash, dto.password);
+      if (!passwordMatches) {
+        throw await this.errorHandlingService.getValidationError([{
+          errorFieldsCode: ErrorFieldCode.password,
+          validationErrorKey: ValidationErrorKeys.INCORRECT_PASSWORD
+        }]);
+      }
+
+      return await this.jwtSessionService.createSession(user);
+    } catch (error) {
+      throw error;
     }
-
-    if (!user.isVerificated) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_NOT_VERIFIED);
-    }
-
-    const passwordMatches = await argon.verify(user.hash, dto.password);
-    if (!passwordMatches) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.INCORRECT_PASSWORD);
-    }
-
-    // Delegate session/token creation to JWTSessionService
-    return await this.jwtSessionService.createSession(user);
   }
 
   async logout(userId: number, rt: string): Promise<IStatusResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { sessions: true, currentCompany: true },
-    });
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { sessions: true, currentCompany: true },
+      });
 
-    // If user is not found, consider the session already ended.
-    if (!user) {
+      // If user is not found, consider the session already ended.
+      if (!user) {
+        return { status: StatusType.SUCCESS };
+      }
+
+      await this.jwtSessionService.endSession(user, rt);
       return { status: StatusType.SUCCESS };
+    } catch (error) {
+      throw error;
     }
-
-    await this.jwtSessionService.endSession(user, rt);
-    return { status: StatusType.SUCCESS };
   }
 
   async refreshTokens(userId: number, rt: string): Promise<ITokensResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { sessions: true, currentCompany: true },
-    });
-    if (!user || !user.sessions) {
-      throw await this.errorHandlingService.getForbiddenError(ErrorsKeys.SESSION_EXPIRED);
-    }
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { sessions: true, currentCompany: true },
+      });
+      if (!user || !user.sessions) {
+        throw await this.errorHandlingService.getForbiddenError(ErrorsKeys.SESSION_EXPIRED);
+      }
 
-    await this.jwtSessionService.verifyRtMatch(user, rt);
-    const tokens = await this.jwtSessionService.getTokens(user.id, user.currentCompanyId, user.email);
-    await this.jwtSessionService.updateRtHash(user, rt, tokens.refresh_token);
-    return tokens;
+      await this.jwtSessionService.verifyRtMatch(user, rt);
+      const tokens = await this.jwtSessionService.getTokens(user.id, user.currentCompanyId, user.email);
+      await this.jwtSessionService.updateRtHash(user, rt, tokens.refresh_token);
+      return tokens;
+    } catch (error) {
+      throw error;
+    }
   }
 
   // MARK: - Private Methods

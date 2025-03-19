@@ -275,6 +275,7 @@ export class UserService {
         description: await this.localizationStringsService.getUserText(UserKeys.INCORRECT_OTP),
       };
     }
+    
     await this.prisma.user.update({
       where: { id: userId },
       data: { email: dto.email, otpHash: null },
