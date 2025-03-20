@@ -75,29 +75,10 @@ export class UserService {
   ): Promise<ISearchUsersResponse> {
     switch (type) {
       case SearchUserType.friendsList:
-        const friendships = await this.prisma.friendship.findMany({
-          where: {
-            OR: [
-              { senderId: userId, type: FriendshipType.FRIEND },
-              { receiverId: userId, type: FriendshipType.FRIEND },
-            ],
-          },
-        });
-        const friendIds = friendships.map(fs =>
-          fs.senderId === userId ? fs.receiverId : fs.senderId,
-        );
-        const users = await this.prisma.user.findMany({
-          where: { id: { in: friendIds } },
-        });
-        return { users: users.map(user => this.mappingService.mapUser(user)) };
+        return await this.getFriendsList(userId);
 
       case SearchUserType.teamList:
-        const relations = await this.prisma.userToCompanyRelation.findMany({
-          where: { companyId: currentCompanyId },
-          include: { user: true },
-        });
-        const team = relations.map(relation => relation.user);
-        return { users: team.map(user => this.mappingService.mapUser(user)) };
+        return await this.getTeamList(userId, currentCompanyId);
 
       case SearchUserType.friendsGlobalSearch:
         return { users: [] };
@@ -275,7 +256,7 @@ export class UserService {
         description: await this.localizationStringsService.getUserText(UserKeys.INCORRECT_OTP),
       };
     }
-    
+
     await this.prisma.user.update({
       where: { id: userId },
       data: { email: dto.email, otpHash: null },
@@ -331,7 +312,7 @@ export class UserService {
     return { users: users.map(user => this.mappingService.mapUser(user)) };
   }
 
-  private async searchTeam(currentUserId:number, currentCompanyId: number, dto: SearchUsersRequestDto): Promise<ISearchUsersResponse> {
+  private async searchTeam(currentUserId: number, currentCompanyId: number, dto: SearchUsersRequestDto): Promise<ISearchUsersResponse> {
     // Get all users related to the current company (team members)
     const relations = await this.prisma.userToCompanyRelation.findMany({
       where: { companyId: currentCompanyId },
@@ -343,11 +324,13 @@ export class UserService {
       .filter(user => {
         if (user.id === currentUserId) { // assuming dto.currentUserId contains the caller's id
           return false;
+        } else if (!dto.searchStr) {
+          return true;
         }
-        if (!dto.searchStr) return true;
+
         const searchLower = dto.searchStr.toLowerCase();
         return (user.userName && user.userName.toLowerCase().includes(searchLower)) ||
-               (user.email && user.email.toLowerCase().includes(searchLower));
+          (user.email && user.email.toLowerCase().includes(searchLower));
       });
     return { users: filteredUsers.map(user => this.mappingService.mapUser(user)) };
   }
@@ -365,11 +348,45 @@ export class UserService {
     return { users: users.map(user => this.mappingService.mapUser(user)) };
   }
 
+  private async getFriendsList(userId: number): Promise<ISearchUsersResponse> {
+    const friendships = await this.prisma.friendship.findMany({
+      where: {
+        OR: [
+          { senderId: userId, type: FriendshipType.FRIEND },
+          { receiverId: userId, type: FriendshipType.FRIEND },
+        ],
+      },
+    });
+    const friendIds = friendships.map(fs =>
+      fs.senderId === userId ? fs.receiverId : fs.senderId,
+    );
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: friendIds } },
+    });
+    return { users: users.map(user => this.mappingService.mapUser(user)) };
+  }
+
+  private async getTeamList(
+    userId: number,
+    currentCompanyId: number
+  ): Promise<ISearchUsersResponse> {
+    const relations = await this.prisma.userToCompanyRelation.findMany({
+      where: { companyId: currentCompanyId, userId: { not: userId } },
+      include: { user: true },
+    });
+    const team = relations.map(relation => relation.user)
+    return { users: team.map(user => this.mappingService.mapUser(user)) };
+  }
+
   private async buildUserActions(
     currentUserId: number,
     currentCompanyId: number,
     targetUserId: number,
   ): Promise<IGetUserAction[]> {
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: currentUserId },
+      include: { currentCompany: true }
+    })
     const actions: IGetUserAction[] = [];
     const friendship = await this.prisma.friendship.findFirst({
       where: {
@@ -390,16 +407,32 @@ export class UserService {
     const targetUserRelation = await this.prisma.userToCompanyRelation.findFirst({
       where: { userId: targetUserId, companyId: currentCompanyId },
     });
-    const currentUserRelation = await this.prisma.userToCompanyRelation.findFirst({
-      where: { userId: currentUserId },
-      include: { company: true },
-    });
+
     const showMakeChief = await this.companyRulesService.shouldShowMakeChiefAction(currentCompanyId);
     const isFriend = friendship ? friendship.type === FriendshipType.FRIEND : false;
     const isIncomingFriendRequest = friendship ? friendship.type === FriendshipType.REQUEST : false;
     const isTeammate = !!targetUserRelation;
     const isIncomingTeamRequest = teamInvitation ? teamInvitation.type === TeamInvitationType.REQUEST : false;
-    const isCompanyPersonal = currentUserRelation?.company?.isPersonal;
+    const isCompanyPersonal = currentUser.currentCompany?.isPersonal;
+
+    console.log(friendship);
+    console.log(teamInvitation);
+    console.log(targetUserRelation);
+
+    console.log("FLAGS");
+
+    console.log("showMakeChief");
+    console.log(showMakeChief);
+    console.log("isFriend");
+    console.log(isFriend);
+    console.log("isIncomingFriendRequest");
+    console.log(isIncomingFriendRequest);
+    console.log("isTeammate");
+    console.log(isTeammate);
+    console.log("isIncomingTeamRequest");
+    console.log(isIncomingTeamRequest);
+    console.log("isCompanyPersonal");
+    console.log(isCompanyPersonal);
 
     actions.push({
       type: UserActionType.addToFriends,
@@ -443,6 +476,8 @@ export class UserService {
         isEnabled: true,
       });
     }
+
+    console.log(actions);
     return actions;
   }
 

@@ -78,7 +78,7 @@ export class SettingsService {
           text: friendsLabel,
           number: friendsCount,
         },
-        teamMatesBlock: {
+        teamMatesBlock: currentCompany.isPersonal ? null : {
           iconName: await this.iconsService.getOSIcon(IconKey.team),
           text: teamMatesLabel,
           number: teamCount,
