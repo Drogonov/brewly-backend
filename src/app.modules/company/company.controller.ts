@@ -87,4 +87,15 @@ export class CompanyController {
   ): Promise<IStatusResponse> {
     return this.companyService.editCompany(userId, currentCompanyId, dto);
   }
+
+  @Post('accept-team-invitation')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Accept team invitation' })
+  @ApiOkResponse({ description: 'User successfully join the team', type: StatusResponseDto })
+  acceptTeamInvitation(
+    @GetCurrentUserId() userId: number,
+    @Query('notificationId', ParseIntPipe) notificationId: number
+  ): Promise<IStatusResponse> {
+    return this.companyService.acceptTeamInvitation(userId, notificationId);
+  }
 }

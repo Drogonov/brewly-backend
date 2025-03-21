@@ -2,5 +2,8 @@
   "DELETE_USER_COMPANY_SUCCESS": "We have deleted all info about this company",
   "CHANGE_CURRENT_COMPANY_SUCCESS": "We have changed your current company",
   "EDIT_COMPANY_UPDATE_SUCCESS": "We have updated your {{ companyName }} company",
-  "EDIT_COMPANY_CREATE_SUCCESS": "We have created your {{ companyName }} company"
+  "EDIT_COMPANY_CREATE_SUCCESS": "We have created your {{ companyName }} company",
+  "TEAM_INVITATION_ACCEPTED": "You have successfully joined the team",
+  "NOTIFICATION_NOT_FOUND": "Team invitation not found or already processed",
+  "TEAM_INVITATION_ALREADY_ACCEPTED": "You already accepted team invitation"
 }

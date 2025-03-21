@@ -7,7 +7,7 @@ import {
   StatusResponseDto,
   StatusType
 } from './dto';
-import { Company, Role } from '@prisma/client';
+import { Company, Role, TeamInvitationType } from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
@@ -185,6 +185,51 @@ export class CompanyService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async acceptTeamInvitation(
+    userId: number,
+    notificationId: number
+  ): Promise<StatusResponseDto> {
+    const invitation = await this.prisma.teamInvitation.findUnique({
+      where: { id: notificationId },
+      include: { company: true },
+    });
+
+    let description: string
+    if (invitation.type !== TeamInvitationType.REQUEST && invitation.type !== TeamInvitationType.TEAM) {
+      description = await this.localizationStringsService.getCompanyText(
+        CompanyKeys.TEAM_INVITATION_ALREADY_ACCEPTED
+      );
+      return { status: StatusType.DENIED, description };
+    }
+
+    if (!invitation || invitation.receiverId !== userId) {
+      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.NOTIFICATION_NOT_FOUND);
+    }
+
+    await this.prisma.teamInvitation.update({
+      where: { id: notificationId },
+      data: { type: TeamInvitationType.TEAM },
+    });
+
+    const existing = await this.prisma.userToCompanyRelation.findUnique({
+      where: { userId_companyId: { userId, companyId: invitation.companyId } },
+    });
+    if (!existing) {
+      await this.prisma.userToCompanyRelation.create({
+        data: {
+          userId,
+          companyId: invitation.companyId,
+          role: Role.BARISTA,
+        },
+      });
+    }
+
+    description = await this.localizationStringsService.getCompanyText(
+      CompanyKeys.TEAM_INVITATION_ACCEPTED
+    );
+    return { status: StatusType.SUCCESS, description };
   }
 
   // Private Methods

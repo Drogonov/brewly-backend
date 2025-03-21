@@ -374,8 +374,15 @@ export class UserService {
       where: { companyId: currentCompanyId, userId: { not: userId } },
       include: { user: true },
     });
-    const team = relations.map(relation => relation.user)
-    return { users: team.map(user => this.mappingService.mapUser(user)) };
+
+    let users: IUserInfoResponse[] = []
+    relations.forEach(relation => {
+      const role = this.mappingService.mapRole(relation.role);
+      const user = this.mappingService.mapUser(relation.user, role);
+      users.push(user)
+    });
+
+    return { users: users };
   }
 
   private async buildUserActions(
@@ -414,25 +421,6 @@ export class UserService {
     const isTeammate = !!targetUserRelation;
     const isIncomingTeamRequest = teamInvitation ? teamInvitation.type === TeamInvitationType.REQUEST : false;
     const isCompanyPersonal = currentUser.currentCompany?.isPersonal;
-
-    console.log(friendship);
-    console.log(teamInvitation);
-    console.log(targetUserRelation);
-
-    console.log("FLAGS");
-
-    console.log("showMakeChief");
-    console.log(showMakeChief);
-    console.log("isFriend");
-    console.log(isFriend);
-    console.log("isIncomingFriendRequest");
-    console.log(isIncomingFriendRequest);
-    console.log("isTeammate");
-    console.log(isTeammate);
-    console.log("isIncomingTeamRequest");
-    console.log(isIncomingTeamRequest);
-    console.log("isCompanyPersonal");
-    console.log(isCompanyPersonal);
 
     actions.push({
       type: UserActionType.addToFriends,
