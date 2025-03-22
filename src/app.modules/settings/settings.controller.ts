@@ -9,7 +9,6 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-
 import { SettingsService } from './settings.service';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetCurrentUserId, GetCurrentUserCompanyId } from 'src/app.common/decorators';

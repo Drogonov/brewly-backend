@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString, IsEmail } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { CuppingSettingsRequestDto } from './cupping.settings-request.dto';
+import { CuppingSettingsRequestDto } from './cupping-settings.request.dto';
 
 export class CreateCuppingRequestDto {
     @IsNotEmpty()
