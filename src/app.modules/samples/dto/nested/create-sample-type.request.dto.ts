@@ -1,11 +1,7 @@
-import { IsNotEmpty, IsString, IsEmail } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsNumber, Min, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateSampleTypeRequestDto {
-  @IsNotEmpty()
-  @ApiProperty({ example: 666 })
-  companyId: number;
-  
+export class CreateSampleTypeRequestDto {  
   @IsNotEmpty()
   @IsString()
   @ApiProperty({ example: 'Tasty Coffee' })
@@ -17,9 +13,11 @@ export class CreateSampleTypeRequestDto {
   sampleName: string;
 
   @IsNotEmpty()
-  @IsString()
-  @ApiProperty({ example: 'Medium' })
-  roastType: string;
+  @IsNumber()
+  @Min(1, {})
+  @Max(5, {})
+  @ApiProperty({description: "range from 1 to 5 of roast value", example: 1 })
+  roastType: number;
 
   @IsNotEmpty()
   @IsString()

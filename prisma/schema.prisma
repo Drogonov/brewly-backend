@@ -135,7 +135,7 @@ model Company {
   updatedAt       DateTime                @updatedAt
   relatedToUsers  UserToCompanyRelation[] @relation("RelatedUsers")
   sampleTypes     SampleType[]            @relation("SampleTypesOwnedByCompany")
-  sampleItems     SampleItem[]
+  coffeePacks     CoffeePack[]
   cuppings        Cupping[]
   cuppingSettings CuppingSettings[]
   cuppingResult   CuppingResult[]
@@ -188,7 +188,7 @@ model Cupping {
   settingsId       Int
   settings         CuppingSettings @relation(fields: [settingsId], references: [id])
   invitedUsers     User[]          @relation("CuppingInvitedUsers")
-  sampleItems      SampleItem[]    @relation("CuppingSampleItems")
+  coffeePacks      CoffeePack[]    @relation("CuppingCoffeePacks")
   sampleTestings   SampleTesting[]
   cuppingResult    CuppingResult?
 }
@@ -248,10 +248,10 @@ model SampleType {
   coffeTypeId       Int
   coffeeType        CoffeeType   @relation(fields: [coffeTypeId], references: [id])
   company           Company[]    @relation("SampleTypesOwnedByCompany")
-  sampleItems       SampleItem[]
+  sampleItems       CoffeePack[]
 }
 
-model SampleItem {
+model CoffeePack {
   id            Int             @id @default(autoincrement())
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -263,7 +263,7 @@ model SampleItem {
   openDate      DateTime
   weight        Int
   barCode       String
-  cuppings      Cupping[]       @relation("CuppingSampleItems")
+  cuppings      Cupping[]       @relation("CuppingCoffeePacks")
   sampleTesting SampleTesting[]
 }
 
@@ -301,8 +301,8 @@ model SampleTesting {
   company                  Company                  @relation(fields: [companyId], references: [id])
   cuppingId                Int
   cupping                  Cupping                  @relation(fields: [cuppingId], references: [id])
-  sampleItemId             Int
-  sampleItem               SampleItem               @relation(fields: [sampleItemId], references: [id])
+  coffeePackId             Int
+  coffeePack               CoffeePack               @relation(fields: [coffeePackId], references: [id])
   userTestingTimeInSeconds Int
   userSampleProperties     SampleProperty[]
   cuppingResultForSample   CuppingResultForSample[]
