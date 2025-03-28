@@ -6,8 +6,11 @@ export interface ISampleTypeInfoResponse {
   sampleTypeId: number,
   companyName: string;
   sampleName: string;
-  roastType: number;
-  coffeeType: string;
+  beanOrigin?: BeanOrigin;
+  procecingMethod?: ProcessingMethod;
+  roastType?: number;
+  grindType?: number;
+  labels?: [string]
   packsInWarehouseDescription?: string
 }
 
@@ -23,12 +26,33 @@ export class SampleTypeInfoResponseDto implements ISampleTypeInfoResponse {
   @ApiProperty({ example: 'Irgachiff 4' })
   sampleName: string;
 
-  @ApiProperty({ description: "range from 1 to 5 of roast value", example: 1 })
-  roastType: number;
+  @ApiPropertyOptional({ example: 'Blend' })
+  beanOrigin?: BeanOrigin;
 
-  @ApiProperty({ example: 'Blend' })
-  coffeeType: string;
+  @ApiPropertyOptional({ example: 'Washed' })
+  procecingMethod?: ProcessingMethod;
 
-  @ApiProperty({ description: "String value with comment about amount of availiable packs at warehouse", example: "2 packs of 250g and 1 pack of 1000g" })
+  @ApiPropertyOptional({ example: 9 })
+  grindType?: number;
+
+  @ApiPropertyOptional({ example: ['Decaf', 'Microlot'] })
+  labels?: [string];
+
+  @ApiPropertyOptional({ description: "range from 1 to 5 of roast value", example: 1 })
+  roastType?: number;
+
+  @ApiPropertyOptional({ description: "String value with comment about amount of availiable packs at warehouse", example: "2 packs of 250g and 1 pack of 1000g" })
   packsInWarehouseDescription?: string
+}
+
+export enum BeanOrigin {
+  Mono = "Mono",
+  Blend = "Blend"
+}
+
+export enum ProcessingMethod {
+  Washed = 'Washed',
+  Natural = 'Natural',
+  Honey = 'Honey',
+  Experimental = 'Experimental',
 }

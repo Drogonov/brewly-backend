@@ -3,6 +3,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 // MARK: - Project implementation
 
 export interface ICoffeePackInfoResponse {
+    id: number;
     roastDate: string;
     openDate?: string;
     wheight: number;
@@ -13,6 +14,8 @@ export interface ICoffeePackInfoResponse {
 // MARK: - Swagger class
 
 export class CoffeePackInfoResponseDto implements ICoffeePackInfoResponse {
+    @ApiProperty({description: "pack id", example: 666 })
+    id: number
     // ISO8601 format date
     @ApiPropertyOptional({ example: "2025-01-01T00:00:00Z" })
     roastDate: string;

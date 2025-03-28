@@ -4,7 +4,9 @@ import {
     StatusType,
     IStatusResponse,
     IGetSampleInfoResponse,
-    IGetSampleTypesResponse
+    IGetSampleTypesResponse,
+    BeanOrigin,
+    ProcessingMethod
 } from './dto';
 
 @Injectable()
@@ -40,18 +42,24 @@ export class SamplesService {
         return {
             sampleTypeInfo: {
                 sampleTypeId: 0,
-                companyName: 'Tasty Coffee',
-                sampleName: 'Irgachiff 4',
-                roastType: 1,
-                coffeeType: 'Blend',
+                companyName: 'Tasty Coffee and partners',
+                sampleName: 'Brazilia Cerrado',
+                beanOrigin: BeanOrigin.Blend,
+                procecingMethod: ProcessingMethod.Natural,
+                roastType: 4,
+                grindType: 5,
+                labels: ["Microlot"],
             },
             coffeePacksInfo: [
                 {
+                    id: 0,
                     roastDate: '2025-02-01T00:00:00Z',
                     openDate: '2025-02-07T00:00:00Z',
                     wheight: 250,
                     packIsOver: false
-                }, {
+                },
+                {
+                    id: 1,
                     roastDate: '2025-03-01T00:00:00Z',
                     openDate: '2025-03-07T00:00:00Z',
                     wheight: 1000,
@@ -69,19 +77,25 @@ export class SamplesService {
             sampleTypesInfo: [
                 {
                     sampleTypeId: 0,
-                    companyName: 'Tasty Coffee',
-                    sampleName: 'Irgachiff 4',
-                    roastType: 1,
-                    coffeeType: 'Mono',
+                    companyName: 'Tasty Coffee and partners',
+                    sampleName: 'Brazilia Cerrado',
+                    beanOrigin: BeanOrigin.Blend,
+                    procecingMethod: ProcessingMethod.Natural,
+                    roastType: 4,
+                    grindType: 5,
+                    labels: null,
                     packsInWarehouseDescription: "2 packs of 250g and 1 pack of 1000g"
                 },
                 {
                     sampleTypeId: 1,
                     companyName: 'Tasty Coffee',
-                    sampleName: 'Brazilia Cerrado',
-                    roastType: 3,
-                    coffeeType: 'Blend',
-                    packsInWarehouseDescription: "1 pack of 1000g"
+                    sampleName: 'Irgachiff 4',
+                    beanOrigin: BeanOrigin.Mono,
+                    procecingMethod: ProcessingMethod.Washed,
+                    roastType: 2,
+                    grindType: 9,
+                    labels: ['Microlot'],
+                    packsInWarehouseDescription: null
                 }
             ]
         }
