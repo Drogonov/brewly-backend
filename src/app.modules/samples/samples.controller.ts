@@ -53,6 +53,17 @@ export class SamplesController {
     return this.sampleService.createSample(userId, currentCompanyId, dto);
   }
 
+  @Post('update')
+  @ApiOperation({ summary: 'Update Sample' })
+  @ApiOkResponse({ description: 'Returns DTO of the sample after update', type: StatusResponseDto })
+  updateSample(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Body() dto: CreateSampleRequestDto
+  ): Promise<IStatusResponse> {
+    return this.sampleService.updateSample(userId, currentCompanyId, dto);
+  }
+
   @Get('sample-info')
   @ApiOperation({ summary: 'Get Sample type info' })
   @ApiOkResponse({ description: 'Returns DTO of the sample info', type: GetSampleInfoResponseDto })

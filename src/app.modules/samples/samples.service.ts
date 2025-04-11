@@ -34,6 +34,17 @@ export class SamplesService {
         };
     }
 
+    async updateSample(
+        userId: number,
+        currentCompanyId: number,
+        dto: CreateSampleRequestDto
+    ): Promise<IStatusResponse> {
+        return {
+            status: StatusType.SUCCESS,
+            description: "We have created sample, wait till page will update"
+        };
+    }
+
     async getSampleInfo(
         userId: number,
         currentCompanyId: number,
