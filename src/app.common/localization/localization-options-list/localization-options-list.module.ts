@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
-import { LocalizationStringsService } from '../localization/localization-strings.service';
 import { LocalizationOptionsListService } from './localization-options-list.service';
+import { LocalizationStringsService } from '../localization-strings.service';
 
 @Global()
 @Module({

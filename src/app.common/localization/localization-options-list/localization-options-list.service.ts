@@ -1,24 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { OptionListsKeys } from './generated';
-import { LocalizationStringsService } from './localization-strings.service';
-
-export interface LocalizationOptionsList {
-  type: LocalizationOptionListType;
-  currentOption?: LocalizedOption;
-  options: LocalizedOption[];
-}
-
-export interface LocalizedOption {
-  code: number;
-  value: string;
-}
-
-export const LocalizationOptionListConst = {
-  BEAN_ORIGIN: 'BEAN_ORIGIN',
-  PROCESSING_METHOD: 'PROCESSING_METHOD',
-} as const;
-
-export type LocalizationOptionListType = typeof LocalizationOptionListConst[keyof typeof LocalizationOptionListConst];
+import { LocalizationStringsService } from '../localization-strings.service';
+import { OptionListsKeys } from '../generated';
+import { LocalizationOptionListType, LocalizationOptionsList } from './localization-options-list.model';
 
 @Injectable()
 export class LocalizationOptionsListService {
@@ -39,7 +22,7 @@ export class LocalizationOptionsListService {
     ],
   };
 
-  async getOptionsList(type: LocalizationOptionListType): Promise<LocalizationOptionsList> {
+  async getOptionsList(type: LocalizationOptionListType, currenOptionCode?: number): Promise<LocalizationOptionsList> {
     const keys = this.optionsMap[type];
 
     if (!keys) {
@@ -47,15 +30,26 @@ export class LocalizationOptionsListService {
     }
 
     const options = await Promise.all(
-      keys.map(async (key, index) => ({
-        code: index + 1, // or parse from key if you prefer
+      keys.map(async (key) => ({
+        code: this.extractCodeFromKey(key),
         value: await this.localizationStringsService.getOptionListText(key),
       }))
     );
 
+    const currentOption = options.find((option) => option.code == currenOptionCode);
+
     return {
       type,
+      currentOption,
       options,
     };
+  }
+
+  private extractCodeFromKey(key: OptionListsKeys): number {
+    const match = key.match(/_CODE_(\d+)$/);
+    if (!match) {
+      throw new Error(`Invalid option key format: ${key}`);
+    }
+    return parseInt(match[1], 10);
   }
 }

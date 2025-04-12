@@ -6,7 +6,7 @@ import { ErrorHandlingModule } from 'src/app.common/error-handling/error-handlin
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { IconsService } from 'src/app.common/services/icons/icons.service';
 import { MappingService } from 'src/app.common/services/mapping.service';
-import { LocalizationOptionsListModule } from 'src/app.common/localization/localization-options-list.module';
+import { LocalizationOptionsListModule } from 'src/app.common/localization/localization-options-list/localization-options-list.module';
 
 @Module({
   imports: [ErrorHandlingModule, LocalizationOptionsListModule],

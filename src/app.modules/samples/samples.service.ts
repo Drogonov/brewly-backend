@@ -13,7 +13,9 @@ import { MappingService } from 'src/app.common/services/mapping.service';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { IconsService } from 'src/app.common/services/icons/icons.service';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
-import { LocalizationOptionListConst, LocalizationOptionsListService } from 'src/app.common/localization/localization-options-list.service';
+import { LocalizationOptionsListService } from 'src/app.common/localization/localization-options-list/localization-options-list.service';
+import { LocalizationOptionListConst } from 'src/app.common/localization/localization-options-list/localization-options-list.model';
+import { IOptionListResponse } from 'src/app.common/dto/option-list.response.dto';
 
 @Injectable()
 export class SamplesService {
@@ -67,9 +69,9 @@ export class SamplesService {
         sampleId: number
     ): Promise<IGetSampleInfoResponse> {
         const beanOriginOptionList = await this.localizationOptionsListService.getOptionsList(
-            LocalizationOptionListConst.BEAN_ORIGIN
+            LocalizationOptionListConst.BEAN_ORIGIN, 1
         );
-        console.log(beanOriginOptionList);
+        const response: IOptionListResponse = this.mappingService.mapOptionList(beanOriginOptionList);
 
         return {
             sampleTypeInfo: {

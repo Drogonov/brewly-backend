@@ -18,6 +18,8 @@ import {
     IGetUserNotificationResponse,
     UserNotificationType
 } from 'src/app.modules/user/dto';
+import { LocalizationOptionsList } from '../localization/localization-options-list/localization-options-list.model';
+import { IOptionListResponse } from '../dto/option-list.response.dto';
 
 /**
  * This service centralizes mapping logic so that transformations
@@ -144,5 +146,18 @@ export class MappingService {
             senderId: sender.id,
             wasLoadedByReceiver: invitation.wasLoadedByReceiver
         };
+    }
+
+    /**
+     * Maps OptionList from Model to DTO.
+     */
+    mapOptionList(
+        optionList: LocalizationOptionsList
+    ): IOptionListResponse {
+        return {
+            type: optionList.type,
+            currentOption: optionList.currentOption,
+            options: optionList.options
+        }
     }
 }
