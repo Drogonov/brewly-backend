@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { LocalizationStringsService } from '../localization/localization-strings-service';
+import { LocalizationStringsService } from '../localization/localization-strings.service';
 import { ErrorHandlingService } from './error-handling.service';
 
 @Global()

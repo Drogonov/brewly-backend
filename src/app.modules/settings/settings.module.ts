@@ -4,7 +4,7 @@ import { SettingsController } from './settings.controller';
 import { SettingsService } from './settings.service';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { ErrorHandlingModule } from 'src/app.common/error-handling/error-handling.module';
-import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { IconsService } from 'src/app.common/services/icons/icons.service';
 
 @Module({

@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { ErrorFieldCodeType, ValidationErrorCodes, BusinessErrorException, ErrorSubCodeType, ErrorSubCode } from './exceptions';
 import { ErrorFieldResponseDto } from '../dto';
 import { BusinessErrorKeys, ErrorsKeys } from '../localization/generated';

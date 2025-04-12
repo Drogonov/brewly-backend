@@ -16,7 +16,7 @@ import { MappingService } from 'src/app.common/services/mapping.service';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { IconsService } from 'src/app.common/services/icons/icons.service';
-import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { SettingsKeys } from 'src/app.common/localization/generated/settings.enum';
 import { IconKey } from 'src/app.common/services/icons/icon-keys.enum';
 import { ErrorsKeys } from 'src/app.common/localization/generated';

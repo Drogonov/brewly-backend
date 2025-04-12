@@ -33,7 +33,7 @@ import { MappingService } from 'src/app.common/services/mapping.service';
 import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
 import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
-import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { UserKeys } from 'src/app.common/localization/generated/user.enum';
 import { MailService } from 'src/app.common/services/mail/mail.service';
 import * as argon from 'argon2';

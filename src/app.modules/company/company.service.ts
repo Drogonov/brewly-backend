@@ -12,7 +12,7 @@ import { MappingService } from 'src/app.common/services/mapping.service';
 import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
-import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { CompanyKeys, ErrorsKeys } from 'src/app.common/localization/generated';
 
 @Injectable()

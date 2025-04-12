@@ -1,6 +1,6 @@
 import { ArgumentMetadata, BadRequestException, Injectable, ValidationPipe, ValidationError } from '@nestjs/common';
 import { BusinessErrorException, ErrorFieldCodeType, ErrorFieldCode, ErrorSubCodeType, ErrorSubCode, ValidationErrorCodes, constraintToErrorMapping } from './exceptions';
-import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { AuthKeys } from '../localization/generated/auth.enum';
 import { ErrorHandlingService } from './error-handling.service';
 import { ValidationErrorKeys } from '../localization/generated';

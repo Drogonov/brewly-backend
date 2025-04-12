@@ -36,7 +36,7 @@ export class LocalizationStringsService {
   }
 
   async getOptionListText(key: OptionListsKeys, args?: Record<string, any>): Promise<string> {
-    return this.i18n.translate(`${LocalizationKey.auth}.${key}`, {
+    return this.i18n.translate(`${LocalizationKey.optionLists}.${key}`, {
       lang: this.currentLang,
       args
     });
