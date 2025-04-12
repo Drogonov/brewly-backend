@@ -8,6 +8,7 @@ import {
   Languages,
   LocalizationKey,
   OnboardingKeys,
+  OptionListsKeys,
   SettingsKeys,
   UserKeys,
   ValidationErrorKeys
@@ -28,6 +29,13 @@ export class LocalizationStringsService {
   }
 
   async getAuthText(key: AuthKeys, args?: Record<string, any>): Promise<string> {
+    return this.i18n.translate(`${LocalizationKey.auth}.${key}`, {
+      lang: this.currentLang,
+      args
+    });
+  }
+
+  async getOptionListText(key: OptionListsKeys, args?: Record<string, any>): Promise<string> {
     return this.i18n.translate(`${LocalizationKey.auth}.${key}`, {
       lang: this.currentLang,
       args
