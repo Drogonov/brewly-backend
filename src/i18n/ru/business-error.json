@@ -10,5 +10,6 @@
   "VALIDATION_ERROR": "Ошибка валидации",
   "REQUEST_VALIDATION_ERROR": "Ошибка валидации запроса",
   "UNEXPECTED_ERROR": "Неожиданная ошибка",
-  "COMPANY_DELETE_DENIED": "Нельзя удалить вашу компанию"
+  "COMPANY_DELETE_DENIED": "Нельзя удалить вашу компанию",
+  "SAMPLE_CREATION_FAILED": "Ошибка сохранения образца"
 }

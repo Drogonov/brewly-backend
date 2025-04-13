@@ -9,6 +9,7 @@ import {
   LocalizationKey,
   OnboardingKeys,
   OptionListsKeys,
+  SamplesKeys,
   SettingsKeys,
   UserKeys,
   ValidationErrorKeys
@@ -65,6 +66,13 @@ export class LocalizationStringsService {
 
   async getUserText(key: UserKeys, args?: Record<string, any>): Promise<string> {
     return this.i18n.translate(`${LocalizationKey.user}.${key}`, {
+      lang: this.currentLang,
+      args
+    });
+  }
+
+  async getSamplesText(key: SamplesKeys, args?: Record<string, any>): Promise<string> {
+    return this.i18n.translate(`${LocalizationKey.samples}.${key}`, {
       lang: this.currentLang,
       args
     });

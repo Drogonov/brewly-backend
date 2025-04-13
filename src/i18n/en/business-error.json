@@ -10,5 +10,6 @@
     "VALIDATION_ERROR": "Validation error",
     "REQUEST_VALIDATION_ERROR": "Request validation error",
     "UNEXPECTED_ERROR": "You have some unexpected error",
-    "COMPANY_DELETE_DENIED": "We cant delete your company"
+    "COMPANY_DELETE_DENIED": "We cant delete your company",
+    "SAMPLE_CREATION_FAILED": "Cant create sample"
   }

@@ -4,6 +4,7 @@ export * from './company.enum';
 export * from './errors.enum';
 export * from './onboarding.enum';
 export * from './option-lists.enum';
+export * from './samples.enum';
 export * from './settings.enum';
 export * from './user.enum';
 export * from './validation-error.enum';

@@ -12,7 +12,7 @@ export interface ISampleResponse {
     sampleItemId: number;
     roastDate: string;
     openDate: string;
-    wheight: number;
+    weight: number;
     barCode: string;
 }
 
@@ -44,8 +44,8 @@ export class SampleResponseDto implements ISampleResponse {
     @ApiProperty({ example: '21.12.2021' })
     openDate: string;
 
-    @ApiProperty({ description: "Wheight in gramms", example: '250' })
-    wheight: number;
+    @ApiProperty({ description: "Weight in gramms", example: '250' })
+    weight: number;
 
     @ApiProperty({ example: '666777' })
     barCode: string;

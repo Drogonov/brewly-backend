@@ -6,7 +6,7 @@ export interface ICoffeePackInfoResponse {
     id: number;
     roastDate: string;
     openDate?: string;
-    wheight: number;
+    weight: number;
     barCode?: string;
     packIsOver?: boolean
 }
@@ -24,8 +24,8 @@ export class CoffeePackInfoResponseDto implements ICoffeePackInfoResponse {
     @ApiPropertyOptional({ example: "2025-01-01T00:00:00Z" })
     openDate?: string;
 
-    @ApiProperty({description: "wheight in gramms", example: 250 })
-    wheight: number;
+    @ApiProperty({description: "weight in gramms", example: 250 })
+    weight: number;
 
     @ApiPropertyOptional({ description: 'Pack bar code' })
     barCode?: string;

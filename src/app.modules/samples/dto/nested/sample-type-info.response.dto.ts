@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IOptionListResponse } from 'src/app.common/dto/option-list.response.dto';
 
 // MARK: - Project implementation
 
@@ -6,11 +7,11 @@ export interface ISampleTypeInfoResponse {
   sampleTypeId: number,
   companyName: string;
   sampleName: string;
-  beanOrigin?: BeanOrigin;
-  procecingMethod?: ProcessingMethod;
+  beanOrigin?: IOptionListResponse;
+  procecingMethod?: IOptionListResponse;
   roastType?: number;
   grindType?: number;
-  labels?: [string]
+  labels?: string[]
   packsInWarehouseDescription?: string
 }
 
@@ -27,32 +28,17 @@ export class SampleTypeInfoResponseDto implements ISampleTypeInfoResponse {
   sampleName: string;
 
   @ApiPropertyOptional({ example: 'Blend' })
-  beanOrigin?: BeanOrigin;
+  beanOrigin?: IOptionListResponse;
 
   @ApiPropertyOptional({ example: 'Washed' })
-  procecingMethod?: ProcessingMethod;
+  procecingMethod?: IOptionListResponse;
 
   @ApiPropertyOptional({ example: 9 })
   grindType?: number;
 
   @ApiPropertyOptional({ example: ['Decaf', 'Microlot'] })
-  labels?: [string];
+  labels?: string[];
 
   @ApiPropertyOptional({ description: "range from 1 to 5 of roast value", example: 1 })
   roastType?: number;
-
-  @ApiPropertyOptional({ description: "String value with comment about amount of availiable packs at warehouse", example: "2 packs of 250g and 1 pack of 1000g" })
-  packsInWarehouseDescription?: string
-}
-
-export enum BeanOrigin {
-  Mono = "Mono",
-  Blend = "Blend"
-}
-
-export enum ProcessingMethod {
-  Washed = 'Washed',
-  Natural = 'Natural',
-  Honey = 'Honey',
-  Experimental = 'Experimental',
 }

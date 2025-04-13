@@ -6,6 +6,7 @@ export enum LocalizationKey {
   errors = 'errors',
   onboarding = 'onboarding',
   optionLists = 'option-lists',
+  samples = 'samples',
   settings = 'settings',
   user = 'user',
   validationError = 'validation-error'

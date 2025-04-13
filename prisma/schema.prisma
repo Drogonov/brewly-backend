@@ -238,17 +238,18 @@ model CuppingSettings {
 //
 
 model SampleType {
-  id                Int          @id @default(autoincrement())
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-  originCompanyName String
-  sampleName        String
-  roastTypeId       Int
-  roastType         RoastType    @relation(fields: [roastTypeId], references: [id])
-  coffeTypeId       Int
-  coffeeType        CoffeeType   @relation(fields: [coffeTypeId], references: [id])
-  company           Company[]    @relation("SampleTypesOwnedByCompany")
-  sampleItems       CoffeePack[]
+  id                  Int          @id @default(autoincrement())
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  company             Company[]    @relation("SampleTypesOwnedByCompany")
+  originCompanyName   String
+  sampleName          String
+  beanOriginCode      Int
+  procecingMethodCode Int
+  roastType           Int
+  grindType           Int
+  labels              String[]
+  sampleItems         CoffeePack[]
 }
 
 model CoffeePack {
@@ -260,29 +261,12 @@ model CoffeePack {
   sampleTypeId  Int
   sampleType    SampleType      @relation(fields: [sampleTypeId], references: [id])
   roastDate     DateTime
-  openDate      DateTime
+  openDate      DateTime?
+  packIsOver    Boolean
   weight        Int
-  barCode       String
+  barCode       String?
   cuppings      Cupping[]       @relation("CuppingCoffeePacks")
   sampleTesting SampleTesting[]
-}
-
-model RoastType {
-  id         Int          @id @default(autoincrement())
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  value      String
-  isCustom   Boolean
-  sampleType SampleType[]
-}
-
-model CoffeeType {
-  id         Int          @id @default(autoincrement())
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  value      String
-  isCustom   Boolean
-  sampleType SampleType[]
 }
 
 //
