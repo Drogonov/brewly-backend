@@ -20,7 +20,7 @@ export class CoffeePackRequestDto {
   openDate?: string;
 
   @IsOptional()
-  @IsBoolean()
+  @Type(() => Boolean)
   @ApiPropertyOptional({ example: false })
   packIsOver?: boolean
 

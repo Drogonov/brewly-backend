@@ -54,6 +54,7 @@ export class SamplesService {
         currentCompanyId: number,
         dto: SampleRequestDto
     ): Promise<IStatusResponse> {
+        console.log(dto);
         try {
             await this.prisma.sampleType.create({
                 data: {
