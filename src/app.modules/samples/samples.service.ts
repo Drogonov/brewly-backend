@@ -18,7 +18,6 @@ import { LocalizationOptionsListService } from 'src/app.common/localization/loca
 import { LocalizationOptionListConst } from 'src/app.common/localization/localization-options-list/localization-options-list.model';
 import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { SamplesKeys } from 'src/app.common/localization/generated';
-import { IOptionListResponse } from 'src/app.common/dto/option-list.response.dto';
 
 @Injectable()
 export class SamplesService {

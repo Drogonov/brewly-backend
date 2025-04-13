@@ -17,7 +17,9 @@ import {
   IGetSampleInfoResponse,
   IGetSampleTypesResponse,
   GetSampleTypesResponseDto,
-  GetSampleInfoResponseDto
+  GetSampleInfoResponseDto,
+  IGetSampleCreationOptionsResponse,
+  GetSampleCreationOptionsResponseDTO
 } from './dto';
 
 @ApiTags('samples')
@@ -56,7 +58,7 @@ export class SamplesController {
     @GetCurrentUserCompanyId() currentCompanyId: number,
     @Query('sampleId', ParseIntPipe) sampleId: number
   ): Promise<IGetSampleInfoResponse> {
-    return this.sampleService.getSampleInfo(userId, currentCompanyId, sampleId)
+    return this.sampleService.getSampleInfo(userId, currentCompanyId, sampleId);
   }
 
   @Get('types')
@@ -67,5 +69,15 @@ export class SamplesController {
     @GetCurrentUserCompanyId() currentCompanyId: number,
   ): Promise<IGetSampleTypesResponse> {
     return this.sampleService.getSampleTypes(userId, currentCompanyId);
+  }
+
+  @Get('creation-options')
+  @ApiOperation({ summary: 'Get Sample Creation Options' })
+  @ApiOkResponse({ description: 'Returns DTO with options for creating a sample', type: GetSampleCreationOptionsResponseDTO })
+  getSampleCreationOptions(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+  ): Promise<IGetSampleCreationOptionsResponse> {
+    return this.sampleService.getSampleCreationOptions(userId, currentCompanyId);
   }
 }
