@@ -250,6 +250,7 @@ model SampleType {
   grindType           Int
   labels              String[]
   sampleItems         CoffeePack[]
+  isArchived          Boolean      @default(false)
 }
 
 model CoffeePack {
@@ -262,7 +263,7 @@ model CoffeePack {
   sampleType    SampleType      @relation(fields: [sampleTypeId], references: [id])
   roastDate     DateTime
   openDate      DateTime?
-  packIsOver    Boolean
+  packIsOver    Boolean         @default(false)
   weight        Int
   barCode       String?
   cuppings      Cupping[]       @relation("CuppingCoffeePacks")

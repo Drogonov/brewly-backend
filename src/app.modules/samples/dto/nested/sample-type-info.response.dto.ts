@@ -13,6 +13,7 @@ export interface ISampleTypeInfoResponse {
   grindType?: number;
   labels?: string[]
   packsInWarehouseDescription?: string
+  isArchived: boolean;
 }
 
 // MARK: - Swagger class
@@ -41,4 +42,7 @@ export class SampleTypeInfoResponseDto implements ISampleTypeInfoResponse {
 
   @ApiPropertyOptional({ description: "range from 1 to 5 of roast value", example: 1 })
   roastType?: number;
+
+  @ApiProperty({ example: false })
+  isArchived: boolean;
 }

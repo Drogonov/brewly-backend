@@ -22,6 +22,7 @@ import {
   IGetSampleCreationOptionsResponse,
   GetSampleCreationOptionsResponseDTO
 } from './dto';
+import { ArchiveSampleDto } from './dto/archive-sample.request.dto';
 
 @ApiTags('samples')
 @ApiBearerAuth('access-token')
@@ -49,6 +50,17 @@ export class SamplesController {
     @Body() dto: SampleRequestDto
   ): Promise<IStatusResponse> {
     return this.sampleService.updateSample(userId, currentCompanyId, dto);
+  }
+
+  @Post('archive')
+  @ApiOperation({ summary: 'Update Sample' })
+  @ApiOkResponse({ description: 'Returns DTO with status of sample archiving', type: StatusResponseDto })
+  archiveSample(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Body() dto: ArchiveSampleDto
+  ): Promise<IStatusResponse> {
+    return this.sampleService.archiveSample(userId, currentCompanyId, dto);
   }
 
   @Get('sample-info')

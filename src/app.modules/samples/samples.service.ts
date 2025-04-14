@@ -18,6 +18,7 @@ import { LocalizationOptionsListService } from 'src/app.common/localization/loca
 import { LocalizationOptionListConst } from 'src/app.common/localization/localization-options-list/localization-options-list.model';
 import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { SamplesKeys } from 'src/app.common/localization/generated';
+import { ArchiveSampleDto } from './dto/archive-sample.request.dto';
 
 @Injectable()
 export class SamplesService {
@@ -96,7 +97,6 @@ export class SamplesService {
         }
     }
 
-
     async updateSample(
         userId: number,
         currentCompanyId: number,
@@ -169,6 +169,40 @@ export class SamplesService {
         }
     }
 
+    async archiveSample(
+        userId: number,
+        currentCompanyId: number,
+        dto: ArchiveSampleDto
+    ): Promise<IStatusResponse> {
+        const sample = await this.prisma.sampleType.findUnique({
+            where: { id: dto.sampleTypeId },
+            include: { sampleItems: true },
+        });
+
+        if (!sample) {
+            throw await this.errorHandlingService.getBusinessError(ErrorSubCode.SAMPLE_DOESNT_EXIST);
+        }
+
+        try {
+            await this.prisma.sampleType.update({
+                where: { id: sample.id },
+                data: {
+                    isArchived: dto.isArchived
+                }
+            });
+
+            return {
+                status: StatusType.SUCCESS,
+                description: await this.localizationStringsService.getSamplesText(
+                    SamplesKeys.SAMPLE_UPDATED_SUCCESSFULLY
+                ),
+            };
+
+        } catch (error) {
+            throw await this.errorHandlingService.getBusinessError(ErrorSubCode.REQUEST_VALIDATION_ERROR);
+        }    
+    }
+
     async getSampleInfo(
         userId: number,
         currentCompanyId: number,
@@ -205,6 +239,7 @@ export class SamplesService {
             roastType: sample.roastType,
             grindType: sample.grindType,
             labels: sample.labels,
+            isArchived: sample.isArchived
         };
 
         // Map each coffee pack (SampleItems) into the response format.
@@ -270,6 +305,7 @@ export class SamplesService {
                     grindType: sample.grindType,
                     labels: sample.labels,
                     packsInWarehouseDescription: packsInWarehouseDescription || null,
+                    isArchived: sample.isArchived
                 };
             })
         );
