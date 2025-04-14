@@ -1,9 +1,11 @@
 import { IsNotEmpty, IsString, IsEmail, IsDate, IsDateString, IsOptional, IsNumber, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { BooleanTransformer } from 'src/app.common/decorators';
 
 export class CoffeePackRequestDto {
   @IsOptional()
+  @Type(() => Number)
   @ApiProperty({ example: 666 })
   packId?: number;
 
@@ -19,10 +21,11 @@ export class CoffeePackRequestDto {
   @ApiPropertyOptional({ example: "2025-01-01T00:00:00Z" })
   openDate?: string;
 
-  @IsOptional()
-  @Type(() => Boolean)
+  @IsNotEmpty()
+  @BooleanTransformer()
+  @IsBoolean()
   @ApiPropertyOptional({ example: false })
-  packIsOver?: boolean
+  packIsOver: boolean
 
   @IsNotEmpty()
   @Type(() => Number)

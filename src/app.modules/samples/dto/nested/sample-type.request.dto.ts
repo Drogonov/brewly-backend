@@ -31,15 +31,15 @@ export class SampleTypeRequestDto {
 
   @IsNotEmpty()
   @Type(() => Number)
-  @Min(1, {})
+  @Min(0, {})
   @Max(5, {})
   @ApiProperty({description: "range from 1 to 5 of roast value", example: 1 })
   roastType: number;
 
   @IsNotEmpty()
   @Type(() => Number)
-  @Min(1, {})
-  @Max(5, {})
+  @Min(0, {})
+  @Max(10, {})
   @ApiProperty({description: "range from 1 to 10 of grind value", example: 1 })
   grindType: number;
 

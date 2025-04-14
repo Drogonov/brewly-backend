@@ -54,8 +54,22 @@ export class SamplesService {
         currentCompanyId: number,
         dto: SampleRequestDto
     ): Promise<IStatusResponse> {
-        console.log(dto);
         try {
+            // Map coffee packs if provided; if not, leave it undefined.
+            const sampleItemsData =
+                dto.coffeePacksInfo && dto.coffeePacksInfo.length
+                    ? {
+                        create: dto.coffeePacksInfo.map(pack => ({
+                            companyId: currentCompanyId,
+                            roastDate: new Date(pack.roastDate),
+                            openDate: pack.openDate ? new Date(pack.openDate) : null,
+                            packIsOver: pack.packIsOver ?? false,
+                            weight: pack.weight,
+                            barCode: pack.barCode,
+                        })),
+                    }
+                    : undefined;
+
             await this.prisma.sampleType.create({
                 data: {
                     originCompanyName: dto.sampleTypeInfo.companyName,
@@ -68,16 +82,8 @@ export class SamplesService {
                     company: {
                         connect: { id: currentCompanyId },
                     },
-                    sampleItems: {
-                        create: dto.coffeePacksInfo.map(pack => ({
-                            companyId: currentCompanyId,
-                            roastDate: new Date(pack.roastDate),
-                            openDate: pack.openDate ? new Date(pack.openDate) : null,
-                            packIsOver: pack.packIsOver ?? false,
-                            weight: pack.weight,
-                            barCode: pack.barCode,
-                        })),
-                    },
+                    // Only include sampleItems if coffee packs were provided.
+                    ...(sampleItemsData ? { sampleItems: sampleItemsData } : {}),
                 },
             });
 
@@ -90,17 +96,22 @@ export class SamplesService {
         }
     }
 
+
     async updateSample(
         userId: number,
         currentCompanyId: number,
         dto: SampleRequestDto
     ): Promise<IStatusResponse> {
+        console.log(dto);
+        // Validation: update method requires sampleTypeId.
         if (!dto.sampleTypeInfo.sampleTypeId) {
+            // You can also provide a more descriptive error message or adjust the validation.
             throw await this.errorHandlingService.getBusinessError(ErrorSubCode.REQUEST_VALIDATION_ERROR);
         }
         const sampleTypeId = dto.sampleTypeInfo.sampleTypeId;
 
         try {
+            // Update the sample type record.
             await this.prisma.sampleType.update({
                 where: { id: sampleTypeId },
                 data: {
@@ -114,49 +125,44 @@ export class SamplesService {
                 },
             });
 
-            // Retrieve existing coffee packs for this sample type.
-            const existingCoffeePacks = await this.prisma.coffeePack.findMany({
-                where: { sampleTypeId: sampleTypeId },
-            });
-
-            // Collect packIds from incoming coffee packs that are existing records.
-            const incomingPackIds: number[] = dto.coffeePacksInfo
-                .filter((pack) => pack.packId !== undefined)
-                .map((pack) => pack.packId as number);
-
-            // Iterate over the incoming coffee packs.
-            for (const pack of dto.coffeePacksInfo) {
-                if (pack.packId) {
-                    // Update existing pack.
-                    await this.prisma.coffeePack.update({
-                        where: { id: pack.packId },
-                        data: {
-                            roastDate: new Date(pack.roastDate),
-                            openDate: pack.openDate ? new Date(pack.openDate) : null,
-                            packIsOver: pack.packIsOver ?? false,
-                            weight: pack.weight,
-                            barCode: pack.barCode,
-                        },
-                    });
-                } else {
-                    // Create a new coffee pack for the sample.
-                    await this.prisma.coffeePack.create({
-                        data: {
-                            companyId: currentCompanyId,
-                            sampleTypeId: sampleTypeId,
-                            roastDate: new Date(pack.roastDate),
-                            openDate: pack.openDate ? new Date(pack.openDate) : null,
-                            packIsOver: pack.packIsOver ?? false,
-                            weight: pack.weight,
-                            barCode: pack.barCode,
-                        },
-                    });
+            // Proceed only if coffeePacksInfo is provided
+            if (dto.coffeePacksInfo && dto.coffeePacksInfo.length > 0) {
+                // For each provided coffee pack, either update an existing record or create a new one.
+                for (const pack of dto.coffeePacksInfo) {
+                    if (pack.packId) {
+                        // Update an existing coffee pack.
+                        await this.prisma.coffeePack.update({
+                            where: { id: pack.packId },
+                            data: {
+                                roastDate: new Date(pack.roastDate),
+                                openDate: pack.openDate ? new Date(pack.openDate) : null,
+                                packIsOver: pack.packIsOver ?? false,
+                                weight: pack.weight,
+                                barCode: pack.barCode,
+                            },
+                        });
+                    } else {
+                        // Create a new coffee pack associated with the sample.
+                        await this.prisma.coffeePack.create({
+                            data: {
+                                companyId: currentCompanyId,
+                                sampleTypeId: sampleTypeId,
+                                roastDate: new Date(pack.roastDate),
+                                openDate: pack.openDate ? new Date(pack.openDate) : null,
+                                packIsOver: pack.packIsOver ?? false,
+                                weight: pack.weight,
+                                barCode: pack.barCode,
+                            },
+                        });
+                    }
                 }
             }
 
             return {
                 status: StatusType.SUCCESS,
-                description: await this.localizationStringsService.getSamplesText(SamplesKeys.SAMPLE_UPDATED_SUCCESSFULLY),
+                description: await this.localizationStringsService.getSamplesText(
+                    SamplesKeys.SAMPLE_UPDATED_SUCCESSFULLY
+                ),
             };
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(ErrorSubCode.SAMPLE_CREATION_FAILED);

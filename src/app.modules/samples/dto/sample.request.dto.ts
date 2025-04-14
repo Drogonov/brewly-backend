@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsEmail } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { SampleTypeRequestDto } from './nested/sample-type.request.dto';
 import { CoffeePackRequestDto } from './nested/coffee-pack.request.dto';
@@ -10,8 +10,8 @@ export class SampleRequestDto {
   @ApiProperty({ description: 'Type describing sample' })
   sampleTypeInfo: SampleTypeRequestDto;
 
-  @IsNotEmpty()
+  @IsOptional()
   @Type(() => CoffeePackRequestDto)
   @ApiProperty({ example: 'Current coffee packs of that sample type' })
-  coffeePacksInfo: CoffeePackRequestDto[];
+  coffeePacksInfo?: CoffeePackRequestDto[];
 }
