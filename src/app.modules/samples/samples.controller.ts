@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  ParseArrayPipe,
   ParseIntPipe,
   Post,
   Query,
@@ -20,7 +21,9 @@ import {
   GetSampleTypesResponseDto,
   GetSampleInfoResponseDto,
   IGetSampleCreationOptionsResponse,
-  GetSampleCreationOptionsResponseDTO
+  GetSampleCreationOptionsResponseDTO,
+  GetCoffeePacksInfoResponseDto,
+  IGetCoffeePacksInfoResponse
 } from './dto';
 import { ArchiveSampleDto } from './dto/archive-sample.request.dto';
 
@@ -92,5 +95,20 @@ export class SamplesController {
     @GetCurrentUserCompanyId() currentCompanyId: number,
   ): Promise<IGetSampleCreationOptionsResponse> {
     return this.sampleService.getSampleCreationOptions(userId, currentCompanyId);
+  }
+
+  @Get('coffee-packs-info')
+  @ApiOperation({ summary: 'Get Coffee packs' })
+  @ApiOkResponse({ description: 'Returns DTO of the coffee packs by their ids', type: GetCoffeePacksInfoResponseDto })
+  getCoffeePacksInfo(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Query(
+      'packsIds',
+      new ParseArrayPipe({ items: Number, separator: ',' })
+    )
+    packsIds: number[],
+  ): Promise<IGetCoffeePacksInfoResponse> {
+    return this.sampleService.getCoffeePacksInfo(userId, currentCompanyId, packsIds);
   }
 }

@@ -7,7 +7,8 @@ import {
     IGetSampleTypesResponse,
     ISampleTypeInfoResponse,
     ICoffeePackInfoResponse,
-    IGetSampleCreationOptionsResponse
+    IGetSampleCreationOptionsResponse,
+    IGetCoffeePacksInfoResponse
 } from './dto';
 import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
 import { MappingService } from 'src/app.common/services/mapping.service';
@@ -200,7 +201,7 @@ export class SamplesService {
 
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(ErrorSubCode.REQUEST_VALIDATION_ERROR);
-        }    
+        }
     }
 
     async getSampleInfo(
@@ -294,6 +295,7 @@ export class SamplesService {
                 const packsInWarehouseDescription = Object.entries(packsCount)
                     .map(([weight, count]) => `${count} pack${count > 1 ? "s" : ""} of ${weight}g`)
                     .join(" and ");
+                const connectedPackIds: number[] = sample.sampleItems.map(pack => pack.id);
 
                 return {
                     sampleTypeId: sample.id,
@@ -305,11 +307,39 @@ export class SamplesService {
                     grindType: sample.grindType,
                     labels: sample.labels,
                     packsInWarehouseDescription: packsInWarehouseDescription || null,
+                    connectedPackIds: connectedPackIds,
                     isArchived: sample.isArchived
                 };
             })
         );
 
         return { sampleTypesInfo };
+    }
+
+    async getCoffeePacksInfo(
+        userId: number,
+        currentCompanyId: number,
+        packsIds: number[]
+    ): Promise<IGetCoffeePacksInfoResponse> {
+        console.log("DEBUG: ");
+        const coffeePacks = await this.prisma.coffeePack.findMany({
+            where: {
+                companyId: currentCompanyId,
+                id: { in: packsIds },
+            },
+        });
+
+        const coffeePacksInfo: ICoffeePackInfoResponse[] = coffeePacks.map(pack => ({
+            id: pack.id,
+            roastDate: pack.roastDate.toISOString(),
+            openDate: pack.openDate ? pack.openDate.toISOString() : undefined,
+            weight: pack.weight,
+            barCode: pack.barCode,
+            packIsOver: pack.packIsOver,
+        }));
+
+        console.log(coffeePacksInfo);
+
+        return { coffeePacksInfo };
     }
 }

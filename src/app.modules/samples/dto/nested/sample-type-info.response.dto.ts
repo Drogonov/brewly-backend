@@ -11,8 +11,9 @@ export interface ISampleTypeInfoResponse {
   procecingMethod?: IOptionListResponse;
   roastType?: number;
   grindType?: number;
-  labels?: string[]
-  packsInWarehouseDescription?: string
+  labels?: string[];
+  packsInWarehouseDescription?: string;
+  connectedPackIds?: number[];
   isArchived: boolean;
 }
 
@@ -42,6 +43,12 @@ export class SampleTypeInfoResponseDto implements ISampleTypeInfoResponse {
 
   @ApiPropertyOptional({ description: "range from 1 to 5 of roast value", example: 1 })
   roastType?: number;
+
+  @ApiPropertyOptional({ description: "description about connected packs", example: "1 pack 250g" })
+  packsInWarehouseDescription?: string;
+
+  @ApiPropertyOptional({ description: "array of connected pack ids", example: [1, 2, 666] })
+  connectedPackIds?: number[];
 
   @ApiProperty({ example: false })
   isArchived: boolean;
