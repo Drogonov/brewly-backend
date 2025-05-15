@@ -3,7 +3,6 @@ import {
     SampleRequestDto,
     StatusType,
     IStatusResponse,
-    IGetSampleInfoResponse,
     IGetSampleTypesResponse,
     ISampleTypeInfoResponse,
     ICoffeePackInfoResponse,
@@ -208,7 +207,7 @@ export class SamplesService {
         userId: number,
         currentCompanyId: number,
         sampleId: number
-    ): Promise<IGetSampleInfoResponse> {
+    ): Promise<ISampleTypeInfoResponse> {
         // Retrieve the sample type record along with its related coffee packs.
         const sample = await this.prisma.sampleType.findUnique({
             where: { id: sampleId },
@@ -230,19 +229,6 @@ export class SamplesService {
             sample.procecingMethodCode
         );
 
-        // Construct the sample type info response.
-        const sampleTypeInfo: ISampleTypeInfoResponse = {
-            sampleTypeId: sample.id,
-            companyName: sample.originCompanyName,
-            sampleName: sample.sampleName,
-            beanOrigin: this.mappingService.mapOptionList(beanOriginOptionList),
-            procecingMethod: this.mappingService.mapOptionList(processingMethodOptionList),
-            roastType: sample.roastType,
-            grindType: sample.grindType,
-            labels: sample.labels,
-            isArchived: sample.isArchived
-        };
-
         // Map each coffee pack (SampleItems) into the response format.
         const coffeePacksInfo: ICoffeePackInfoResponse[] = sample.sampleItems.map(pack => ({
             id: pack.id,
@@ -253,10 +239,21 @@ export class SamplesService {
             packIsOver: pack.packIsOver,
         }));
 
-        return {
-            sampleTypeInfo,
-            coffeePacksInfo,
+        // Construct the sample type info response.
+        const sampleTypeInfo: ISampleTypeInfoResponse = {
+            sampleTypeId: sample.id,
+            companyName: sample.originCompanyName,
+            sampleName: sample.sampleName,
+            beanOrigin: this.mappingService.mapOptionList(beanOriginOptionList),
+            procecingMethod: this.mappingService.mapOptionList(processingMethodOptionList),
+            roastType: sample.roastType,
+            grindType: sample.grindType,
+            labels: sample.labels,
+            isArchived: sample.isArchived,
+            connectedPacksInfo: coffeePacksInfo
         };
+
+        return sampleTypeInfo;
     }
 
     async getSampleTypes(
@@ -295,7 +292,17 @@ export class SamplesService {
                 const packsInWarehouseDescription = Object.entries(packsCount)
                     .map(([weight, count]) => `${count} pack${count > 1 ? "s" : ""} of ${weight}g`)
                     .join(" and ");
-                const connectedPackIds: number[] = sample.sampleItems.map(pack => pack.id);
+
+
+                // Map each coffee pack (SampleItems) into the response format.
+                const coffeePacksInfo: ICoffeePackInfoResponse[] = sample.sampleItems.map(pack => ({
+                    id: pack.id,
+                    roastDate: pack.roastDate.toISOString(),
+                    openDate: pack.openDate ? pack.openDate.toISOString() : undefined,
+                    weight: pack.weight,
+                    barCode: pack.barCode,
+                    packIsOver: pack.packIsOver,
+                }));
 
                 return {
                     sampleTypeId: sample.id,
@@ -307,7 +314,7 @@ export class SamplesService {
                     grindType: sample.grindType,
                     labels: sample.labels,
                     packsInWarehouseDescription: packsInWarehouseDescription || null,
-                    connectedPackIds: connectedPackIds,
+                    connectedPacksInfo: coffeePacksInfo,
                     isArchived: sample.isArchived
                 };
             })

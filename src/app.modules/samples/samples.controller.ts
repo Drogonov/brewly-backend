@@ -16,14 +16,14 @@ import {
   SampleRequestDto,
   IStatusResponse,
   StatusResponseDto,
-  IGetSampleInfoResponse,
   IGetSampleTypesResponse,
   GetSampleTypesResponseDto,
-  GetSampleInfoResponseDto,
   IGetSampleCreationOptionsResponse,
   GetSampleCreationOptionsResponseDTO,
   GetCoffeePacksInfoResponseDto,
-  IGetCoffeePacksInfoResponse
+  IGetCoffeePacksInfoResponse,
+  SampleTypeInfoResponseDto,
+  ISampleTypeInfoResponse
 } from './dto';
 import { ArchiveSampleDto } from './dto/archive-sample.request.dto';
 
@@ -68,12 +68,12 @@ export class SamplesController {
 
   @Get('sample-info')
   @ApiOperation({ summary: 'Get Sample type info' })
-  @ApiOkResponse({ description: 'Returns DTO of the sample info', type: GetSampleInfoResponseDto })
+  @ApiOkResponse({ description: 'Returns DTO of the sample info', type: SampleTypeInfoResponseDto })
   getSampleInfo(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
     @Query('sampleId', ParseIntPipe) sampleId: number
-  ): Promise<IGetSampleInfoResponse> {
+  ): Promise<ISampleTypeInfoResponse> {
     return this.sampleService.getSampleInfo(userId, currentCompanyId, sampleId);
   }
 

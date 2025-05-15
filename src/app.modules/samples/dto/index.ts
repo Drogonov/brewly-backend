@@ -10,7 +10,6 @@ export * from './???/coffee-type.response.dto'
 export * from './???/search-sample-type.response.dto'
 export * from './nested/coffee-pack-info.response.dto'
 export * from './get-sample-creaton-options-response.dto'
-export * from './get-sample-info.response.dto'
 export * from './get-coffee-packs.response.dto'
 
 export * from 'src/app.common/dto/status-response.dto'

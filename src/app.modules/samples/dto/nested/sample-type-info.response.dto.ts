@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IOptionListResponse } from 'src/app.common/dto/option-list.response.dto';
+import { ICoffeePackInfoResponse } from './coffee-pack-info.response.dto';
 
 // MARK: - Project implementation
 
@@ -13,7 +14,7 @@ export interface ISampleTypeInfoResponse {
   grindType?: number;
   labels?: string[];
   packsInWarehouseDescription?: string;
-  connectedPackIds?: number[];
+  connectedPacksInfo?: ICoffeePackInfoResponse[];
   isArchived: boolean;
 }
 
@@ -48,7 +49,7 @@ export class SampleTypeInfoResponseDto implements ISampleTypeInfoResponse {
   packsInWarehouseDescription?: string;
 
   @ApiPropertyOptional({ description: "array of connected pack ids", example: [1, 2, 666] })
-  connectedPackIds?: number[];
+  connectedPacksInfo?: ICoffeePackInfoResponse[];
 
   @ApiProperty({ example: false })
   isArchived: boolean;
