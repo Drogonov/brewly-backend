@@ -202,10 +202,32 @@ export class SettingsService {
     currentCompanyId: number
   ): Promise<IGetCurrentCuppingSettingsResponse> {
 
-    return {
-      cuppingNumber: "123",
-      chosenUsersAmount: 66
-    };
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          currentCompany: {
+            include: { relatedToUsers: true, teamInvitations: true },
+          }
+        },
+      });
+      if (!user) {
+        throw await this.errorHandlingService.getForbiddenError(ErrorsKeys.SESSION_EXPIRED);
+      }
+
+      const currentCompany = await this.resolveCurrentCompany(user, userId);
+
+      const teamCount = currentCompany.teamInvitations.filter(
+        (inv) => inv.type === TeamInvitationType.TEAM,
+      ).length;
+
+      return {
+        cuppingNumber: "123",
+        chosenUsersAmount: teamCount
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 
   // PRIVATE METHODS
