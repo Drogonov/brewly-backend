@@ -23,7 +23,9 @@ import {
   GetCompanyRulesResponseDto,
   IGetCompanyRulesResponse,
   SaveCompanyRulesRequestDto,
-  GetCompanyRulesRequestDto
+  GetCompanyRulesRequestDto,
+  GetCurrentCuppingSettingsResponseDto,
+  IGetCurrentCuppingSettingsResponse
 } from './dto';
 
 @ApiTags('settings')
@@ -62,6 +64,16 @@ export class SettingsController {
     @GetCurrentUserCompanyId() currentCompanyId: number
   ): Promise<IGetDefaultCuppingSettingsResponse> {
     return this.settingsService.getDefaultCuppingSettings(userId, currentCompanyId);
+  }
+
+  @Get('current-cupping-settings')
+  @ApiOperation({ summary: 'Get Settings of the current cupping' })
+  @ApiOkResponse({ description: 'Get Cupping settings', type: GetCurrentCuppingSettingsResponseDto })
+  getCurrentCuppingSettings(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number
+  ): Promise<IGetCurrentCuppingSettingsResponse> {
+    return this.settingsService.getCurrentCuppingSettings(userId, currentCompanyId);
   }
 
   @Get('get-company-rules')

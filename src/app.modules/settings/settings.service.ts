@@ -9,6 +9,7 @@ import {
   SaveCompanyRulesRequestDto,
   StatusResponseDto,
   IIconTextNumberInfoBlockResponse,
+  IGetCurrentCuppingSettingsResponse,
 } from './dto';
 import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
 import { FriendshipType, Role, TeamInvitationType } from '@prisma/client';
@@ -194,6 +195,17 @@ export class SettingsService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async getCurrentCuppingSettings(
+    userId: number,
+    currentCompanyId: number
+  ): Promise<IGetCurrentCuppingSettingsResponse> {
+
+    return {
+      cuppingNumber: "123",
+      chosenUsersAmount: 66
+    };
   }
 
   // PRIVATE METHODS
