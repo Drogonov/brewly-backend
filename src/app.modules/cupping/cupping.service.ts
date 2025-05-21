@@ -20,12 +20,12 @@ export class CuppingService {
     ): Promise<ISuccessIdResponse> {
         const { samples, settings, chosenUserIds } = dto;
 
-        // if “inviteAllTeammates” is true, override chosenUserIds
+        // Determine invited users
         const invitedUserIds = settings.inviteAllTeammates
             ? (
                 await this.prisma.userToCompanyRelation.findMany({
                     where: { companyId: currentCompanyId },
-                    select: { userId: true }
+                    select: { userId: true },
                 })
             )
                 .map(r => r.userId)
@@ -33,37 +33,37 @@ export class CuppingService {
             : chosenUserIds;
 
         try {
-            const created = await this.prisma.cupping.create({
-                data: {
-                    cuppingCreator: { connect: { id: userId } },
-                    cuppingName: settings.cuppingName,
-                    company: { connect: { id: currentCompanyId } },
-                    settings: {
-                        create: {
-                            randomSamplesOrder: settings.randomSamplesOrder,
-                            openSampleNameCupping: settings.openSampleNameCupping,
-                            singleUserCupping: settings.singleUserCupping,
-                            inviteAllTeammates: settings.inviteAllTeammates,
-                            company: { connect: { id: currentCompanyId } },
-                            user: { connect: { id: userId } },
+            const [created] = await this.prisma.$transaction([
+                // 1) Create cupping + nested settings + connect relations
+                this.prisma.cupping.create({
+                    data: {
+                        cuppingCreator: { connect: { id: userId } },
+                        cuppingName: settings.cuppingName,
+                        company: { connect: { id: currentCompanyId } },
+                        settings: {
+                            create: {
+                                randomSamplesOrder: settings.randomSamplesOrder,
+                                openSampleNameCupping: settings.openSampleNameCupping,
+                                singleUserCupping: settings.singleUserCupping,
+                                inviteAllTeammates: settings.inviteAllTeammates,
+                                company: { connect: { id: currentCompanyId } },
+                                user: { connect: { id: userId } },
+                            },
+                        },
+                        coffeePacks: {
+                            connect: samples.map(s => ({ id: s.packId })),
                         },
                     },
-                    coffeePacks: {
-                        connect: samples.map(s => ({ id: s.packId })),
-                    },
-                },
-            });
-
-            await this.prisma.cuppingInvitation.createMany({
-                data: invitedUserIds.map(userId => ({
-                    cuppingId: created.id,
-                    userId,
-                })),
-            });
+                }),
+                // 2) Bulk create invitations, skip duplicates
+                this.prisma.cuppingInvitation.createMany({
+                    data: invitedUserIds.map(uId => ({ cuppingId: created.id, userId: uId })),
+                    skipDuplicates: true,
+                }),
+            ]);
 
             return { id: created.id };
         } catch (error) {
-            // wrap any error in your business-error system
             throw await this.errorHandlingService.getBusinessError(
                 ErrorSubCode.REQUEST_VALIDATION_ERROR
             );

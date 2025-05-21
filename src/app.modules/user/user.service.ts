@@ -28,6 +28,8 @@ import {
   Role,
   FriendshipType,
   TeamInvitationType,
+  CuppingInvitation,
+  Cupping,
 } from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
@@ -144,7 +146,12 @@ export class UserService {
     const teamInvitations = await this.prisma.teamInvitation.findMany({
       where: { receiverId: userId, type: TeamInvitationType.REQUEST },
     });
-    const notifications = await this.buildNotifications(friendRequests, teamInvitations);
+    const cuppingInvitations = await this.prisma.cuppingInvitation.findMany({
+      where: { userId, wasLoadedByReceiver: false },
+      include: { cupping: true },
+    }) as Array<CuppingInvitation & { cupping: Cupping }>;
+
+    const notifications = await this.buildNotifications(friendRequests, teamInvitations, cuppingInvitations);
     return { notifications };
   }
 
@@ -502,6 +509,7 @@ export class UserService {
   private async buildNotifications(
     friendRequests: Friendship[],
     teamInvitations: TeamInvitation[],
+    cuppingInvitations: Array<CuppingInvitation & { cupping: Cupping }>
   ): Promise<any[]> {
     const notifications = [];
     for (const req of friendRequests) {
@@ -515,6 +523,11 @@ export class UserService {
       if (sender) {
         notifications.push(this.mappingService.mapTeamInvitationNotification(req, sender));
       }
+    }
+    for (const inv of cuppingInvitations) {
+      notifications.push(
+        this.mappingService.mapCuppingInvitationNotification(inv, inv.cupping)
+      );
     }
     notifications.sort((a, b) => (a.notificationDate < b.notificationDate ? 1 : -1));
 

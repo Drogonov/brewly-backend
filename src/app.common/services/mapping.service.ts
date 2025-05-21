@@ -6,6 +6,8 @@ import {
     Role,
     Friendship,
     TeamInvitation,
+    CuppingInvitation,
+    Cupping,
 } from '@prisma/client';
 import {
     IUserInfoResponse,
@@ -146,6 +148,21 @@ export class MappingService {
             senderId: sender.id,
             wasLoadedByReceiver: invitation.wasLoadedByReceiver
         };
+    }
+
+    mapCuppingInvitationNotification(
+        invitation: CuppingInvitation,
+        cupping: Cupping
+    ): IGetUserNotificationResponse {
+        return {
+            notificationId:      invitation.id,
+            notificationDate:    invitation.createdAt.toISOString(),
+            iconName:            'local_cafe',
+            description:         `You’ve been invited to cupping “${cupping.cuppingName}”`,
+            type:                UserNotificationType.cuppingInvitation,
+            senderId:            cupping.cuppingCreatorId,
+            wasLoadedByReceiver: invitation.wasLoadedByReceiver,
+        }
     }
 
     /**
