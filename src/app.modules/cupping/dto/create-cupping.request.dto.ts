@@ -1,19 +1,12 @@
 import { IsNotEmpty, IsString, IsEmail } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { CuppingSettingsRequestDto } from './nested/cupping-settings.request.dto';
+import { CuppingSampleRequestDto } from './nested/cupping-sample.request.dto';
 
 export class CreateCuppingRequestDto {
     @IsNotEmpty()
-    @ApiProperty({ example: 666 })
-    cuppingCreatorId: number
-
-    @IsNotEmpty()
-    @ApiProperty({ example: 666 })
-    companyId: number
-
-    @IsNotEmpty()
-    @ApiProperty({ description: "IDs of sample items from warehouse witch are included to cupping", example: [1, 3, 777] })
-    sampleItemsId: number[]
+    @ApiProperty({ description: "IDs of sample items from warehouse witch are included to cupping"})
+    samples: CuppingSampleRequestDto[]
 
     @IsNotEmpty()
     @ApiProperty({ description: "Cupping Settings" })
@@ -21,9 +14,5 @@ export class CreateCuppingRequestDto {
 
     @IsNotEmpty()
     @ApiProperty({ description: "IDs of Users who will be invited to cupping", example: [1, 3, 777] })
-    invitedUsersId: number[]
-
-    @IsNotEmpty()
-    @ApiProperty({ example: "Cupping 1" })
-    cuppingName: string
+    chosenUserIds: number[]
 }

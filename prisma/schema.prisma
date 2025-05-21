@@ -30,7 +30,7 @@ model User {
   currentCompanyId        Int?
   currentCompany          Company?                @relation("CurrentUserCompany", fields: [currentCompanyId], references: [id])
   sessions                Session[]
-  invitedCuppings         Cupping[]               @relation("CuppingInvitedUsers")
+  cuppingInvitations      CuppingInvitation[]
   sampleTestings          SampleTesting[]
   cuppingSettings         CuppingSettings[]
   createdCuppings         Cupping[]               @relation("CreatedCuppingsByUser")
@@ -177,20 +177,36 @@ model CompanyRule {
 //
 
 model Cupping {
-  id               Int             @id @default(autoincrement())
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  id               Int                 @id @default(autoincrement())
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
   cuppingCreatorId Int
-  cuppingCreator   User            @relation("CreatedCuppingsByUser", fields: [cuppingCreatorId], references: [id])
+  cuppingCreator   User                @relation("CreatedCuppingsByUser", fields: [cuppingCreatorId], references: [id])
   cuppingName      String
   companyId        Int
-  company          Company         @relation(fields: [companyId], references: [id])
+  company          Company             @relation(fields: [companyId], references: [id])
   settingsId       Int
-  settings         CuppingSettings @relation(fields: [settingsId], references: [id])
-  invitedUsers     User[]          @relation("CuppingInvitedUsers")
-  coffeePacks      CoffeePack[]    @relation("CuppingCoffeePacks")
+  settings         CuppingSettings     @relation(fields: [settingsId], references: [id])
+  invitations      CuppingInvitation[]
+  coffeePacks      CoffeePack[]        @relation("CuppingCoffeePacks")
   sampleTestings   SampleTesting[]
   cuppingResult    CuppingResult?
+}
+
+enum CuppingType {
+  CREATED
+  STARTED
+  ARCHIVED
+}
+
+model CuppingInvitation {
+  id                  Int      @id @default(autoincrement())
+  createdAt           DateTime @default(now())
+  cupping             Cupping  @relation(fields: [cuppingId], references: [id])
+  cuppingId           Int
+  user                User     @relation(fields: [userId], references: [id])
+  userId              Int
+  wasLoadedByReceiver Boolean  @default(false)
 }
 
 model CuppingResult {
