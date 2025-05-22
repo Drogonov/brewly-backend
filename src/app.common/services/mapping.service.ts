@@ -8,6 +8,8 @@ import {
     TeamInvitation,
     CuppingInvitation,
     Cupping,
+    CuppingSettings,
+    CuppingType,
 } from '@prisma/client';
 import {
     IUserInfoResponse,
@@ -22,6 +24,7 @@ import {
 } from 'src/app.modules/user/dto';
 import { LocalizationOptionsList } from '../localization/localization-options-list/localization-options-list.model';
 import { IOptionListResponse } from '../dto/option-list.response.dto';
+import { CuppingStatus, ICuppingResponse } from 'src/app.modules/cupping/dto';
 
 /**
  * This service centralizes mapping logic so that transformations
@@ -155,12 +158,13 @@ export class MappingService {
         cupping: Cupping
     ): IGetUserNotificationResponse {
         return {
-            notificationId:      invitation.id,
-            notificationDate:    invitation.createdAt.toISOString(),
-            iconName:            'local_cafe',
-            description:         `You’ve been invited to cupping “${cupping.cuppingName}”`,
-            type:                UserNotificationType.cuppingInvitation,
-            senderId:            cupping.cuppingCreatorId,
+            notificationId: invitation.id,
+            notificationDate: invitation.createdAt.toISOString(),
+            iconName: 'cup.and.heat.waves.fill',
+            description: `You’ve been invited to cupping “${cupping.cuppingName}”`,
+            type: UserNotificationType.cuppingInvitation,
+            senderId: cupping.cuppingCreatorId,
+            cuppingId: cupping.id,
             wasLoadedByReceiver: invitation.wasLoadedByReceiver,
         }
     }
@@ -175,6 +179,31 @@ export class MappingService {
             type: optionList.type,
             currentOption: optionList.currentOption,
             options: optionList.options
+        }
+    }
+
+    /**
+    * Map Prisma’s Cupping + its Settings to ICuppingResponse
+    */
+    mapCupping(
+        cupping: Cupping & { settings: CuppingSettings }
+    ): ICuppingResponse {
+        return {
+            id: cupping.id,
+            title: cupping.cuppingName,
+            creationDate: cupping.createdAt.toISOString(),
+            eventDate: cupping.eventDate
+                ? cupping.eventDate.toISOString()
+                : null,
+            status: this.translateStatus(cupping.cuppingType),
+        };
+    }
+
+    private translateStatus(type: CuppingType): CuppingStatus {
+        switch (type) {
+            case CuppingType.CREATED: return CuppingStatus.planned;
+            case CuppingType.STARTED: return CuppingStatus.inProgress;
+            case CuppingType.ARCHIVED: return CuppingStatus.ended;
         }
     }
 }

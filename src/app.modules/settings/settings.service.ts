@@ -219,10 +219,14 @@ export class SettingsService {
 
       const teamCount = currentCompany.teamInvitations.filter(
         (inv) => inv.type === TeamInvitationType.TEAM,
-      ).length;
+      ).length + 1;
+
+      const cuppingNumber = await this.prisma.cupping.findMany({
+        where: { companyId: currentCompanyId }
+      });
 
       return {
-        cuppingNumber: "123",
+        cuppingNumber: `${cuppingNumber.length + 1}`,
         chosenUsersAmount: teamCount
       };
     } catch (error) {

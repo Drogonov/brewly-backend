@@ -11,6 +11,7 @@ export interface IGetUserNotificationResponse {
     description: string;
     type: UserNotificationType;
     senderId: number;
+    cuppingId?: number;
     wasLoadedByReceiver: boolean;
 }
 
@@ -35,6 +36,9 @@ export class GetUserNotificationResponseDto implements IGetUserNotificationRespo
 
     @ApiProperty({ example: 666 })
     senderId: number;
+
+    @ApiProperty({ example: 666 })
+    cuppingId?: number;
 
     @ApiProperty({ example: false })
     wasLoadedByReceiver: boolean;

@@ -25,6 +25,7 @@ import {
   GetCurrentUserCompanyId,
   GetCurrentUserId,
 } from 'src/app.common/decorators';
+import { IStatusResponse } from '../auth/dto';
 
 @ApiTags('cupping')
 @ApiBearerAuth('access-token')
@@ -35,8 +36,12 @@ export class CuppingController {
   @Post('create')
   @ApiOperation({ summary: 'Create Cupping' })
   @ApiOkResponse({ description: 'Create Cupping with following DTO', type: SuccessIdResponseDto })
-  getOnboarding(@Body() dto: CreateCuppingRequestDto): Promise<ISuccessIdResponse> {
-    return this.cuppingService.createCupping(dto);
+  createCupping(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Body() dto: CreateCuppingRequestDto
+  ): Promise<IStatusResponse> {
+    return this.cuppingService.createCupping(userId, currentCompanyId, dto);
   }
 
   @Get('list')

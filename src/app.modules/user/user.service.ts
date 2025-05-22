@@ -20,6 +20,7 @@ import {
   IGetUserAction,
   IGetUserSendedRequestResponse,
   OTPRequestDto,
+  IGetUserNotificationResponse,
 } from './dto';
 import {
   Friendship,
@@ -147,9 +148,12 @@ export class UserService {
       where: { receiverId: userId, type: TeamInvitationType.REQUEST },
     });
     const cuppingInvitations = await this.prisma.cuppingInvitation.findMany({
-      where: { userId, wasLoadedByReceiver: false },
+      where: { userId },
       include: { cupping: true },
     }) as Array<CuppingInvitation & { cupping: Cupping }>;
+
+    console.log(userId);
+    console.log(cuppingInvitations);
 
     const notifications = await this.buildNotifications(friendRequests, teamInvitations, cuppingInvitations);
     return { notifications };
@@ -510,7 +514,7 @@ export class UserService {
     friendRequests: Friendship[],
     teamInvitations: TeamInvitation[],
     cuppingInvitations: Array<CuppingInvitation & { cupping: Cupping }>
-  ): Promise<any[]> {
+  ): Promise<IGetUserNotificationResponse[]> {
     const notifications = [];
     for (const req of friendRequests) {
       const sender = await this.prisma.user.findUnique({ where: { id: req.senderId } });
@@ -534,11 +538,23 @@ export class UserService {
     // Use Promise.all to update notifications concurrently
     await Promise.all([
       ...friendRequests.map(request =>
-        this.prisma.friendship.update({ where: { id: request.id }, data: { wasLoadedByReceiver: true } })
+        this.prisma.friendship.update({
+          where: { id: request.id },
+          data: { wasLoadedByReceiver: true }
+        })
       ),
       ...teamInvitations.map(request =>
-        this.prisma.teamInvitation.update({ where: { id: request.id }, data: { wasLoadedByReceiver: true } })
-      )
+        this.prisma.teamInvitation.update({
+          where: { id: request.id },
+          data: { wasLoadedByReceiver: true }
+        })
+      ),
+      ...cuppingInvitations.map(ci =>
+        this.prisma.cuppingInvitation.update({
+          where: { id: ci.id },
+          data: { wasLoadedByReceiver: true },
+        })
+      ),
     ]);
 
     return notifications;

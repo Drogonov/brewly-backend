@@ -6,7 +6,8 @@ import { CuppingStatus } from '../types/cupping-status.enum';
 export interface ICuppingResponse {
     id: number
     title: string;
-    dateOfTheEvent: string;
+    creationDate: string;
+    eventDate?: string;    
     status: CuppingStatus
 }
 
@@ -19,11 +20,13 @@ export class CuppingResponseDto implements ICuppingResponse {
     @ApiProperty({ example: 'Cupping 1' })
     title: string;
 
-    // ISO8601 format date
-    @ApiProperty({ example: "2025-01-01T00:00:00Z" })
-    dateOfTheEvent: string;
+    @ApiProperty({ example: '2025-01-15T12:00:00Z' })
+    creationDate: string;
 
-    @ApiProperty({ example: "inProgress" })
+    @ApiProperty({ example: '2025-02-01T00:00:00Z' })
+    eventDate?: string;
+
+    @ApiProperty({ example: CuppingStatus.inProgress })
     status: CuppingStatus;
 }
 

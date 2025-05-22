@@ -1,24 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { CreateCuppingRequestDto, CuppingStatus, IGetCuppingsListResponse, ISuccessIdResponse } from './dto';
+import { CreateCuppingRequestDto, CuppingStatus, GetCuppingsListResponseDto, IGetCuppingsListResponse, IStatusResponse, ISuccessIdResponse, StatusType } from './dto';
 import { GetCuppingResultsRequestDto } from './dto/get-cupping-results.request.dto';
 import { IGetCuppingResultsResponse } from './dto/get-cupping-results.response.dto';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
+import { Cupping, CuppingType } from '@prisma/client';
+import { MappingService } from 'src/app.common/services/mapping.service';
 
 @Injectable()
 export class CuppingService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly errorHandlingService: ErrorHandlingService,
+        private mappingService: MappingService,
     ) { }
 
     async createCupping(
         userId: number,
         currentCompanyId: number,
         dto: CreateCuppingRequestDto
-    ): Promise<ISuccessIdResponse> {
+    ): Promise<IStatusResponse> {
+        console.log(dto);
         const { samples, settings, chosenUserIds } = dto;
+        chosenUserIds.push(userId);
 
         // Determine invited users
         const invitedUserIds = settings.inviteAllTeammates
@@ -29,9 +34,10 @@ export class CuppingService {
                 })
             )
                 .map(r => r.userId)
-                .filter(id => id !== userId)
+            // .filter(id => id !== userId)
             : chosenUserIds;
 
+        console.log(invitedUserIds);
         try {
             const [created] = await this.prisma.$transaction([
                 // 1) Create cupping + nested settings + connect relations
@@ -39,6 +45,7 @@ export class CuppingService {
                     data: {
                         cuppingCreator: { connect: { id: userId } },
                         cuppingName: settings.cuppingName,
+                        cuppingType: CuppingType.CREATED,
                         company: { connect: { id: currentCompanyId } },
                         settings: {
                             create: {
@@ -55,15 +62,22 @@ export class CuppingService {
                         },
                     },
                 }),
-                // 2) Bulk create invitations, skip duplicates
-                this.prisma.cuppingInvitation.createMany({
-                    data: invitedUserIds.map(uId => ({ cuppingId: created.id, userId: uId })),
-                    skipDuplicates: true,
-                }),
             ]);
 
-            return { id: created.id };
+            // 2) Bulk create invitations, skip duplicates
+            await this.prisma.cuppingInvitation.createMany({
+                data: invitedUserIds.map(uId => ({ cuppingId: created.id, userId: uId })),
+                skipDuplicates: true,
+            })
+
+            console.log(created.id);
+
+            return {
+                status: StatusType.SUCCESS,
+                description: `Cupping with id ${created.id} created`
+            };
         } catch (error) {
+            console.log(error);
             throw await this.errorHandlingService.getBusinessError(
                 ErrorSubCode.REQUEST_VALIDATION_ERROR
             );
@@ -78,28 +92,25 @@ export class CuppingService {
         };
     }
 
-    async getCuppingsList(userId: number, currentCompanyId: number): Promise<IGetCuppingsListResponse> {
-        return {
-            cuppings: [
-                {
-                    id: 1,
-                    title: 'Cupping #3',
-                    dateOfTheEvent: '2025-03-01T00:00:00Z',
-                    status: CuppingStatus.inProgress
-                },
-                {
-                    id: 2,
-                    title: 'Cupping #2',
-                    dateOfTheEvent: '2025-02-01T00:00:00Z',
-                    status: CuppingStatus.planned
-                },
-                {
-                    id: 3,
-                    title: 'Cupping #1',
-                    dateOfTheEvent: '2025-01-01T00:00:00Z',
-                    status: CuppingStatus.ended
-                }
-            ]
+    async getCuppingsList(
+        userId: number,
+        currentCompanyId: number
+    ): Promise<IGetCuppingsListResponse> {
+        try {
+            const cuppings = await this.prisma.cupping.findMany({
+                where: { companyId: currentCompanyId },
+                include: { settings: true },
+                orderBy: { createdAt: 'desc' },
+            });
+
+            return {
+                cuppings: cuppings.map(c => this.mappingService.mapCupping(c as Cupping & { settings: any }))
+            };
+        } catch (error) {
+            console.log(error);
+            throw await this.errorHandlingService.getBusinessError(
+                ErrorSubCode.REQUEST_VALIDATION_ERROR
+            );
         }
     }
 }

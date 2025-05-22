@@ -183,6 +183,8 @@ model Cupping {
   cuppingCreatorId Int
   cuppingCreator   User                @relation("CreatedCuppingsByUser", fields: [cuppingCreatorId], references: [id])
   cuppingName      String
+  cuppingType      CuppingType
+  eventDate        DateTime?
   companyId        Int
   company          Company             @relation(fields: [companyId], references: [id])
   settingsId       Int
