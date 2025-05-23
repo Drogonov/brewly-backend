@@ -23,7 +23,11 @@ export class CuppingService {
     ): Promise<IStatusResponse> {
         console.log(dto);
         const { samples, settings, chosenUserIds } = dto;
-        chosenUserIds.push(userId);
+
+        // Add current user to the array
+        if (chosenUserIds) {
+            chosenUserIds.push(userId);
+        }
 
         // Determine invited users
         const invitedUserIds = settings.inviteAllTeammates
@@ -37,7 +41,6 @@ export class CuppingService {
             // .filter(id => id !== userId)
             : chosenUserIds;
 
-        console.log(invitedUserIds);
         try {
             const [created] = await this.prisma.$transaction([
                 // 1) Create cupping + nested settings + connect relations
