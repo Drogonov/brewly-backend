@@ -2,7 +2,9 @@ import {
   Body,
   Controller,
   Get,
+  ParseIntPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { CuppingService } from './cupping.service';
 import {
@@ -13,7 +15,9 @@ import {
   ISuccessIdResponse,
   SuccessIdResponseDto,
   GetCuppingsListResponseDto,
-  IGetCuppingsListResponse
+  IGetCuppingsListResponse,
+  GetCuppingResponseDto,
+  IGetCuppingResponse
 } from './dto';
 import {
   ApiBearerAuth,
@@ -54,10 +58,14 @@ export class CuppingController {
     return this.cuppingService.getCuppingsList(userId, currentCompanyId);
   }
 
-  @Post('results')
-  @ApiOperation({ summary: 'Create Cupping' })
-  @ApiOkResponse({ description: 'Create Cupping with following DTO', type: GetCuppingResultsResponseDto })
-  getCuppingResult(@Body() dto: GetCuppingResultsRequestDto): Promise<IGetCuppingResultsResponse> {
-    return this.cuppingService.getCuppingResult(dto);
+  @Post('get-cupping')
+  @ApiOperation({ summary: 'Start Cupping' })
+  @ApiOkResponse({ description: 'Start cupping with your friends', type: GetCuppingResponseDto })
+  getCupping(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Query('cuppingId', ParseIntPipe) cuppingId: number
+  ): Promise<IGetCuppingResponse> {
+    return this.cuppingService.getCupping(userId, currentCompanyId, cuppingId);
   }
 }
