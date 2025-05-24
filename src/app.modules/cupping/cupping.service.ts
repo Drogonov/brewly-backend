@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateCuppingRequestDto, CuppingStatus, GetCuppingsListResponseDto, IGetCuppingSampleResponse, IGetCuppingSampleTest, IGetCuppingsListResponse, IStatusResponse, ISuccessIdResponse, StatusType, TestType } from './dto';
+import { CreateCuppingRequestDto, CuppingStatus, GetCuppingsListResponseDto, IGetCuppingSampleResponse, IGetCuppingSampleTest, IGetCuppingsListResponse, IStatusResponse, ISuccessIdResponse, SetCuppingTestRequestDto, SetCuppingTypeRequestDto, StatusResponseDto, StatusType, TestType } from './dto';
 import { GetCuppingResultsRequestDto } from './dto/get-cupping-results.request.dto';
 import { IGetCuppingResultsResponse } from './dto/get-cupping-results.response.dto';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
@@ -115,106 +115,186 @@ export class CuppingService {
         currentCompanyId: number,
         cuppingId: number,
     ): Promise<IGetCuppingResponse> {
-        // 1) Fetch the cupping, its creator, settings, invitations and linked packs
+        // Delegate logic to private handlers based on status
         const cupping = await this.prisma.cupping.findUnique({
             where: { id: cuppingId },
             include: {
                 cuppingCreator: true,
                 settings: true,
-                invitations: { select: { userId: true } },    // renamed to match schema
-                coffeePacks: {
-                    include: { sampleType: true },               // pull in sampleType data
-                },
+                invitations: { select: { userId: true } },
+                coffeePacks: { include: { sampleType: true } },
             },
         });
 
-        // 2) Validate existence and company
         if (!cupping || cupping.companyId !== currentCompanyId) {
             throw await this.errorHandlingService.getBusinessError(
                 ErrorSubCode.REQUEST_VALIDATION_ERROR,
             );
         }
-
-        // 3) Validate invitation
-        const invitedIds = cupping.invitations.map(inv => inv.userId);
+        const invitedIds = cupping.invitations.map(i => i.userId);
         if (!invitedIds.includes(userId)) {
             throw await this.errorHandlingService.getBusinessError(
                 ErrorSubCode.REQUEST_VALIDATION_ERROR,
             );
         }
 
-        // 4) Auto-start if still CREATED and requester is creator
-        if (
-            cupping.cuppingType === CuppingType.CREATED &&
-            cupping.cuppingCreatorId === userId
-        ) {
-            cupping.eventDate = new Date();
-            cupping.cuppingType = CuppingType.STARTED;
-            await this.prisma.cupping.update({
-                where: { id: cuppingId },
-                data: {
-                    cuppingType: CuppingType.STARTED,
-                    eventDate: cupping.eventDate,
-                },
-            });
+        switch (cupping.cuppingType) {
+            case CuppingType.CREATED:
+                return this.getCreatedCupping(cupping, userId);
+            case CuppingType.STARTED:
+                return this.getInProgressCupping(cupping, userId);
+            case CuppingType.ARCHIVED:
+                return this.getEndedCupping(cupping, userId);
+            default:
+                // fallback
+                return this.getCreatedCupping(cupping, userId);
         }
+    }
 
-        // 5) Translate CuppingType → CuppingStatus
-        const status: CuppingStatus = (() => {
-            switch (cupping.cuppingType) {
-                case CuppingType.CREATED:
-                    return CuppingStatus.planned;
-                case CuppingType.STARTED:
-                    return CuppingStatus.inProgress;
-                case CuppingType.ARCHIVED:
-                    return CuppingStatus.ended;
-            }
-        })();
+    async getCuppingType(
+        userId: number,
+        currentCompanyId: number,
+        cuppingId: number,
+    ): Promise<string> {
+        const cupping = await this.prisma.cupping.findUnique({ where: { id: cuppingId } });
+        if (!cupping || cupping.companyId !== currentCompanyId) {
+            throw await this.errorHandlingService.getBusinessError(
+                ErrorSubCode.REQUEST_VALIDATION_ERROR,
+            );
+        }
+        return cupping.cuppingType;
+    }
 
-        // 6) Compute who can start/end
-        const canUserStartCupping =
-            status === CuppingStatus.planned && cupping.cuppingCreatorId === userId;
-        const canUserEndCupping =
-            status === CuppingStatus.inProgress &&
-            cupping.cuppingCreatorId === userId;
+    async setCuppingStatus(
+        userId: number,
+        currentCompanyId: number,
+        dto: SetCuppingTypeRequestDto,
+    ): Promise<StatusResponseDto> {
+        const { cuppingId, cuppingType } = dto;
+        await this.prisma.cupping.update({
+            where: { id: cuppingId },
+            data: { cuppingType },
+        });
+        return {
+            status: StatusType.SUCCESS,
+            description: `Cupping ${cuppingId} set to ${cuppingType}`
+        };
+    }
 
-        // 7) Build samples array
-        const samples: IGetCuppingSampleResponse[] = cupping.coffeePacks.map(
-            pack => {
-                const hiddenSampleName = cupping.settings.openSampleNameCupping
-                    ? undefined
-                    : pack.sampleType.sampleName;
 
-                const test: IGetCuppingSampleTest = {
-                    type: TestType.aroma,
-                    // other fields left undefined for UI to fill in sequence
-                };
-
-                return {
-                    sampleTypeId: pack.sampleTypeId,
-                    hiddenSampleName,
-                    companyName: pack.sampleType.originCompanyName,
-                    sampleName: pack.sampleType.sampleName,
-                    beanOrigin: null,            // hook in your option-list here if needed
-                    procecingMethod: null,       // ditto
-                    roastType: pack.sampleType.roastType,
-                    grindType: pack.sampleType.grindType,
-                    packId: pack.id,
-                    roastDate: pack.roastDate.toISOString(),
-                    openDate: pack.openDate?.toISOString(),
-                    weight: pack.weight,
-                    barCode: pack.barCode,
-                    test,
-                };
+    async setCuppingTest(
+        userId: number,
+        currentCompanyId: number,
+        dto: SetCuppingTestRequestDto,
+    ): Promise<StatusResponseDto> {
+        // Example: create a sample testing record
+        const {
+            cuppingId,
+            coffeePackId,
+            userTestingTimeInSeconds,
+            properties,
+        } = dto;
+        const testing = await this.prisma.sampleTesting.create({
+            data: {
+                userId,
+                companyId: currentCompanyId,
+                cuppingId,
+                coffeePackId,
+                userTestingTimeInSeconds,
+                userSampleProperties: {
+                    create: properties.map(p => ({
+                        propertyTypeId: p.propertyTypeId,
+                        intensity: p.intensity,
+                        quality: p.quality,
+                        comment: p.comment,
+                    })),
+                },
             },
-        );
+        });
+        return {
+            status: StatusType.SUCCESS,
+            description: `Sample testing ${testing.id} recorded`
+        };
+    }
+
+    async doneCuppingTesting(
+        userId: number,
+        currentCompanyId: number,
+        cuppingId: number,
+    ): Promise<StatusResponseDto> {
+        // Archive cupping when all tests done
+        await this.prisma.cupping.update({
+            where: { id: cuppingId },
+            data: { cuppingType: CuppingType.ARCHIVED },
+        });
+        return {
+            status: StatusType.SUCCESS,
+            description: `Cupping ${cuppingId} archived`
+        };
+    }
+
+    // MARK: - Proivate Methods
+
+    private async getCreatedCupping(
+        cupping: Cupping & any,
+        userId: number,
+    ): Promise<IGetCuppingResponse> {
+        // Auto-start if creator
+        const status = CuppingStatus.planned;
+        const canStart = cupping.cuppingCreatorId === userId;
+        return this.buildBaseResponse(cupping, status, canStart, false);
+    }
+
+    private async getInProgressCupping(
+        cupping: Cupping & any,
+        userId: number,
+    ): Promise<IGetCuppingResponse> {
+        const status = CuppingStatus.inProgress;
+        const canEnd = cupping.cuppingCreatorId === userId;
+        return this.buildBaseResponse(cupping, status, false, canEnd);
+    }
+
+    private async getEndedCupping(
+        cupping: Cupping & any,
+        userId: number,
+    ): Promise<IGetCuppingResponse> {
+        const status = CuppingStatus.ended;
+        return this.buildBaseResponse(cupping, status, false, false);
+    }
+
+    private buildBaseResponse(
+        cupping: Cupping & any,
+        status: CuppingStatus,
+        canStart: boolean,
+        canEnd: boolean,
+    ): IGetCuppingResponse {
+        const samples: IGetCuppingSampleResponse[] = cupping.coffeePacks.map(pack => {
+            const hidden = cupping.settings.openSampleNameCupping ? undefined : pack.sampleType.sampleName;
+            const test: IGetCuppingSampleTest = { type: TestType.aroma };
+            return {
+                sampleTypeId: pack.sampleTypeId,
+                hiddenSampleName: hidden,
+                companyName: pack.sampleType.originCompanyName,
+                sampleName: pack.sampleType.sampleName,
+                beanOrigin: null,
+                procecingMethod: null,
+                roastType: pack.sampleType.roastType,
+                grindType: pack.sampleType.grindType,
+                packId: pack.id,
+                roastDate: pack.roastDate.toISOString(),
+                openDate: pack.openDate?.toISOString(),
+                weight: pack.weight,
+                barCode: pack.barCode,
+                test,
+            };
+        });
 
         return {
             status,
             eventDate: cupping.eventDate?.toISOString(),
-            endDate: null,                  // fill in when you implement “end” logic
-            canUserStartCupiing: canUserStartCupping,
-            canUserEndCupiing: canUserEndCupping,
+            endDate: null,
+            canUserStartCupiing: canStart,
+            canUserEndCupiing: canEnd,
             samples,
         };
     }
