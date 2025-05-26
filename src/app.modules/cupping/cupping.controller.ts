@@ -17,7 +17,9 @@ import {
   GetCuppingsListResponseDto,
   IGetCuppingsListResponse,
   GetCuppingResponseDto,
-  IGetCuppingResponse
+  IGetCuppingResponse,
+  SetCuppingTypeRequestDto,
+  SetCuppingTestsRequestDto
 } from './dto';
 import {
   ApiBearerAuth,
@@ -29,7 +31,7 @@ import {
   GetCurrentUserCompanyId,
   GetCurrentUserId,
 } from 'src/app.common/decorators';
-import { IStatusResponse } from '../auth/dto';
+import { IStatusResponse, StatusResponseDto } from '../auth/dto';
 
 @ApiTags('cupping')
 @ApiBearerAuth('access-token')
@@ -58,14 +60,47 @@ export class CuppingController {
     return this.cuppingService.getCuppingsList(userId, currentCompanyId);
   }
 
-  @Post('get-cupping')
-  @ApiOperation({ summary: 'Start Cupping' })
-  @ApiOkResponse({ description: 'Start cupping with your friends', type: GetCuppingResponseDto })
+  @Get('get-cupping')
+  @ApiOperation({ summary: 'Get Cupping' })
+  @ApiOkResponse({ description: 'Get cupping info', type: GetCuppingResponseDto })
   getCupping(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
     @Query('cuppingId', ParseIntPipe) cuppingId: number
   ): Promise<IGetCuppingResponse> {
     return this.cuppingService.getCupping(userId, currentCompanyId, cuppingId);
+  }
+
+  @Get('get-cupping-type')
+  @ApiOperation({ summary: 'Get Cupping type' })
+  @ApiOkResponse({ description: 'Start cupping with your friends', type: String })
+  getCuppingType(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Query('cuppingId', ParseIntPipe) cuppingId: number
+  ): Promise<String> {
+    return this.cuppingService.getCuppingType(userId, currentCompanyId, cuppingId);
+  }
+
+  @Post('set-cupping-status')
+  @ApiOperation({ summary: 'Set Cupping status by user who has permissions' })
+  @ApiOkResponse({ description: 'Get cupping status', type: StatusResponseDto })
+  setCuppingStatus(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Body() dto: SetCuppingTypeRequestDto
+  ): Promise<IStatusResponse> {
+    return this.cuppingService.setCuppingStatus(userId, currentCompanyId, dto);
+  }
+
+  @Post('set-cupping-test')
+  @ApiOperation({ summary: 'Set Cupping tests' })
+  @ApiOkResponse({ description: 'Set cupping test info by user', type: StatusResponseDto })
+  setCuppingTests(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Body() dto: SetCuppingTestsRequestDto
+  ): Promise<IStatusResponse> {
+    return this.cuppingService.setCuppingTests(userId, currentCompanyId, dto);
   }
 }
