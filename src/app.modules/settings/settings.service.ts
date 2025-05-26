@@ -104,34 +104,75 @@ export class SettingsService {
     }
   }
 
-  // TODO: - add settings from real cupping
   async saveDefaultCuppingSettings(
+    userId: number,
+    companyId: number,
     dto: SaveDefaultCuppingSettingsRequestDto,
   ): Promise<IStatusResponse> {
-    try {
-      const successMsg = await this.localizationStringsService.getSettingsText(SettingsKeys.DEFAULT_CUPPING_SETTINGS_SAVE_SUCCESS);
-      return {
-        status: StatusType.SUCCESS,
-        description: successMsg,
-      };
-    } catch (error) {
-      throw error;
+    // see if there’s any existing row:
+    const existing = await this.prisma.defaultCuppingSettings.findFirst({
+      where: { userId, companyId }
+    });
+
+    if (existing) {
+      await this.prisma.defaultCuppingSettings.update({
+        where: { id: existing.id },
+        data: {
+          defaultCuppingName: dto.defaultCuppingName,
+          randomSamplesOrder: dto.randomSamplesOrder,
+          openSampleNameCupping: dto.openSampleNameCupping,
+          singleUserCupping: dto.singleUserCupping,
+          inviteAllTeammates: dto.inviteAllTeammates,
+        }
+      });
+    } else {
+      await this.prisma.defaultCuppingSettings.create({
+        data: {
+          companyId,
+          userId,
+          defaultCuppingName: dto.defaultCuppingName,
+          randomSamplesOrder: dto.randomSamplesOrder,
+          openSampleNameCupping: dto.openSampleNameCupping,
+          singleUserCupping: dto.singleUserCupping,
+          inviteAllTeammates: dto.inviteAllTeammates,
+        }
+      });
     }
+
+    const msg = await this.localizationStringsService.getSettingsText(
+      SettingsKeys.DEFAULT_CUPPING_SETTINGS_SAVE_SUCCESS,
+    );
+    return { status: StatusType.SUCCESS, description: msg };
   }
 
-  // TODO: - add settings from real cupping
   async getDefaultCuppingSettings(
     userId: number,
-    currentCompanyId: number,
+    companyId: number,
   ): Promise<IGetDefaultCuppingSettingsResponse> {
     try {
-      return {
-        defaultCuppingName: await this.localizationStringsService.getSettingsText(SettingsKeys.DEFAULT_CUPPING_NAME),
-        randomSamplesOrder: true,
-        openSampleNameCupping: false,
-        singleUserCupping: false,
-        inviteAllTeammates: true,
-      };
+      const defaults = await this.prisma.defaultCuppingSettings.findFirst({
+        where: { userId, companyId },
+      });
+
+      if (defaults) {
+        return {
+          defaultCuppingName: defaults.defaultCuppingName,
+          randomSamplesOrder: defaults.randomSamplesOrder,
+          openSampleNameCupping: defaults.openSampleNameCupping,
+          singleUserCupping: defaults.singleUserCupping,
+          inviteAllTeammates: defaults.inviteAllTeammates,
+        };
+      } else {
+        return {
+          defaultCuppingName: await this.localizationStringsService.getSettingsText(
+            SettingsKeys.DEFAULT_CUPPING_NAME,
+          ),
+          randomSamplesOrder: true,
+          openSampleNameCupping: false,
+          singleUserCupping: false,
+          inviteAllTeammates: true,
+        };
+      }
     } catch (error) {
       throw error;
     }

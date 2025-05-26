@@ -17,28 +17,29 @@ datasource db {
 //
 
 model User {
-  id                      Int                     @id @default(autoincrement())
-  createdAt               DateTime                @default(now())
-  updatedAt               DateTime                @updatedAt
+  id                      Int                      @id @default(autoincrement())
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
   userName                String?
   userImageURL            String?
-  email                   String                  @unique
+  email                   String                   @unique
   about                   String?
   hash                    String
   otpHash                 String?
   isVerificated           Boolean
   currentCompanyId        Int?
-  currentCompany          Company?                @relation("CurrentUserCompany", fields: [currentCompanyId], references: [id])
+  currentCompany          Company?                 @relation("CurrentUserCompany", fields: [currentCompanyId], references: [id])
   sessions                Session[]
   cuppingInvitations      CuppingInvitation[]
   sampleTestings          SampleTesting[]
   cuppingSettings         CuppingSettings[]
-  createdCuppings         Cupping[]               @relation("CreatedCuppingsByUser")
-  relatedToCompanies      UserToCompanyRelation[] @relation("RelatedCompanies")
-  sentFriendships         Friendship[]            @relation("FriendshipSender")
-  receivedFriendships     Friendship[]            @relation("FriendshipReceiver")
-  sentTeamInvitations     TeamInvitation[]        @relation("TeamInvitationSender")
-  receivedTeamInvitations TeamInvitation[]        @relation("TeamInvitationReceiver")
+  createdCuppings         Cupping[]                @relation("CreatedCuppingsByUser")
+  relatedToCompanies      UserToCompanyRelation[]  @relation("RelatedCompanies")
+  sentFriendships         Friendship[]             @relation("FriendshipSender")
+  receivedFriendships     Friendship[]             @relation("FriendshipReceiver")
+  sentTeamInvitations     TeamInvitation[]         @relation("TeamInvitationSender")
+  receivedTeamInvitations TeamInvitation[]         @relation("TeamInvitationReceiver")
+  defaultCuppingSettings  DefaultCuppingSettings[]
 }
 
 model Session {
@@ -130,22 +131,23 @@ enum Role {
 }
 
 model Company {
-  id              Int                     @id @default(autoincrement())
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
-  relatedToUsers  UserToCompanyRelation[] @relation("RelatedUsers")
-  sampleTypes     SampleType[]            @relation("SampleTypesOwnedByCompany")
-  coffeePacks     CoffeePack[]
-  cuppings        Cupping[]
-  cuppingSettings CuppingSettings[]
-  cuppingResult   CuppingResult[]
-  sampleTesting   SampleTesting[]
-  currentTeam     User[]                  @relation("CurrentUserCompany")
-  isPersonal      Boolean
-  companyName     String
-  companyImageURL String?
-  teamInvitations TeamInvitation[]        @relation("TeamInvitationCompany")
-  companyRules    CompanyRule[]           @relation("CompanyRuleRelation")
+  id                     Int                      @id @default(autoincrement())
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  relatedToUsers         UserToCompanyRelation[]  @relation("RelatedUsers")
+  sampleTypes            SampleType[]             @relation("SampleTypesOwnedByCompany")
+  coffeePacks            CoffeePack[]
+  cuppings               Cupping[]
+  cuppingSettings        CuppingSettings[]
+  cuppingResult          CuppingResult[]
+  sampleTesting          SampleTesting[]
+  currentTeam            User[]                   @relation("CurrentUserCompany")
+  isPersonal             Boolean
+  companyName            String
+  companyImageURL        String?
+  teamInvitations        TeamInvitation[]         @relation("TeamInvitationCompany")
+  companyRules           CompanyRule[]            @relation("CompanyRuleRelation")
+  defaultCuppingSettings DefaultCuppingSettings[]
 }
 
 enum CompanyRuleType {
@@ -177,23 +179,23 @@ model CompanyRule {
 //
 
 model Cupping {
-  id               Int                 @id @default(autoincrement())
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  cuppingCreatorId Int
-  cuppingCreator   User                @relation("CreatedCuppingsByUser", fields: [cuppingCreatorId], references: [id])
-  cuppingName      String
-  cuppingType      CuppingType
-  eventDate        DateTime?
-  companyId        Int
-  company          Company             @relation(fields: [companyId], references: [id])
-  settingsId       Int
-  settings         CuppingSettings     @relation(fields: [settingsId], references: [id])
-  invitations      CuppingInvitation[]
-  coffeePacks      CoffeePack[]        @relation("CuppingCoffeePacks")
-  sampleTestings   SampleTesting[]
-  cuppingResult    CuppingResult?
-  cuppingHiddenPackNames  CuppingHiddenPackName[]
+  id                     Int                     @id @default(autoincrement())
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  cuppingCreatorId       Int
+  cuppingCreator         User                    @relation("CreatedCuppingsByUser", fields: [cuppingCreatorId], references: [id])
+  cuppingName            String
+  cuppingType            CuppingType
+  eventDate              DateTime?
+  companyId              Int
+  company                Company                 @relation(fields: [companyId], references: [id])
+  settingsId             Int
+  settings               CuppingSettings         @relation(fields: [settingsId], references: [id])
+  invitations            CuppingInvitation[]
+  coffeePacks            CoffeePack[]            @relation("CuppingCoffeePacks")
+  sampleTestings         SampleTesting[]
+  cuppingResult          CuppingResult?
+  cuppingHiddenPackNames CuppingHiddenPackName[]
 }
 
 model CuppingHiddenPackName {
@@ -259,6 +261,22 @@ model CuppingSettings {
   user                  User      @relation(fields: [userId], references: [id])
 }
 
+model DefaultCuppingSettings {
+  id                    Int      @id @default(autoincrement())
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  randomSamplesOrder    Boolean
+  openSampleNameCupping Boolean
+  singleUserCupping     Boolean
+  inviteAllTeammates    Boolean
+  defaultCuppingName    String
+  companyId             Int
+  company               Company  @relation(fields: [companyId], references: [id])
+  userId                Int
+  user                  User     @relation(fields: [userId], references: [id])
+  @@unique([userId, companyId])
+}
+
 //
 // ──────────────────────────────────────────────────────
 //  SAMPLE TYPE / ITEM / ROAST TYPE / COFFEE TYPE
@@ -282,20 +300,20 @@ model SampleType {
 }
 
 model CoffeePack {
-  id              Int               @id @default(autoincrement())
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  companyId       Int
-  company         Company           @relation(fields: [companyId], references: [id])
-  sampleTypeId    Int
-  sampleType      SampleType        @relation(fields: [sampleTypeId], references: [id])
-  roastDate       DateTime
-  openDate        DateTime?
-  packIsOver      Boolean           @default(false)
-  weight          Int
-  barCode         String?
-  cuppings        Cupping[]         @relation("CuppingCoffeePacks")
-  sampleTesting   SampleTesting[]
+  id                    Int                     @id @default(autoincrement())
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  companyId             Int
+  company               Company                 @relation(fields: [companyId], references: [id])
+  sampleTypeId          Int
+  sampleType            SampleType              @relation(fields: [sampleTypeId], references: [id])
+  roastDate             DateTime
+  openDate              DateTime?
+  packIsOver            Boolean                 @default(false)
+  weight                Int
+  barCode               String?
+  cuppings              Cupping[]               @relation("CuppingCoffeePacks")
+  sampleTesting         SampleTesting[]
   cuppingHiddenPackName CuppingHiddenPackName[]
 }
 

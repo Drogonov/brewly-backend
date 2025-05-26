@@ -50,9 +50,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Save default cupping settings' })
   @ApiOkResponse({ description: 'Save new cupping settings', type: StatusResponseDto })
   saveDefaultCuppingSettings(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUserCompanyId() currentCompanyId: number,
     @Body() dto: SaveDefaultCuppingSettingsRequestDto
   ): Promise<IStatusResponse> {
-    return this.settingsService.saveDefaultCuppingSettings(dto);
+    return this.settingsService.saveDefaultCuppingSettings(userId, currentCompanyId, dto);
   }
 
   @Get('get-cupping-settings')
