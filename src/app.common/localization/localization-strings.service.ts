@@ -4,6 +4,7 @@ import {
   AuthKeys,
   BusinessErrorKeys,
   CompanyKeys,
+  CuppingKeys,
   ErrorsKeys,
   Languages,
   LocalizationKey,
@@ -73,6 +74,13 @@ export class LocalizationStringsService {
 
   async getSamplesText(key: SamplesKeys, args?: Record<string, any>): Promise<string> {
     return this.i18n.translate(`${LocalizationKey.samples}.${key}`, {
+      lang: this.currentLang,
+      args
+    });
+  }
+
+  async getCuppingText(key: CuppingKeys, args?: Record<string, any>): Promise<string> {
+    return this.i18n.translate(`${LocalizationKey.cupping}.${key}`, {
       lang: this.currentLang,
       args
     });

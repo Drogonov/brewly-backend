@@ -1,0 +1,6 @@
+// This file is auto-generated. Do not edit manually.
+export enum CuppingKeys {
+  CREATE_CUPPING_SUCCESS = 'CREATE_CUPPING_SUCCESS',
+  CUPPING_STATUS_UPDATED = 'CUPPING_STATUS_UPDATED',
+  SAMPLE_TESTS_RECORDED = 'SAMPLE_TESTS_RECORDED'
+}

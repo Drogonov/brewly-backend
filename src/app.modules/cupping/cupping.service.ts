@@ -8,12 +8,15 @@ import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
 import { Cupping, CuppingType, Role } from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { IGetCuppingResponse } from './dto/get-cupping.response.dto';
+import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
+import { CuppingKeys } from 'src/app.common/localization/generated';
 
 @Injectable()
 export class CuppingService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly errorHandlingService: ErrorHandlingService,
+        private localizationStringsService: LocalizationStringsService,
         private mappingService: MappingService,
     ) { }
 
@@ -34,7 +37,6 @@ export class CuppingService {
                 })
             )
                 .map(r => r.userId)
-            // .filter(id => id !== userId)
             : chosenUserIds;
 
         // Add current user to the array 
@@ -86,11 +88,12 @@ export class CuppingService {
                 skipDuplicates: true,
             })
 
-            console.log(created.id);
-
             return {
                 status: StatusType.SUCCESS,
-                description: `Cupping with id ${created.id} created`
+                description: await this.localizationStringsService.getCuppingText(
+                    CuppingKeys.CREATE_CUPPING_SUCCESS,
+                    { cuppingId: created.id }
+                )
             };
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
@@ -221,7 +224,10 @@ export class CuppingService {
 
             return {
                 status: StatusType.SUCCESS,
-                description: `Cupping ${cuppingId} set to ${cuppingType}`
+                description: await this.localizationStringsService.getCuppingText(
+                    CuppingKeys.CUPPING_STATUS_UPDATED,
+                    { cuppingId: cuppingId, cuppingStatus: cuppingType }
+                )
             };
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
@@ -298,7 +304,10 @@ export class CuppingService {
 
             return {
                 status: StatusType.SUCCESS,
-                description: `${createdEntries.length} sample tests recorded`,
+                description: await this.localizationStringsService.getCuppingText(
+                    CuppingKeys.SAMPLE_TESTS_RECORDED,
+                    { sampleTestsAmount: createdEntries.length }
+                ),
             };
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
@@ -384,31 +393,31 @@ export class CuppingService {
     }
 
     private mapSamples(
-        cupping: Cupping & { 
-          settings: any; 
-          coffeePacks: any[]; 
-          cuppingHiddenPackNames: { coffeePackId: number; coffeePackName: string }[] 
+        cupping: Cupping & {
+            settings: any;
+            coffeePacks: any[];
+            cuppingHiddenPackNames: { coffeePackId: number; coffeePackName: string }[]
         },
-      ): IGetCuppingSampleResponse[] {
+    ): IGetCuppingSampleResponse[] {
         const hiddenNameMap = new Map<number, string>(
-          cupping.cuppingHiddenPackNames.map(h => [h.coffeePackId, h.coffeePackName])
+            cupping.cuppingHiddenPackNames.map(h => [h.coffeePackId, h.coffeePackName])
         );
-      
+
         return cupping.coffeePacks.map(pack => ({
-          sampleTypeId: pack.sampleTypeId,
-          hiddenSampleName: hiddenNameMap.get(pack.id) ?? null,
-          companyName: pack.sampleType.originCompanyName,
-          sampleName: pack.sampleType.sampleName,
-          beanOrigin: null,
-          procecingMethod: null,
-          roastType: pack.sampleType.roastType,
-          grindType: pack.sampleType.grindType,
-          packId: pack.id,
-          roastDate: pack.roastDate.toISOString(),
-          openDate: pack.openDate?.toISOString(),
-          weight: pack.weight,
-          barCode: pack.barCode,
-          test: { type: TestType.aroma } as IGetCuppingSampleTest,
+            sampleTypeId: pack.sampleTypeId,
+            hiddenSampleName: hiddenNameMap.get(pack.id) ?? null,
+            companyName: pack.sampleType.originCompanyName,
+            sampleName: pack.sampleType.sampleName,
+            beanOrigin: null,
+            procecingMethod: null,
+            roastType: pack.sampleType.roastType,
+            grindType: pack.sampleType.grindType,
+            packId: pack.id,
+            roastDate: pack.roastDate.toISOString(),
+            openDate: pack.openDate?.toISOString(),
+            weight: pack.weight,
+            barCode: pack.barCode,
+            test: { type: TestType.aroma } as IGetCuppingSampleTest,
         }));
-      }
+    }
 }

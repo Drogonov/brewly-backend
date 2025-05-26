@@ -499,13 +499,13 @@ export class UserService {
     });
     const isFriend = friendship ? friendship.type === FriendshipType.FRIEND : false;
     const isTeammate = !!targetUserRelation;
-    let status = 'Stranger';
+    let status = await this.localizationStringsService.getUserText(UserKeys.STRANGER);
     if (isFriend && isTeammate) {
-      status = 'Friends, teammates';
+      status = await this.localizationStringsService.getUserText(UserKeys.FRIENDS_TEAMMATES);
     } else if (isFriend) {
-      status = 'Friends';
+      status = await this.localizationStringsService.getUserText(UserKeys.FRIENDS);
     } else if (isTeammate) {
-      status = 'Teammates';
+      status = await this.localizationStringsService.getUserText(UserKeys.TEAMMATES);
     }
     return status;
   }

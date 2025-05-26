@@ -1,6 +1,7 @@
 export * from './auth.enum';
 export * from './business-error.enum';
 export * from './company.enum';
+export * from './cupping.enum';
 export * from './errors.enum';
 export * from './onboarding.enum';
 export * from './option-lists.enum';

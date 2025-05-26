@@ -328,7 +328,6 @@ export class SamplesService {
         currentCompanyId: number,
         packsIds: number[]
     ): Promise<IGetCoffeePacksInfoResponse> {
-        console.log("DEBUG: ");
         const coffeePacks = await this.prisma.coffeePack.findMany({
             where: {
                 companyId: currentCompanyId,

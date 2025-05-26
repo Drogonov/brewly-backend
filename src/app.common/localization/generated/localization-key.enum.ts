@@ -3,6 +3,7 @@ export enum LocalizationKey {
   auth = 'auth',
   businessError = 'business-error',
   company = 'company',
+  cupping = 'cupping',
   errors = 'errors',
   onboarding = 'onboarding',
   optionLists = 'option-lists',
