@@ -193,6 +193,16 @@ model Cupping {
   coffeePacks      CoffeePack[]        @relation("CuppingCoffeePacks")
   sampleTestings   SampleTesting[]
   cuppingResult    CuppingResult?
+  cuppingHiddenPackNames  CuppingHiddenPackName[]
+}
+
+model CuppingHiddenPackName {
+  id             Int        @id @default(autoincrement())
+  cuppingId      Int
+  cupping        Cupping    @relation(fields: [cuppingId], references: [id])
+  pack           CoffeePack @relation(fields: [coffeePackId], references: [id])
+  coffeePackName String
+  coffeePackId   Int
 }
 
 enum CuppingType {
@@ -272,20 +282,21 @@ model SampleType {
 }
 
 model CoffeePack {
-  id            Int             @id @default(autoincrement())
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  companyId     Int
-  company       Company         @relation(fields: [companyId], references: [id])
-  sampleTypeId  Int
-  sampleType    SampleType      @relation(fields: [sampleTypeId], references: [id])
-  roastDate     DateTime
-  openDate      DateTime?
-  packIsOver    Boolean         @default(false)
-  weight        Int
-  barCode       String?
-  cuppings      Cupping[]       @relation("CuppingCoffeePacks")
-  sampleTesting SampleTesting[]
+  id              Int               @id @default(autoincrement())
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  companyId       Int
+  company         Company           @relation(fields: [companyId], references: [id])
+  sampleTypeId    Int
+  sampleType      SampleType        @relation(fields: [sampleTypeId], references: [id])
+  roastDate       DateTime
+  openDate        DateTime?
+  packIsOver      Boolean           @default(false)
+  weight          Int
+  barCode         String?
+  cuppings        Cupping[]         @relation("CuppingCoffeePacks")
+  sampleTesting   SampleTesting[]
+  cuppingHiddenPackName CuppingHiddenPackName[]
 }
 
 //

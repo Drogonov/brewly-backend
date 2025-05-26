@@ -68,7 +68,19 @@ export class CuppingService {
                 }),
             ]);
 
-            // 2) Bulk create invitations, skip duplicates
+            // 2) Add Hidden sample names
+            if (!settings.openSampleNameCupping) {
+                await this.prisma.cuppingHiddenPackName.createMany({
+                    data: samples.map(sample => ({
+                        cuppingId: created.id,
+                        coffeePackId: sample.packId,
+                        coffeePackName: sample.hiddenSampleName
+                    })),
+                    skipDuplicates: true,
+                });
+            }
+
+            // 3) Bulk create invitations, skip duplicates
             await this.prisma.cuppingInvitation.createMany({
                 data: invitedUserIds.map(uId => ({ cuppingId: created.id, userId: uId })),
                 skipDuplicates: true,
@@ -122,6 +134,7 @@ export class CuppingService {
                     invitations: { select: { userId: true } },
                     coffeePacks: { include: { sampleType: true } },
                     sampleTestings: { select: { userId: true } },
+                    cuppingHiddenPackNames: true
                 },
             });
 
@@ -150,18 +163,18 @@ export class CuppingService {
 
             switch (cupping.cuppingType) {
                 case CuppingType.CREATED:
-                    return this.getCreatedCupping(cupping, userId);
+                    return this.getCreatedCupping(cupping, isUserHaveStrongPermissions);
                 case CuppingType.STARTED:
                     if (this.hasUserEndTesting(cupping, userId)) {
-                        return this.getLoaderCupping(cupping, userId);
+                        return this.getLoaderCupping(cupping, isUserHaveStrongPermissions);
                     } else {
-                        return this.getInProgressCupping(cupping, userId);
+                        return this.getInProgressCupping(cupping, isUserHaveStrongPermissions);
                     }
                 case CuppingType.ARCHIVED:
-                    return this.getEndedCupping(cupping, userId);
+                    return this.getEndedCupping(cupping);
                 default:
                     // fallback
-                    return this.getCreatedCupping(cupping, userId);
+                    return this.getCreatedCupping(cupping, isUserHaveStrongPermissions);
             }
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
@@ -306,83 +319,88 @@ export class CuppingService {
     // Get cupping template when chief still doesnt start it
     private async getCreatedCupping(
         cupping: Cupping & any,
-        userId: number,
+        isUserHaveStrongPermissions: boolean
     ): Promise<IGetCuppingResponse> {
-        const status = CuppingStatus.planned;
-        const canStart = cupping.cuppingCreatorId === userId;
-        return this.buildBaseResponse(cupping, status, canStart, false);
+        return this.buildResponse(
+            cupping,
+            CuppingStatus.planned,
+            isUserHaveStrongPermissions,
+            false
+        );
     }
 
     // Get cupping data when chief start it
     private async getInProgressCupping(
         cupping: Cupping & any,
-        userId: number,
+        isUserHaveStrongPermissions: boolean,
     ): Promise<IGetCuppingResponse> {
-        const status = CuppingStatus.inProgress;
-        const canEnd = cupping.cuppingCreatorId === userId;
-        return this.buildBaseResponse(cupping, status, false, canEnd);
+        return this.buildResponse(
+            cupping,
+            CuppingStatus.inProgress,
+            isUserHaveStrongPermissions,
+            true
+        );
     }
 
     // Get loader after user pass all data and now status for him doneByCurrentUser
     private async getLoaderCupping(
         cupping: Cupping & any,
-        userId: number,
+        isUserHaveStrongPermissions: boolean
     ): Promise<IGetCuppingResponse> {
-        const canStart = cupping.cuppingCreatorId === userId;
-        const status = CuppingStatus.doneByCurrentUser;
-
-        return {
-            status,
-            eventDate: cupping.eventDate?.toISOString(),
-            endDate: null,
-            canUserStartCupiing: canStart,
-            canUserEndCupiing: canStart,
-        };
+        return this.buildResponse(
+            cupping,
+            CuppingStatus.doneByCurrentUser,
+            isUserHaveStrongPermissions,
+            false
+        );
     }
 
     // Get info about cupping when it is over and archived so we can show results on front
     private async getEndedCupping(
         cupping: Cupping & any,
-        userId: number,
     ): Promise<IGetCuppingResponse> {
-        const status = CuppingStatus.ended;
-        return this.buildBaseResponse(cupping, status, false, false);
+        return this.buildResponse(
+            cupping,
+            CuppingStatus.ended,
+            false,
+            true
+        );
     }
 
-    private buildBaseResponse(
+    private buildResponse(
         cupping: Cupping & any,
         status: CuppingStatus,
-        canStart: boolean,
-        canEnd: boolean,
+        isUserHaveStrongPermissions: boolean,
+        includeSamples = true,
     ): IGetCuppingResponse {
-        const samples: IGetCuppingSampleResponse[] = cupping.coffeePacks.map(pack => {
-            const hidden = cupping.settings.openSampleNameCupping ? undefined : pack.sampleType.sampleName;
-            const test: IGetCuppingSampleTest = { type: TestType.aroma };
-            return {
-                sampleTypeId: pack.sampleTypeId,
-                hiddenSampleName: hidden,
-                companyName: pack.sampleType.originCompanyName,
-                sampleName: pack.sampleType.sampleName,
-                beanOrigin: null,
-                procecingMethod: null,
-                roastType: pack.sampleType.roastType,
-                grindType: pack.sampleType.grindType,
-                packId: pack.id,
-                roastDate: pack.roastDate.toISOString(),
-                openDate: pack.openDate?.toISOString(),
-                weight: pack.weight,
-                barCode: pack.barCode,
-                test,
-            };
-        });
-
         return {
             status,
             eventDate: cupping.eventDate?.toISOString(),
-            endDate: null,
-            canUserStartCupiing: canStart,
-            canUserEndCupiing: canEnd,
-            samples,
+            endDate: cupping.endDate?.toISOString() ?? null,
+            canUserStartCupiing: isUserHaveStrongPermissions,
+            canUserEndCupiing: isUserHaveStrongPermissions,
+            samples: includeSamples ? this.mapSamples(cupping) : undefined,
         };
+    }
+
+    private mapSamples(
+        cupping: Cupping & { settings: any; coffeePacks: any[], cuppingHiddenPackNames: any[] },
+    ): IGetCuppingSampleResponse[] {
+        return cupping.coffeePacks.map(pack => ({
+            sampleTypeId: pack.sampleTypeId,
+            hiddenSampleName: "Add logic for hiddenPackNames here",
+            companyName: pack.sampleType.originCompanyName,
+            sampleName: pack.sampleType.sampleName,
+            beanOrigin: null,
+            procecingMethod: null,
+            roastType: pack.sampleType.roastType,
+            grindType: pack.sampleType.grindType,
+            packId: pack.id,
+            roastDate: pack.roastDate.toISOString(),
+            openDate: pack.openDate?.toISOString(),
+            weight: pack.weight,
+            barCode: pack.barCode,
+            test: { type: TestType.aroma } as IGetCuppingSampleTest,
+        }));
     }
 }

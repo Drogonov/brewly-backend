@@ -185,6 +185,7 @@ export class MappingService {
     /**
     * Map Prisma’s Cupping + its Settings to ICuppingResponse
     */
+
     mapCupping(
         cupping: Cupping & { settings: CuppingSettings }
     ): ICuppingResponse {
@@ -192,18 +193,21 @@ export class MappingService {
             id: cupping.id,
             title: cupping.cuppingName,
             creationDate: cupping.createdAt.toISOString(),
-            eventDate: cupping.eventDate
-                ? cupping.eventDate.toISOString()
-                : null,
+            eventDate: cupping.eventDate?.toISOString() ?? null,
             status: this.translateStatus(cupping.cuppingType),
         };
     }
 
-    private translateStatus(type: CuppingType): CuppingStatus {
+    translateStatus(type: CuppingType): CuppingStatus {
         switch (type) {
-            case CuppingType.CREATED: return CuppingStatus.planned;
-            case CuppingType.STARTED: return CuppingStatus.inProgress;
-            case CuppingType.ARCHIVED: return CuppingStatus.ended;
+            case CuppingType.CREATED:
+                return CuppingStatus.planned;
+            case CuppingType.STARTED:
+                return CuppingStatus.inProgress;
+            case CuppingType.ARCHIVED:
+                return CuppingStatus.ended;
+            default:
+                return CuppingStatus.planned;
         }
     }
 }
