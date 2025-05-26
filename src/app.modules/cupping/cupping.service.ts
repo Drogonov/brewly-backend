@@ -25,11 +25,6 @@ export class CuppingService {
         console.log(dto);
         const { samples, settings, chosenUserIds } = dto;
 
-        // Add current user to the array
-        if (chosenUserIds) {
-            chosenUserIds.push(userId);
-        }
-
         // Determine invited users
         const invitedUserIds = settings.inviteAllTeammates
             ? (
@@ -41,6 +36,11 @@ export class CuppingService {
                 .map(r => r.userId)
             // .filter(id => id !== userId)
             : chosenUserIds;
+
+        // Add current user to the array 
+        if (invitedUserIds.some(ids => ids == userId)) {
+            invitedUserIds.push(userId);
+        }
 
         try {
             const [created] = await this.prisma.$transaction([
@@ -384,23 +384,31 @@ export class CuppingService {
     }
 
     private mapSamples(
-        cupping: Cupping & { settings: any; coffeePacks: any[], cuppingHiddenPackNames: any[] },
-    ): IGetCuppingSampleResponse[] {
+        cupping: Cupping & { 
+          settings: any; 
+          coffeePacks: any[]; 
+          cuppingHiddenPackNames: { coffeePackId: number; coffeePackName: string }[] 
+        },
+      ): IGetCuppingSampleResponse[] {
+        const hiddenNameMap = new Map<number, string>(
+          cupping.cuppingHiddenPackNames.map(h => [h.coffeePackId, h.coffeePackName])
+        );
+      
         return cupping.coffeePacks.map(pack => ({
-            sampleTypeId: pack.sampleTypeId,
-            hiddenSampleName: "Add logic for hiddenPackNames here",
-            companyName: pack.sampleType.originCompanyName,
-            sampleName: pack.sampleType.sampleName,
-            beanOrigin: null,
-            procecingMethod: null,
-            roastType: pack.sampleType.roastType,
-            grindType: pack.sampleType.grindType,
-            packId: pack.id,
-            roastDate: pack.roastDate.toISOString(),
-            openDate: pack.openDate?.toISOString(),
-            weight: pack.weight,
-            barCode: pack.barCode,
-            test: { type: TestType.aroma } as IGetCuppingSampleTest,
+          sampleTypeId: pack.sampleTypeId,
+          hiddenSampleName: hiddenNameMap.get(pack.id) ?? null,
+          companyName: pack.sampleType.originCompanyName,
+          sampleName: pack.sampleType.sampleName,
+          beanOrigin: null,
+          procecingMethod: null,
+          roastType: pack.sampleType.roastType,
+          grindType: pack.sampleType.grindType,
+          packId: pack.id,
+          roastDate: pack.roastDate.toISOString(),
+          openDate: pack.openDate?.toISOString(),
+          weight: pack.weight,
+          barCode: pack.barCode,
+          test: { type: TestType.aroma } as IGetCuppingSampleTest,
         }));
-    }
+      }
 }
