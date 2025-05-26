@@ -12,7 +12,7 @@ export interface IGetCuppingResponse {
     endDate?: string;
     canUserStartCupiing: boolean;
     canUserEndCupiing: boolean;
-    samples: IGetCuppingSampleResponse[];
+    samples?: IGetCuppingSampleResponse[];
 }
 
 // MARK: - Swagger class

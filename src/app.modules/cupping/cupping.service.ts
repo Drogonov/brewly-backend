@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { CreateCuppingRequestDto, CuppingStatus, GetCuppingsListResponseDto, IGetCuppingSampleResponse, IGetCuppingSampleTest, IGetCuppingsListResponse, IStatusResponse, ISuccessIdResponse, SetCuppingTestRequestDto, SetCuppingTypeRequestDto, StatusResponseDto, StatusType, TestType } from './dto';
+import { CreateCuppingRequestDto, CuppingStatus, GetCuppingsListResponseDto, IGetCuppingSampleResponse, IGetCuppingSampleTest, IGetCuppingsListResponse, IStatusResponse, ISuccessIdResponse, SetCuppingTestRequestDto, SetCuppingTestsRequestDto, SetCuppingTypeRequestDto, StatusResponseDto, StatusType, TestType } from './dto';
 import { GetCuppingResultsRequestDto } from './dto/get-cupping-results.request.dto';
 import { IGetCuppingResultsResponse } from './dto/get-cupping-results.response.dto';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
-import { Cupping, CuppingType } from '@prisma/client';
+import { Cupping, CuppingType, Role } from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { IGetCuppingResponse } from './dto/get-cupping.response.dto';
 
@@ -81,7 +81,6 @@ export class CuppingService {
                 description: `Cupping with id ${created.id} created`
             };
         } catch (error) {
-            console.log(error);
             throw await this.errorHandlingService.getBusinessError(
                 ErrorSubCode.REQUEST_VALIDATION_ERROR
             );
@@ -103,7 +102,6 @@ export class CuppingService {
                 cuppings: cuppings.map(c => this.mappingService.mapCupping(c as Cupping & { settings: any }))
             };
         } catch (error) {
-            console.log(error);
             throw await this.errorHandlingService.getBusinessError(
                 ErrorSubCode.REQUEST_VALIDATION_ERROR
             );
@@ -115,39 +113,60 @@ export class CuppingService {
         currentCompanyId: number,
         cuppingId: number,
     ): Promise<IGetCuppingResponse> {
-        // Delegate logic to private handlers based on status
-        const cupping = await this.prisma.cupping.findUnique({
-            where: { id: cuppingId },
-            include: {
-                cuppingCreator: true,
-                settings: true,
-                invitations: { select: { userId: true } },
-                coffeePacks: { include: { sampleType: true } },
-            },
-        });
+        try {
+            const cupping = await this.prisma.cupping.findUnique({
+                where: { id: cuppingId },
+                include: {
+                    cuppingCreator: true,
+                    settings: true,
+                    invitations: { select: { userId: true } },
+                    coffeePacks: { include: { sampleType: true } },
+                    sampleTestings: { select: { userId: true } },
+                },
+            });
 
-        if (!cupping || cupping.companyId !== currentCompanyId) {
-            throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR,
-            );
-        }
-        const invitedIds = cupping.invitations.map(i => i.userId);
-        if (!invitedIds.includes(userId)) {
-            throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR,
-            );
-        }
+            const relation = await this.prisma.userToCompanyRelation.findUnique({
+                where: {
+                    userId_companyId: {
+                        userId,
+                        companyId: currentCompanyId,
+                    },
+                }
+            });
 
-        switch (cupping.cuppingType) {
-            case CuppingType.CREATED:
-                return this.getCreatedCupping(cupping, userId);
-            case CuppingType.STARTED:
-                return this.getInProgressCupping(cupping, userId);
-            case CuppingType.ARCHIVED:
-                return this.getEndedCupping(cupping, userId);
-            default:
-                // fallback
-                return this.getCreatedCupping(cupping, userId);
+            if (!cupping || cupping.companyId !== currentCompanyId) {
+                throw await this.errorHandlingService.getBusinessError(
+                    ErrorSubCode.REQUEST_VALIDATION_ERROR,
+                );
+            }
+            const invitedIds = cupping.invitations.map(i => i.userId);
+            if (!invitedIds.includes(userId)) {
+                throw await this.errorHandlingService.getBusinessError(
+                    ErrorSubCode.REQUEST_VALIDATION_ERROR,
+                );
+            }
+
+            const isUserHaveStrongPermissions = (cupping.cuppingCreatorId === userId) || (relation.role == Role.OWNER);
+
+            switch (cupping.cuppingType) {
+                case CuppingType.CREATED:
+                    return this.getCreatedCupping(cupping, userId);
+                case CuppingType.STARTED:
+                    if (this.hasUserEndTesting(cupping, userId)) {
+                        return this.getLoaderCupping(cupping, userId);
+                    } else {
+                        return this.getInProgressCupping(cupping, userId);
+                    }
+                case CuppingType.ARCHIVED:
+                    return this.getEndedCupping(cupping, userId);
+                default:
+                    // fallback
+                    return this.getCreatedCupping(cupping, userId);
+            }
+        } catch (error) {
+            throw await this.errorHandlingService.getBusinessError(
+                ErrorSubCode.REQUEST_VALIDATION_ERROR
+            );
         }
     }
 
@@ -156,13 +175,23 @@ export class CuppingService {
         currentCompanyId: number,
         cuppingId: number,
     ): Promise<string> {
-        const cupping = await this.prisma.cupping.findUnique({ where: { id: cuppingId } });
-        if (!cupping || cupping.companyId !== currentCompanyId) {
+        try {
+            const cupping = await this.prisma.cupping.findUnique({
+                where: { id: cuppingId }
+            });
+
+            if (!cupping || cupping.companyId !== currentCompanyId) {
+                throw await this.errorHandlingService.getBusinessError(
+                    ErrorSubCode.REQUEST_VALIDATION_ERROR,
+                );
+            }
+            return cupping.cuppingType;
+
+        } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR,
+                ErrorSubCode.REQUEST_VALIDATION_ERROR
             );
         }
-        return cupping.cuppingType;
     }
 
     async setCuppingStatus(
@@ -170,81 +199,121 @@ export class CuppingService {
         currentCompanyId: number,
         dto: SetCuppingTypeRequestDto,
     ): Promise<StatusResponseDto> {
-        const { cuppingId, cuppingType } = dto;
-        await this.prisma.cupping.update({
-            where: { id: cuppingId },
-            data: { cuppingType },
-        });
-        return {
-            status: StatusType.SUCCESS,
-            description: `Cupping ${cuppingId} set to ${cuppingType}`
-        };
+        try {
+            const { cuppingId, cuppingType } = dto;
+            await this.prisma.cupping.update({
+                where: { id: cuppingId },
+                data: { cuppingType },
+            });
+
+            return {
+                status: StatusType.SUCCESS,
+                description: `Cupping ${cuppingId} set to ${cuppingType}`
+            };
+        } catch (error) {
+            throw await this.errorHandlingService.getBusinessError(
+                ErrorSubCode.REQUEST_VALIDATION_ERROR
+            );
+        }
     }
 
-
-    async setCuppingTest(
+    async setCuppingTests(
         userId: number,
         currentCompanyId: number,
-        dto: SetCuppingTestRequestDto,
+        dto: SetCuppingTestsRequestDto,
     ): Promise<StatusResponseDto> {
-        // Example: create a sample testing record
-        const {
-            cuppingId,
-            coffeePackId,
-            userTestingTimeInSeconds,
-            properties,
-        } = dto;
-        const testing = await this.prisma.sampleTesting.create({
-            data: {
-                userId,
-                companyId: currentCompanyId,
-                cuppingId,
-                coffeePackId,
-                userTestingTimeInSeconds,
-                userSampleProperties: {
-                    create: properties.map(p => ({
-                        propertyTypeId: p.propertyTypeId,
-                        intensity: p.intensity,
-                        quality: p.quality,
-                        comment: p.comment,
-                    })),
-                },
-            },
-        });
-        return {
-            status: StatusType.SUCCESS,
-            description: `Sample testing ${testing.id} recorded`
-        };
-    }
+        const { tests } = dto;
 
-    async doneCuppingTesting(
-        userId: number,
-        currentCompanyId: number,
-        cuppingId: number,
-    ): Promise<StatusResponseDto> {
-        // Archive cupping when all tests done
-        await this.prisma.cupping.update({
+        // Validate at least one test
+        if (!tests || tests.length === 0) {
+            throw await this.errorHandlingService.getBusinessError(
+                ErrorSubCode.REQUEST_VALIDATION_ERROR,
+            );
+        }
+
+        // Ensure cupping belongs to company
+        const cuppingId = tests[0].cuppingId;
+        const cupping = await this.prisma.cupping.findUnique({
             where: { id: cuppingId },
-            data: { cuppingType: CuppingType.ARCHIVED },
+            select: { companyId: true, cuppingType: true, invitations: { select: { userId: true } } },
         });
-        return {
-            status: StatusType.SUCCESS,
-            description: `Cupping ${cuppingId} archived`
-        };
+        if (!cupping || cupping.companyId !== currentCompanyId) {
+            throw await this.errorHandlingService.getBusinessError(
+                ErrorSubCode.REQUEST_VALIDATION_ERROR,
+            );
+        }
+
+        // Ensure user is invited
+        const invitedIds = cupping.invitations.map(i => i.userId);
+        if (!invitedIds.includes(userId)) {
+            throw await this.errorHandlingService.getBusinessError(
+                ErrorSubCode.REQUEST_VALIDATION_ERROR,
+            );
+        }
+
+        // Ensure that cupping isnt archived or still not started
+        if (cupping.cuppingType != CuppingType.STARTED) {
+            throw await this.errorHandlingService.getBusinessError(
+                ErrorSubCode.REQUEST_VALIDATION_ERROR,
+            );
+        }
+
+        try {
+            // Create all sampleTesting records in a single transaction
+            const createdEntries = await this.prisma.$transaction(
+                tests.map(test => {
+                    const { coffeePackId, userTestingTimeInSeconds, properties } = test;
+                    return this.prisma.sampleTesting.create({
+                        data: {
+                            userId,
+                            companyId: currentCompanyId,
+                            cuppingId,
+                            coffeePackId,
+                            userTestingTimeInSeconds,
+                            userSampleProperties: {
+                                create: properties.map(p => ({
+                                    propertyTypeId: p.propertyTypeId,
+                                    intensity: p.intensity,
+                                    quality: p.quality,
+                                    comment: p.comment,
+                                })),
+                            },
+                        },
+                    });
+                }),
+            );
+
+            return {
+                status: StatusType.SUCCESS,
+                description: `${createdEntries.length} sample tests recorded`,
+            };
+        } catch (error) {
+            throw await this.errorHandlingService.getBusinessError(
+                ErrorSubCode.REQUEST_VALIDATION_ERROR,
+            );
+        }
     }
 
-    // MARK: - Proivate Methods
+    // MARK: - Private Methods
 
+    private hasUserEndTesting(
+        cupping: Cupping & { sampleTestings: { userId: number }[] },
+        userId: number,
+    ): boolean {
+        return cupping.sampleTestings.some(t => t.userId === userId);
+    }
+
+    // Get cupping template when chief still doesnt start it
     private async getCreatedCupping(
         cupping: Cupping & any,
         userId: number,
     ): Promise<IGetCuppingResponse> {
-        // Auto-start if creator
         const status = CuppingStatus.planned;
         const canStart = cupping.cuppingCreatorId === userId;
         return this.buildBaseResponse(cupping, status, canStart, false);
     }
 
+    // Get cupping data when chief start it
     private async getInProgressCupping(
         cupping: Cupping & any,
         userId: number,
@@ -254,6 +323,24 @@ export class CuppingService {
         return this.buildBaseResponse(cupping, status, false, canEnd);
     }
 
+    // Get loader after user pass all data and now status for him doneByCurrentUser
+    private async getLoaderCupping(
+        cupping: Cupping & any,
+        userId: number,
+    ): Promise<IGetCuppingResponse> {
+        const canStart = cupping.cuppingCreatorId === userId;
+        const status = CuppingStatus.doneByCurrentUser;
+
+        return {
+            status,
+            eventDate: cupping.eventDate?.toISOString(),
+            endDate: null,
+            canUserStartCupiing: canStart,
+            canUserEndCupiing: canStart,
+        };
+    }
+
+    // Get info about cupping when it is over and archived so we can show results on front
     private async getEndedCupping(
         cupping: Cupping & any,
         userId: number,
