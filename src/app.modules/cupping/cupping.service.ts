@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateCuppingRequestDto, CuppingStatus, GetCuppingsListResponseDto, IGetCuppingSampleResponse, IGetCuppingSampleTest, IGetCuppingsListResponse, IStatusResponse, ISuccessIdResponse, SetCuppingTestRequestDto, SetCuppingTestsRequestDto, SetCuppingTypeRequestDto, StatusResponseDto, StatusType, TestType } from './dto';
+import { CreateCuppingRequestDto, CuppingStatus, GetCuppingsListResponseDto, IGetCuppingSampleResponse, IGetCuppingSampleTest, IGetCuppingsListResponse, IGetCuppingStatusResponse, IStatusResponse, ISuccessIdResponse, SetCuppingStatusRequestDto, SetCuppingTestRequestDto, SetCuppingTestsRequestDto, StatusResponseDto, StatusType, TestType } from './dto';
 import { GetCuppingResultsRequestDto } from './dto/get-cupping-results.request.dto';
 import { IGetCuppingResultsResponse } from './dto/get-cupping-results.response.dto';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
@@ -109,12 +109,18 @@ export class CuppingService {
         try {
             const cuppings = await this.prisma.cupping.findMany({
                 where: { companyId: currentCompanyId },
-                include: { settings: true },
+                include: { 
+                    settings: true,
+                    sampleTestings: { select: { userId: true } }
+                },
                 orderBy: { createdAt: 'desc' },
             });
 
             return {
-                cuppings: cuppings.map(c => this.mappingService.mapCupping(c as Cupping & { settings: any }))
+                cuppings: cuppings.map(cupping => this.mappingService.mapCupping(
+                    cupping as Cupping & { settings: any },
+                    this.hasUserEndTesting(cupping, userId)
+                 ))
             };
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
@@ -186,14 +192,15 @@ export class CuppingService {
         }
     }
 
-    async getCuppingType(
+    async getCuppingStatus(
         userId: number,
         currentCompanyId: number,
         cuppingId: number,
-    ): Promise<string> {
+    ): Promise<IGetCuppingStatusResponse> {
         try {
             const cupping = await this.prisma.cupping.findUnique({
-                where: { id: cuppingId }
+                where: { id: cuppingId },
+                include: { sampleTestings: true }
             });
 
             if (!cupping || cupping.companyId !== currentCompanyId) {
@@ -201,8 +208,13 @@ export class CuppingService {
                     ErrorSubCode.REQUEST_VALIDATION_ERROR,
                 );
             }
-            return cupping.cuppingType;
 
+            return {
+                status: this.mappingService.translateTypeToStatus(
+                    cupping.cuppingType,
+                    this.hasUserEndTesting(cupping, userId)
+                )
+            }
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
                 ErrorSubCode.REQUEST_VALIDATION_ERROR
@@ -213,10 +225,12 @@ export class CuppingService {
     async setCuppingStatus(
         userId: number,
         currentCompanyId: number,
-        dto: SetCuppingTypeRequestDto,
+        dto: SetCuppingStatusRequestDto,
     ): Promise<StatusResponseDto> {
         try {
-            const { cuppingId, cuppingType } = dto;
+            const { cuppingId, cuppingStatus } = dto;
+            const cuppingType = this.mappingService.translateStatusToType(cuppingStatus);
+
             await this.prisma.cupping.update({
                 where: { id: cuppingId },
                 data: { cuppingType },

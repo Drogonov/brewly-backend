@@ -18,8 +18,11 @@ import {
   IGetCuppingsListResponse,
   GetCuppingResponseDto,
   IGetCuppingResponse,
-  SetCuppingTypeRequestDto,
-  SetCuppingTestsRequestDto
+  SetCuppingStatusRequestDto,
+  SetCuppingTestsRequestDto,
+  CuppingStatus,
+  IGetCuppingStatusResponse,
+  GetCuppingStatusResponseDto
 } from './dto';
 import {
   ApiBearerAuth,
@@ -71,15 +74,15 @@ export class CuppingController {
     return this.cuppingService.getCupping(userId, currentCompanyId, cuppingId);
   }
 
-  @Get('get-cupping-type')
-  @ApiOperation({ summary: 'Get Cupping type' })
-  @ApiOkResponse({ description: 'Start cupping with your friends', type: String })
-  getCuppingType(
+  @Get('get-cupping-status')
+  @ApiOperation({ summary: 'Get Cupping status' })
+  @ApiOkResponse({ description: 'Get cupping status after some changes', type: GetCuppingStatusResponseDto })
+  getCuppingStatus(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
     @Query('cuppingId', ParseIntPipe) cuppingId: number
-  ): Promise<String> {
-    return this.cuppingService.getCuppingType(userId, currentCompanyId, cuppingId);
+  ): Promise<IGetCuppingStatusResponse> {
+    return this.cuppingService.getCuppingStatus(userId, currentCompanyId, cuppingId);
   }
 
   @Post('set-cupping-status')
@@ -88,7 +91,7 @@ export class CuppingController {
   setCuppingStatus(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
-    @Body() dto: SetCuppingTypeRequestDto
+    @Body() dto: SetCuppingStatusRequestDto
   ): Promise<IStatusResponse> {
     return this.cuppingService.setCuppingStatus(userId, currentCompanyId, dto);
   }

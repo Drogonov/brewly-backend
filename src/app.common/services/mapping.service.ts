@@ -189,27 +189,43 @@ export class MappingService {
     */
 
     mapCupping(
-        cupping: Cupping & { settings: CuppingSettings }
+        cupping: Cupping & { settings: CuppingSettings },
+        hasUserEndTesting: boolean
     ): ICuppingResponse {
         return {
             id: cupping.id,
             title: cupping.cuppingName,
             creationDate: cupping.createdAt.toISOString(),
             eventDate: cupping.eventDate?.toISOString() ?? null,
-            status: this.translateStatus(cupping.cuppingType),
+            status: this.translateTypeToStatus(cupping.cuppingType, hasUserEndTesting),
         };
     }
 
-    translateStatus(type: CuppingType): CuppingStatus {
+    translateTypeToStatus(type: CuppingType, hasUserEndTesting: boolean): CuppingStatus {
         switch (type) {
             case CuppingType.CREATED:
                 return CuppingStatus.planned;
             case CuppingType.STARTED:
-                return CuppingStatus.inProgress;
+                if (hasUserEndTesting) {
+                    return CuppingStatus.doneByCurrentUser;
+                } else {
+                    return CuppingStatus.inProgress;
+                }
             case CuppingType.ARCHIVED:
                 return CuppingStatus.ended;
             default:
                 return CuppingStatus.planned;
+        }
+    }
+
+    translateStatusToType(status: CuppingStatus): CuppingType {
+        switch (status) {
+            case CuppingStatus.planned:
+                return CuppingType.CREATED;
+            case CuppingStatus.inProgress, CuppingStatus.doneByCurrentUser:
+                return CuppingType.STARTED;
+            case CuppingStatus.ended:
+                return CuppingType.ARCHIVED;
         }
     }
 }
