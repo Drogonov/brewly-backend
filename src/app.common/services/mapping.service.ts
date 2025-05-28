@@ -222,7 +222,9 @@ export class MappingService {
         switch (status) {
             case CuppingStatus.planned:
                 return CuppingType.CREATED;
-            case CuppingStatus.inProgress, CuppingStatus.doneByCurrentUser:
+            case CuppingStatus.inProgress:
+                return CuppingType.STARTED;
+            case CuppingStatus.doneByCurrentUser:
                 return CuppingType.STARTED;
             case CuppingStatus.ended:
                 return CuppingType.ARCHIVED;
