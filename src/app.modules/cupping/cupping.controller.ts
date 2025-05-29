@@ -5,6 +5,7 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
 import { CuppingService } from './cupping.service';
 import {
@@ -102,8 +103,11 @@ export class CuppingController {
   setCuppingTests(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
+    @Req() request: Request,
     @Body() dto: SetCuppingTestsRequestDto
   ): Promise<IStatusResponse> {
+    console.log(request);
+    console.log(dto);
     return this.cuppingService.setCuppingTests(userId, currentCompanyId, dto);
   }
 }

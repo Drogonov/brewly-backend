@@ -1,12 +1,12 @@
 import { IsNotEmpty, IsArray, ValidateNested, ArrayMinSize } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { TestType } from '.';
 
 class PropertyDto {
   @IsNotEmpty()
-  @ApiProperty({ example: 1 })
-  @Type(() => Number)
-  propertyTypeId: number;
+  @ApiProperty({ enum: TestType })
+  testPropertyType: TestType;
 
   @IsNotEmpty()
   @ApiProperty({ example: 5 })
@@ -33,11 +33,6 @@ export class SetCuppingTestRequestDto {
   @Type(() => Number)
   coffeePackId: number;
 
-  @IsNotEmpty()
-  @ApiProperty({ example: 120 })
-  @Type(() => Number)
-  userTestingTimeInSeconds: number;
-
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => PropertyDto)
@@ -46,10 +41,8 @@ export class SetCuppingTestRequestDto {
 }
 
 export class SetCuppingTestsRequestDto {
-  @ApiProperty({ type: SetCuppingTestRequestDto, isArray: true })
-  @IsArray()
-  @ArrayMinSize(1)
-  @ValidateNested({ each: true })
+  @ApiProperty({ type: [SetCuppingTestRequestDto], isArray: true })
+  @IsNotEmpty()
   @Type(() => SetCuppingTestRequestDto)
   tests: SetCuppingTestRequestDto[];
 }

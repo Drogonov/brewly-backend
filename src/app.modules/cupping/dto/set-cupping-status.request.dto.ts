@@ -10,7 +10,6 @@ export class SetCuppingStatusRequestDto {
   cuppingId: number;
 
   @IsNotEmpty()
-  @IsEnum(CuppingStatus)
   @ApiProperty({ enum: CuppingStatus })
   cuppingStatus: CuppingStatus;
 }

@@ -10,6 +10,7 @@ import {
     Cupping,
     CuppingSettings,
     CuppingType,
+    PropertyType,
 } from '@prisma/client';
 import {
     IUserInfoResponse,
@@ -24,7 +25,7 @@ import {
 } from 'src/app.modules/user/dto';
 import { LocalizationOptionsList } from '../localization/localization-options-list/localization-options-list.model';
 import { IOptionListResponse } from '../dto/option-list.response.dto';
-import { CuppingStatus, ICuppingResponse } from 'src/app.modules/cupping/dto';
+import { CuppingStatus, ICuppingResponse, TestType } from 'src/app.modules/cupping/dto';
 
 /**
  * This service centralizes mapping logic so that transformations
@@ -230,4 +231,38 @@ export class MappingService {
                 return CuppingType.ARCHIVED;
         }
     }
+
+    translatePropertyToTestType(propertyType: PropertyType): TestType {
+        switch (propertyType) {
+          case PropertyType.AROMA:
+            return TestType.aroma;
+          case PropertyType.ACIDITY:
+            return TestType.acidity;
+          case PropertyType.SWEETNESS:
+            return TestType.sweetness;
+          case PropertyType.BODY:
+            return TestType.body;
+          case PropertyType.AFTERTASTE:
+            return TestType.aftertaste;
+          default:
+            return null
+        }
+      }
+    
+      translateTestToPropertyType(testType: TestType): PropertyType {
+        switch (testType) {
+          case TestType.aroma:
+            return PropertyType.AROMA;
+          case TestType.acidity:
+            return PropertyType.ACIDITY;
+          case TestType.sweetness:
+            return PropertyType.SWEETNESS;
+          case TestType.body:
+            return PropertyType.BODY;
+          case TestType.aftertaste:
+            return PropertyType.AFTERTASTE;
+          default:
+            return null
+        }
+      }
 }

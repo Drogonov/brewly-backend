@@ -274,6 +274,7 @@ model DefaultCuppingSettings {
   company               Company  @relation(fields: [companyId], references: [id])
   userId                Int
   user                  User     @relation(fields: [userId], references: [id])
+
   @@unique([userId, companyId])
 }
 
@@ -335,7 +336,6 @@ model SampleTesting {
   cupping                  Cupping                  @relation(fields: [cuppingId], references: [id])
   coffeePackId             Int
   coffeePack               CoffeePack               @relation(fields: [coffeePackId], references: [id])
-  userTestingTimeInSeconds Int
   userSampleProperties     SampleProperty[]
   cuppingResultForSample   CuppingResultForSample[]
 }
@@ -344,8 +344,7 @@ model SampleProperty {
   id              Int           @id @default(autoincrement())
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  propertyTypeId  Int
-  propertyType    PropertyType  @relation(fields: [propertyTypeId], references: [id])
+  propertyType    PropertyType
   intensity       Int
   quality         Int
   comment         String
@@ -353,10 +352,10 @@ model SampleProperty {
   sampleTesting   SampleTesting @relation(fields: [sampleTestingId], references: [id])
 }
 
-model PropertyType {
-  id               Int              @id @default(autoincrement())
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  propertyName     String
-  sampleProperties SampleProperty[]
+enum PropertyType {
+  AROMA
+  ACIDITY
+  SWEETNESS
+  BODY
+  AFTERTASTE
 }

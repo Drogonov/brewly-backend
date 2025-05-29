@@ -5,6 +5,7 @@ import { ConfigurationService } from 'src/app.common/services/config/configurati
 import { CustomValidationPipe } from 'src/app.common/error-handling/custom-validation-pipe';
 // import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
+import { LoggingInterceptor } from './interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +15,7 @@ async function bootstrap() {
 
   // Use our custom validation pipe globally.
   app.useGlobalPipes(new CustomValidationPipe(errorHandlingService));
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   if (configService.getAppPort() !== 'production') {
     const config = new DocumentBuilder()

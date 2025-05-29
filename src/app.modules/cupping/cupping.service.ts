@@ -257,6 +257,8 @@ export class CuppingService {
     ): Promise<StatusResponseDto> {
         const { tests } = dto;
 
+        console.log(dto);
+
         // Validate at least one test
         if (!tests || tests.length === 0) {
             throw await this.errorHandlingService.getBusinessError(
@@ -295,17 +297,16 @@ export class CuppingService {
             // Create all sampleTesting records in a single transaction
             const createdEntries = await this.prisma.$transaction(
                 tests.map(test => {
-                    const { coffeePackId, userTestingTimeInSeconds, properties } = test;
+                    const { coffeePackId, properties } = test;
                     return this.prisma.sampleTesting.create({
                         data: {
                             userId,
                             companyId: currentCompanyId,
                             cuppingId,
                             coffeePackId,
-                            userTestingTimeInSeconds,
                             userSampleProperties: {
                                 create: properties.map(p => ({
-                                    propertyTypeId: p.propertyTypeId,
+                                    propertyType: this.mappingService.translateTestToPropertyType(p.testPropertyType),
                                     intensity: p.intensity,
                                     quality: p.quality,
                                     comment: p.comment,
