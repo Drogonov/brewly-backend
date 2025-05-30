@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  ParseArrayPipe,
   ParseIntPipe,
   Post,
   Query,
@@ -103,11 +104,8 @@ export class CuppingController {
   setCuppingTests(
     @GetCurrentUserId() userId: number,
     @GetCurrentUserCompanyId() currentCompanyId: number,
-    @Req() request: Request,
     @Body() dto: SetCuppingTestsRequestDto
   ): Promise<IStatusResponse> {
-    console.log(request);
-    console.log(dto);
     return this.cuppingService.setCuppingTests(userId, currentCompanyId, dto);
   }
 }

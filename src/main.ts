@@ -6,6 +6,7 @@ import { CustomValidationPipe } from 'src/app.common/error-handling/custom-valid
 // import { LocalizationStringsService } from 'src/app.common/localization/localization-strings-service';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { LoggingInterceptor } from './interceptor';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

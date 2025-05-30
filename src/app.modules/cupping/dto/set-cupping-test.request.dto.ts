@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsArray, ValidateNested, ArrayMinSize } from 'class-validator';
+import { IsNotEmpty, IsArray, ValidateNested, ArrayMinSize, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { TestType } from '.';
@@ -19,7 +19,8 @@ class PropertyDto {
   quality: number;
 
   @ApiProperty({ example: 'Nice aromas' })
-  comment: string;
+  @IsOptional() 
+  comment?: string;
 }
 
 export class SetCuppingTestRequestDto {
@@ -41,8 +42,8 @@ export class SetCuppingTestRequestDto {
 }
 
 export class SetCuppingTestsRequestDto {
-  @ApiProperty({ type: [SetCuppingTestRequestDto], isArray: true })
-  @IsNotEmpty()
+  @IsArray()
+  @ValidateNested({ each: true })
   @Type(() => SetCuppingTestRequestDto)
   tests: SetCuppingTestRequestDto[];
 }
