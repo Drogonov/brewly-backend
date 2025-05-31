@@ -21,7 +21,8 @@ export interface IGetCuppingSampleResponse {
     weight: number;
     barCode?: string;
 
-    test: IGetCuppingSampleTest[];
+    averageScore?: number;
+    test?: IGetCuppingSampleTest[];
 }
 
 // MARK: - Swagger class
@@ -67,6 +68,9 @@ export class GetCuppingSampleResponseDto implements IGetCuppingSampleResponse {
     @ApiProperty({ description: 'Bar code of the pack' })
     barCode?: string;
 
+    @ApiProperty({ description: 'Average score of the pack' })
+    averageScore?: number;
+
     @ApiProperty({ description: 'Test result of the pack' })
-    test: IGetCuppingSampleTest[];
+    test?: IGetCuppingSampleTest[];
 }
