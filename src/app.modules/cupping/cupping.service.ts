@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { CreateCuppingRequestDto, CuppingStatus, GetCuppingsListResponseDto, IGetCuppingSampleResponse, IGetCuppingSampleTest, IGetCuppingsListResponse, IGetCuppingStatusResponse, IStatusResponse, ISuccessIdResponse, SetCuppingStatusRequestDto, SetCuppingTestRequestDto, SetCuppingTestsRequestDto, StatusResponseDto, StatusType, TestType } from './dto';
-import { GetCuppingResultsRequestDto } from './dto/get-cupping-results.request.dto';
-import { IGetCuppingResultsResponse } from './dto/get-cupping-results.response.dto';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
-import { Cupping, CuppingType, Role } from '@prisma/client';
+import { Cupping, CuppingType, PropertyType, Role, SampleProperty, SampleTesting } from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { IGetCuppingResponse } from './dto/get-cupping.response.dto';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
@@ -109,7 +107,7 @@ export class CuppingService {
         try {
             const cuppings = await this.prisma.cupping.findMany({
                 where: { companyId: currentCompanyId },
-                include: { 
+                include: {
                     settings: true,
                     sampleTestings: { select: { userId: true } }
                 },
@@ -120,7 +118,7 @@ export class CuppingService {
                 cuppings: cuppings.map(cupping => this.mappingService.mapCupping(
                     cupping as Cupping & { settings: any },
                     this.hasUserEndTesting(cupping, userId)
-                 ))
+                ))
             };
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
@@ -142,8 +140,19 @@ export class CuppingService {
                     settings: true,
                     invitations: { select: { userId: true } },
                     coffeePacks: { include: { sampleType: true } },
-                    sampleTestings: { select: { userId: true } },
-                    cuppingHiddenPackNames: true
+                    sampleTestings: {
+                        where: { userId },
+                        include: {
+                            coffeePack: true,
+                            userSampleProperties: true,
+                        },
+                    },
+                    cuppingHiddenPackNames: true,
+                    cuppingResult: {
+                        include: {
+                            cuppingSampleTestingPropertyResult: true,
+                        },
+                    },
                 },
             });
 
@@ -172,18 +181,18 @@ export class CuppingService {
 
             switch (cupping.cuppingType) {
                 case CuppingType.CREATED:
-                    return this.getCreatedCupping(cupping, isUserHaveStrongPermissions);
+                    return this.getCreatedCupping(userId, cupping, isUserHaveStrongPermissions);
                 case CuppingType.STARTED:
                     if (this.hasUserEndTesting(cupping, userId)) {
-                        return this.getLoaderCupping(cupping, isUserHaveStrongPermissions);
+                        return this.getLoaderCupping(userId, cupping, isUserHaveStrongPermissions);
                     } else {
-                        return this.getInProgressCupping(cupping, isUserHaveStrongPermissions);
+                        return this.getInProgressCupping(userId, cupping, isUserHaveStrongPermissions);
                     }
                 case CuppingType.ARCHIVED:
-                    return this.getEndedCupping(cupping);
+                    return this.getEndedCupping(userId, cupping);
                 default:
                     // fallback
-                    return this.getCreatedCupping(cupping, isUserHaveStrongPermissions);
+                    return this.getCreatedCupping(userId, cupping, isUserHaveStrongPermissions);
             }
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
@@ -230,6 +239,10 @@ export class CuppingService {
         try {
             const { cuppingId, cuppingStatus } = dto;
             const cuppingType = this.mappingService.translateStatusToType(cuppingStatus);
+
+            if (cuppingType == CuppingType.ARCHIVED) {
+                await this.saveCuppingResults(cuppingId);
+            }
 
             await this.prisma.cupping.update({
                 where: { id: cuppingId },
@@ -342,10 +355,12 @@ export class CuppingService {
 
     // Get cupping template when chief still doesnt start it
     private async getCreatedCupping(
+        userId: number,
         cupping: Cupping & any,
         isUserHaveStrongPermissions: boolean
     ): Promise<IGetCuppingResponse> {
         return this.buildResponse(
+            userId,
             cupping,
             CuppingStatus.planned,
             isUserHaveStrongPermissions,
@@ -355,10 +370,12 @@ export class CuppingService {
 
     // Get cupping data when chief start it
     private async getInProgressCupping(
+        userId: number,
         cupping: Cupping & any,
         isUserHaveStrongPermissions: boolean,
     ): Promise<IGetCuppingResponse> {
         return this.buildResponse(
+            userId,
             cupping,
             CuppingStatus.inProgress,
             isUserHaveStrongPermissions,
@@ -368,10 +385,12 @@ export class CuppingService {
 
     // Get loader after user pass all data and now status for him doneByCurrentUser
     private async getLoaderCupping(
+        userId: number,
         cupping: Cupping & any,
         isUserHaveStrongPermissions: boolean
     ): Promise<IGetCuppingResponse> {
         return this.buildResponse(
+            userId,
             cupping,
             CuppingStatus.doneByCurrentUser,
             isUserHaveStrongPermissions,
@@ -381,9 +400,11 @@ export class CuppingService {
 
     // Get info about cupping when it is over and archived so we can show results on front
     private async getEndedCupping(
+        userId: number,
         cupping: Cupping & any,
     ): Promise<IGetCuppingResponse> {
         return this.buildResponse(
+            userId,
             cupping,
             CuppingStatus.ended,
             false,
@@ -392,6 +413,7 @@ export class CuppingService {
     }
 
     private buildResponse(
+        userId: number,
         cupping: Cupping & any,
         status: CuppingStatus,
         isUserHaveStrongPermissions: boolean,
@@ -403,36 +425,170 @@ export class CuppingService {
             endDate: cupping.endDate?.toISOString() ?? null,
             canUserStartCupiing: isUserHaveStrongPermissions,
             canUserEndCupiing: isUserHaveStrongPermissions,
-            samples: includeSamples ? this.mapSamples(cupping) : undefined,
+            samples: includeSamples ? this.mappingService.mapCuppingSamples(cupping, userId) : undefined,
         };
     }
 
-    private mapSamples(
-        cupping: Cupping & {
-            settings: any;
-            coffeePacks: any[];
-            cuppingHiddenPackNames: { coffeePackId: number; coffeePackName: string }[]
-        },
-    ): IGetCuppingSampleResponse[] {
-        const hiddenNameMap = new Map<number, string>(
-            cupping.cuppingHiddenPackNames.map(h => [h.coffeePackId, h.coffeePackName])
-        );
-
-        return cupping.coffeePacks.map(pack => ({
-            sampleTypeId: pack.sampleTypeId,
-            hiddenSampleName: hiddenNameMap.get(pack.id) ?? null,
-            companyName: pack.sampleType.originCompanyName,
-            sampleName: pack.sampleType.sampleName,
-            beanOrigin: null,
-            procecingMethod: null,
-            roastType: pack.sampleType.roastType,
-            grindType: pack.sampleType.grindType,
-            packId: pack.id,
-            roastDate: pack.roastDate.toISOString(),
-            openDate: pack.openDate?.toISOString(),
-            weight: pack.weight,
-            barCode: pack.barCode,
-            test: { type: TestType.aroma } as IGetCuppingSampleTest,
-        }));
-    }
+    private async saveCuppingResults(cuppingId: number) {
+        try {
+          // 1) Load the cupping + all sampleTestings (including each user's properties)
+          const cupping = await this.prisma.cupping.findUnique({
+            where: { id: cuppingId },
+            select: {
+              cuppingCreatorId: true,
+              sampleTestings: {
+                include: {
+                  userSampleProperties: true, // each SampleProperty has propertyType, intensity, quality, etc.
+                },
+              },
+            },
+          });
+    
+          if (!cupping) {
+            // If the cupping doesn’t exist, bail out
+            throw await this.errorHandlingService.getBusinessError(
+              ErrorSubCode.REQUEST_VALIDATION_ERROR
+            );
+          }
+    
+          const allTestings = cupping.sampleTestings;
+          if (allTestings.length === 0) {
+            // No one tested anything—nothing to aggregate
+            return;
+          }
+    
+          const chiefUserId = cupping.cuppingCreatorId;
+    
+          // 2) Group all SampleTesting rows by coffeePackId
+          const testsByPack = new Map<number, (SampleTesting & { userSampleProperties: SampleProperty[] })[] >();
+          for (const testing of allTestings) {
+            const packId = testing.coffeePackId;
+            if (!testsByPack.has(packId)) {
+              testsByPack.set(packId, []);
+            }
+            testsByPack.get(packId)!.push(testing);
+          }
+    
+          // 3) For each coffeePackId, compute averages & create the corresponding result rows
+          for (const [coffeePackId, testsForThisPack] of testsByPack.entries()) {
+            // 3a) Compute overall averageScore for this pack:
+            //     - For each SampleTesting, sum (intensity + quality) over all its SampleProperty entries
+            //     - Then average those sums across all testers
+            let sumOfTestersTotals = 0;
+            for (const oneTest of testsForThisPack) {
+              let singleTesterTotal = 0;
+              for (const prop of oneTest.userSampleProperties) {
+                singleTesterTotal += prop.intensity + prop.quality;
+              }
+              sumOfTestersTotals += singleTesterTotal;
+            }
+            const overallAverageScore = Math.round(
+              sumOfTestersTotals / testsForThisPack.length
+            );
+    
+            // 3b) For each PropertyType, compute:
+            //     (i)   average intensity across all testers
+            //     (ii)  average quality across all testers
+            //     (iii) chief’s intensity/quality if the chief tested this pack
+            type AggResult = {
+              propertyType: PropertyType;
+              averageIntensity: number;
+              averageQuality: number;
+              chiefIntensity: number;
+              chiefQuality: number;
+            };
+    
+            const propertyResults: AggResult[] = [];
+    
+            // We know PropertyType is an enum; build an array of all enums
+            const allPropertyTypes: PropertyType[] = [
+              PropertyType.AROMA,
+              PropertyType.ACIDITY,
+              PropertyType.SWEETNESS,
+              PropertyType.BODY,
+              PropertyType.AFTERTASTE,
+            ];
+    
+            // Pre‐find if a “chief”‐testing exists for this coffeePack
+            const chiefTesting = testsForThisPack.find(
+              (t) => t.userId === chiefUserId
+            );
+    
+            for (const propType of allPropertyTypes) {
+              // Collect all SampleProperty entries (of this propertyType) across all testers
+              const matchingProps: SampleProperty[] = [];
+              for (const oneTest of testsForThisPack) {
+                for (const prop of oneTest.userSampleProperties) {
+                  if (prop.propertyType === propType) {
+                    matchingProps.push(prop);
+                  }
+                }
+              }
+    
+              let avgIntensity = 0;
+              let avgQuality = 0;
+              if (matchingProps.length > 0) {
+                const sumIntensity = matchingProps.reduce(
+                  (acc, p) => acc + p.intensity,
+                  0
+                );
+                const sumQuality = matchingProps.reduce(
+                  (acc, p) => acc + p.quality,
+                  0
+                );
+                avgIntensity = Math.round(sumIntensity / matchingProps.length);
+                avgQuality = Math.round(sumQuality / matchingProps.length);
+              }
+    
+              // Chief’s own score for this property (if any)
+              let chiefIntensity = 0;
+              let chiefQuality = 0;
+              if (chiefTesting) {
+                const chiefProp = chiefTesting.userSampleProperties.find(
+                  (p) => p.propertyType === propType
+                );
+                if (chiefProp) {
+                  chiefIntensity = chiefProp.intensity;
+                  chiefQuality = chiefProp.quality;
+                }
+              }
+    
+              propertyResults.push({
+                propertyType: propType,
+                averageIntensity: avgIntensity,
+                averageQuality: avgQuality,
+                chiefIntensity,
+                chiefQuality,
+              });
+            }
+    
+            // 3c) Finally, write one CuppingSampleTestingResult with nested property‐rows
+            await this.prisma.cuppingSampleTestingResult.create({
+              data: {
+                cupping: { connect: { id: cuppingId } },
+                coffeePack: { connect: { id: coffeePackId } },
+                averageScore: overallAverageScore,
+                // Prisma schema’s field for nested creation is exactly "cuppingSampleTestingPropertyResult"
+                cuppingSampleTestingPropertyResult: {
+                  create: propertyResults.map((r) => ({
+                    propertyType: r.propertyType,
+                    averageIntensivityScore: r.averageIntensity,
+                    averageQualityScore: r.averageQuality,
+                    averageChiefIntensivityScore: r.chiefIntensity,
+                    averageChiefQualityScore: r.chiefQuality,
+                    // Note: Because the child model’s relation field is called
+                    //       “cuppingSampleTestingResult” (back to this parent),
+                    //       Prisma will auto‐fill cuppingSampleTestingResultId.
+                  })),
+                },
+              },
+            });
+          }
+        } catch (error) {
+          // Bubble up a business error if anything goes wrong
+          throw await this.errorHandlingService.getBusinessError(
+            ErrorSubCode.REQUEST_VALIDATION_ERROR
+          );
+        }
+      }
 }

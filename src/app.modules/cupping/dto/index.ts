@@ -1,6 +1,4 @@
 export * from './create-cupping.request.dto'
-export * from './get-cupping-results.request.dto'
-export * from './get-cupping-results.response.dto'
 export * from './get-cuppings-list.response'
 export * from './get-cupping-status.response.dto'
 export * from './get-cupping.response.dto'

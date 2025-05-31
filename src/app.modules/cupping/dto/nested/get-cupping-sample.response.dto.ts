@@ -21,7 +21,7 @@ export interface IGetCuppingSampleResponse {
     weight: number;
     barCode?: string;
 
-    test: IGetCuppingSampleTest;
+    test: IGetCuppingSampleTest[];
 }
 
 // MARK: - Swagger class
@@ -68,5 +68,5 @@ export class GetCuppingSampleResponseDto implements IGetCuppingSampleResponse {
     barCode?: string;
 
     @ApiProperty({ description: 'Test result of the pack' })
-    test: IGetCuppingSampleTest;
+    test: IGetCuppingSampleTest[];
 }

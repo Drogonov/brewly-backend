@@ -11,6 +11,12 @@ import {
     CuppingSettings,
     CuppingType,
     PropertyType,
+    CoffeePack,
+    SampleProperty,
+    SampleTesting,
+    SampleType,
+    CuppingSampleTestingResult,
+    CuppingSampleTestingPropertyResult,
 } from '@prisma/client';
 import {
     IUserInfoResponse,
@@ -25,7 +31,7 @@ import {
 } from 'src/app.modules/user/dto';
 import { LocalizationOptionsList } from '../localization/localization-options-list/localization-options-list.model';
 import { IOptionListResponse } from '../dto/option-list.response.dto';
-import { CuppingStatus, ICuppingResponse, TestType } from 'src/app.modules/cupping/dto';
+import { CuppingStatus, ICuppingResponse, IGetCuppingSampleResponse, IGetCuppingSampleTest, TestType } from 'src/app.modules/cupping/dto';
 
 /**
  * This service centralizes mapping logic so that transformations
@@ -234,35 +240,90 @@ export class MappingService {
 
     translatePropertyToTestType(propertyType: PropertyType): TestType {
         switch (propertyType) {
-          case PropertyType.AROMA:
-            return TestType.aroma;
-          case PropertyType.ACIDITY:
-            return TestType.acidity;
-          case PropertyType.SWEETNESS:
-            return TestType.sweetness;
-          case PropertyType.BODY:
-            return TestType.body;
-          case PropertyType.AFTERTASTE:
-            return TestType.aftertaste;
-          default:
-            return null
+            case PropertyType.AROMA:
+                return TestType.aroma;
+            case PropertyType.ACIDITY:
+                return TestType.acidity;
+            case PropertyType.SWEETNESS:
+                return TestType.sweetness;
+            case PropertyType.BODY:
+                return TestType.body;
+            case PropertyType.AFTERTASTE:
+                return TestType.aftertaste;
+            default:
+                return null
         }
-      }
-    
-      translateTestToPropertyType(testType: TestType): PropertyType {
+    }
+
+    translateTestToPropertyType(testType: TestType): PropertyType {
         switch (testType) {
-          case TestType.aroma:
-            return PropertyType.AROMA;
-          case TestType.acidity:
-            return PropertyType.ACIDITY;
-          case TestType.sweetness:
-            return PropertyType.SWEETNESS;
-          case TestType.body:
-            return PropertyType.BODY;
-          case TestType.aftertaste:
-            return PropertyType.AFTERTASTE;
-          default:
-            return null
+            case TestType.aroma:
+                return PropertyType.AROMA;
+            case TestType.acidity:
+                return PropertyType.ACIDITY;
+            case TestType.sweetness:
+                return PropertyType.SWEETNESS;
+            case TestType.body:
+                return PropertyType.BODY;
+            case TestType.aftertaste:
+                return PropertyType.AFTERTASTE;
+            default:
+                return null
         }
-      }
+    }
+
+    mapCuppingSamples(
+        cupping: Cupping & {
+            coffeePacks: Array<CoffeePack & { sampleType: SampleType }>;
+            cuppingHiddenPackNames: { coffeePackId: number; coffeePackName: string }[];
+            sampleTestings: Array<
+                SampleTesting & { userSampleProperties: SampleProperty[] }
+            >;
+            cuppingResult?: CuppingSampleTestingResult & { results: CuppingSampleTestingPropertyResult[] };
+        },
+        currentUserId: number
+    ): IGetCuppingSampleResponse[] {
+        console.log(cupping);
+        // 1) build a hidden-name lookup
+        const hiddenNameMap = new Map(
+            cupping.cuppingHiddenPackNames.map(h => [h.coffeePackId, h.coffeePackName])
+        );
+
+        // 2) index sampleTestings by packId
+        const testsByPack = new Map<number, SampleTesting & { userSampleProperties: SampleProperty[] }>();
+        for (const testing of cupping.sampleTestings) {
+            testsByPack.set(testing.coffeePackId, testing);
+        }
+
+        return cupping.coffeePacks.map(pack => {
+            // basic sample info
+            let test: IGetCuppingSampleTest[];
+
+            const testing = testsByPack.get(pack.id);
+            if (testing) {
+                test = testing.userSampleProperties.map(prop => ({
+                    type: this.translatePropertyToTestType(prop.propertyType)
+                }));
+            }
+
+            const base: IGetCuppingSampleResponse = {
+                sampleTypeId: pack.sampleTypeId,
+                hiddenSampleName: hiddenNameMap.get(pack.id) || null,
+                companyName: pack.sampleType.originCompanyName,
+                sampleName: pack.sampleType.sampleName,
+                beanOrigin: null,
+                procecingMethod: null,
+                roastType: pack.sampleType.roastType,
+                grindType: pack.sampleType.grindType,
+                packId: pack.id,
+                roastDate: pack.roastDate.toISOString(),
+                openDate: pack.openDate?.toISOString() ?? null,
+                weight: pack.weight,
+                barCode: pack.barCode,
+                test: test,
+            };
+
+            return base;
+        });
+    }
 }

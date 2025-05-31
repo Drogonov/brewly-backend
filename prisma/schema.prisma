@@ -139,7 +139,6 @@ model Company {
   coffeePacks            CoffeePack[]
   cuppings               Cupping[]
   cuppingSettings        CuppingSettings[]
-  cuppingResult          CuppingResult[]
   sampleTesting          SampleTesting[]
   currentTeam            User[]                   @relation("CurrentUserCompany")
   isPersonal             Boolean
@@ -179,22 +178,22 @@ model CompanyRule {
 //
 
 model Cupping {
-  id                     Int                     @id @default(autoincrement())
-  createdAt              DateTime                @default(now())
-  updatedAt              DateTime                @updatedAt
+  id                     Int                         @id @default(autoincrement())
+  createdAt              DateTime                    @default(now())
+  updatedAt              DateTime                    @updatedAt
   cuppingCreatorId       Int
-  cuppingCreator         User                    @relation("CreatedCuppingsByUser", fields: [cuppingCreatorId], references: [id])
+  cuppingCreator         User                        @relation("CreatedCuppingsByUser", fields: [cuppingCreatorId], references: [id])
   cuppingName            String
   cuppingType            CuppingType
   eventDate              DateTime?
   companyId              Int
-  company                Company                 @relation(fields: [companyId], references: [id])
+  company                Company                     @relation(fields: [companyId], references: [id])
   settingsId             Int
-  settings               CuppingSettings         @relation(fields: [settingsId], references: [id])
+  settings               CuppingSettings             @relation(fields: [settingsId], references: [id])
   invitations            CuppingInvitation[]
-  coffeePacks            CoffeePack[]            @relation("CuppingCoffeePacks")
+  coffeePacks            CoffeePack[]                @relation("CuppingCoffeePacks")
   sampleTestings         SampleTesting[]
-  cuppingResult          CuppingResult?
+  cuppingResult          CuppingSampleTestingResult?
   cuppingHiddenPackNames CuppingHiddenPackName[]
 }
 
@@ -223,27 +222,29 @@ model CuppingInvitation {
   wasLoadedByReceiver Boolean  @default(false)
 }
 
-model CuppingResult {
-  id                   Int                      @id @default(autoincrement())
-  createdAt            DateTime                 @default(now())
-  updatedAt            DateTime                 @updatedAt
-  companyId            Int
-  company              Company                  @relation(fields: [companyId], references: [id])
-  cuppingId            Int                      @unique
-  cupping              Cupping                  @relation(fields: [cuppingId], references: [id])
-  cuppingTimeInSeconds Int
-  results              CuppingResultForSample[]
+model CuppingSampleTestingResult {
+  id                                 Int                                  @id @default(autoincrement())
+  createdAt                          DateTime                             @default(now())
+  updatedAt                          DateTime                             @updatedAt
+  cuppingId                          Int                                  @unique
+  cupping                            Cupping                              @relation(fields: [cuppingId], references: [id])
+  coffeePackId                       Int
+  coffeePack                         CoffeePack                           @relation(fields: [coffeePackId], references: [id])
+  averageScore                       Int
+  cuppingSampleTestingPropertyResult CuppingSampleTestingPropertyResult[]
 }
 
-model CuppingResultForSample {
-  id                     Int            @id @default(autoincrement())
-  createdAt              DateTime       @default(now())
-  updatedAt              DateTime       @updatedAt
-  cuppingResultId        Int
-  cuppingResult          CuppingResult  @relation(fields: [cuppingResultId], references: [id])
-  averageScore           Int
-  averageSampleTestingId Int?
-  sampleTesting          SampleTesting? @relation(fields: [averageSampleTestingId], references: [id])
+model CuppingSampleTestingPropertyResult {
+  id                           Int                        @id @default(autoincrement())
+  createdAt                    DateTime                   @default(now())
+  updatedAt                    DateTime                   @updatedAt
+  sampleTestingResultId        Int
+  sampleTestingResult          CuppingSampleTestingResult @relation(fields: [sampleTestingResultId], references: [id])
+  propertyType                 PropertyType
+  averageIntensivityScore      Int
+  averageQualityScore          Int
+  averageChiefIntensivityScore Int
+  averageChiefQualityScore     Int
 }
 
 model CuppingSettings {
@@ -301,21 +302,22 @@ model SampleType {
 }
 
 model CoffeePack {
-  id                    Int                     @id @default(autoincrement())
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
-  companyId             Int
-  company               Company                 @relation(fields: [companyId], references: [id])
-  sampleTypeId          Int
-  sampleType            SampleType              @relation(fields: [sampleTypeId], references: [id])
-  roastDate             DateTime
-  openDate              DateTime?
-  packIsOver            Boolean                 @default(false)
-  weight                Int
-  barCode               String?
-  cuppings              Cupping[]               @relation("CuppingCoffeePacks")
-  sampleTesting         SampleTesting[]
-  cuppingHiddenPackName CuppingHiddenPackName[]
+  id                         Int                          @id @default(autoincrement())
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  companyId                  Int
+  company                    Company                      @relation(fields: [companyId], references: [id])
+  sampleTypeId               Int
+  sampleType                 SampleType                   @relation(fields: [sampleTypeId], references: [id])
+  roastDate                  DateTime
+  openDate                   DateTime?
+  packIsOver                 Boolean                      @default(false)
+  weight                     Int
+  barCode                    String?
+  cuppings                   Cupping[]                    @relation("CuppingCoffeePacks")
+  sampleTesting              SampleTesting[]
+  cuppingHiddenPackName      CuppingHiddenPackName[]
+  cuppingSampleTestingResult CuppingSampleTestingResult[]
 }
 
 //
@@ -325,19 +327,18 @@ model CoffeePack {
 //
 
 model SampleTesting {
-  id                       Int                      @id @default(autoincrement())
-  createdAt                DateTime                 @default(now())
-  updatedAt                DateTime                 @updatedAt
-  userId                   Int
-  user                     User                     @relation(fields: [userId], references: [id])
-  companyId                Int
-  company                  Company                  @relation(fields: [companyId], references: [id])
-  cuppingId                Int
-  cupping                  Cupping                  @relation(fields: [cuppingId], references: [id])
-  coffeePackId             Int
-  coffeePack               CoffeePack               @relation(fields: [coffeePackId], references: [id])
-  userSampleProperties     SampleProperty[]
-  cuppingResultForSample   CuppingResultForSample[]
+  id                   Int              @id @default(autoincrement())
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  userId               Int
+  user                 User             @relation(fields: [userId], references: [id])
+  companyId            Int
+  company              Company          @relation(fields: [companyId], references: [id])
+  cuppingId            Int
+  cupping              Cupping          @relation(fields: [cuppingId], references: [id])
+  coffeePackId         Int
+  coffeePack           CoffeePack       @relation(fields: [coffeePackId], references: [id])
+  userSampleProperties SampleProperty[]
 }
 
 model SampleProperty {

@@ -11,10 +11,6 @@ import {
 import { CuppingService } from './cupping.service';
 import {
   CreateCuppingRequestDto,
-  GetCuppingResultsRequestDto,
-  GetCuppingResultsResponseDto,
-  IGetCuppingResultsResponse,
-  ISuccessIdResponse,
   SuccessIdResponseDto,
   GetCuppingsListResponseDto,
   IGetCuppingsListResponse,
@@ -22,7 +18,6 @@ import {
   IGetCuppingResponse,
   SetCuppingStatusRequestDto,
   SetCuppingTestsRequestDto,
-  CuppingStatus,
   IGetCuppingStatusResponse,
   GetCuppingStatusResponseDto
 } from './dto';
