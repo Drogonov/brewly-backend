@@ -277,12 +277,12 @@ export class MappingService {
             coffeePacks: Array<CoffeePack & { sampleType: SampleType }>;
             cuppingHiddenPackNames: { coffeePackId: number; coffeePackName: string }[];
             sampleTestings: Array<SampleTesting & { userSampleProperties: SampleProperty[] }>;
-            cuppingResult?: CuppingSampleTestingResult & { cuppingSampleTestingPropertyResult: CuppingSampleTestingPropertyResult[] };
+            cuppingResult: (CuppingSampleTestingResult & {
+                cuppingSampleTestingPropertyResult: CuppingSampleTestingPropertyResult[];
+            })[];
         },
         currentUserId: number
     ): IGetCuppingSampleResponse[] {
-        console.log(cupping);
-
         // 1) Build a hidden-name lookup (packId → hiddenSampleName)
         const hiddenNameMap = new Map<number, string>(
             cupping.cuppingHiddenPackNames.map(h => [h.coffeePackId, h.coffeePackName])
@@ -297,15 +297,16 @@ export class MappingService {
             testsByPack.set(testing.coffeePackId, testing);
         }
 
-        // 3) If the cupping has ended, index the aggregated result by packId
-        //    (note: cupping.cuppingResult uses a unique constraint on cuppingId,
-        //     but we still check coffeePackId to match each pack).
-        let aggregatedByPack = new Map<number, CuppingSampleTestingPropertyResult[]>();
-        if (cupping.cuppingResult) {
-            // The schema ensures: cuppingResult.coffeePackId is unique per cupping.
-            const packId = cupping.cuppingResult.coffeePackId;
-            const props = cupping.cuppingResult.cuppingSampleTestingPropertyResult;
-            aggregatedByPack.set(packId, props);
+        // 3) Index the aggregated results by coffeePackId
+        const aggregatedByPack = new Map<
+            number,
+            CuppingSampleTestingPropertyResult[]
+        >();
+        for (const resultRow of cupping.cuppingResult || []) {
+            aggregatedByPack.set(
+                resultRow.coffeePackId,
+                resultRow.cuppingSampleTestingPropertyResult
+            );
         }
 
         // 4) Finally, map each CoffeePack → IGetCuppingSampleResponse
@@ -325,11 +326,29 @@ export class MappingService {
                 openDate: pack.openDate?.toISOString() ?? null,
                 weight: pack.weight,
                 barCode: pack.barCode,
-                test: [], // we will fill this next
+                test: [],
             };
 
-            // b) If the cupping is still in progress → map the **current user’s** individual properties
-            if (!cupping.cuppingResult) {
+            // b) If the cupping has ended → map the aggregated PropertyResult rows
+            if (cupping.cuppingResult && cupping.cuppingResult.length > 0) {
+                const aggProps = aggregatedByPack.get(pack.id) || [];
+
+                // find the matching CuppingSampleTestingResult to pull averageScore
+                const thisResult = cupping.cuppingResult.find(r => r.coffeePackId === pack.id);
+                base.averageScore = thisResult?.averageScore;
+
+                base.test = aggProps.map(r => ({
+                    type: this.translatePropertyToTestType(r.propertyType),
+                    intensivityAverageRate: r.averageIntensivityScore,
+                    intensivityChiefRate: r.averageChiefIntensivityScore,
+                    qualityAverageRate: r.averageQualityScore,
+                    qualityChiefRate: r.averageChiefQualityScore,
+                    commentUser: undefined,
+                    commentUsers: undefined,
+                }));
+            }
+            // c) If the cupping is still in progress → map the current user’s individual properties
+            else {
                 const individualTesting = testsByPack.get(pack.id);
                 if (individualTesting) {
                     base.test = individualTesting.userSampleProperties.map(prop => ({
@@ -337,27 +356,14 @@ export class MappingService {
                         intensivityUserRate: prop.intensity,
                         qualityUserRate: prop.quality,
                         commentUser: prop.comment,
+                        intensivityAverageRate: undefined,
+                        intensivityChiefRate: undefined,
+                        qualityAverageRate: undefined,
+                        qualityChiefRate: undefined,
+                        commentUsers: undefined,
                     }));
                 }
-
-                // c) If the cupping has ended → map the aggregated PropertyResult rows
-            } else {
-                const aggregatedProps = aggregatedByPack.get(pack.id) || [];
-                base.averageScore = cupping.cuppingResult.averageScore;
-                base.test = aggregatedProps.map(r => ({
-                    type: this.translatePropertyToTestType(r.propertyType),
-                    // these fields come from CuppingSampleTestingPropertyResult
-                    intensivityAverageRate: r.averageIntensivityScore,
-                    intensivityChiefRate: r.averageChiefIntensivityScore,
-                    qualityAverageRate: r.averageQualityScore,
-                    qualityChiefRate: r.averageChiefQualityScore,
-                    // (optional) you could populate commentUsers or commentUser if you have that data somewhere,
-                    // but since the aggregated results don’t include “comment” fields in the schema, we leave them undefined.
-                }));
             }
-
-            console.log("DEBUG: mapCuppingSamples");
-            console.log(base);
 
             return base;
         });

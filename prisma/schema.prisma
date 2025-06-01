@@ -178,22 +178,23 @@ model CompanyRule {
 //
 
 model Cupping {
-  id                     Int                         @id @default(autoincrement())
-  createdAt              DateTime                    @default(now())
-  updatedAt              DateTime                    @updatedAt
+  id                     Int                          @id @default(autoincrement())
+  createdAt              DateTime                     @default(now())
+  updatedAt              DateTime                     @updatedAt
   cuppingCreatorId       Int
-  cuppingCreator         User                        @relation("CreatedCuppingsByUser", fields: [cuppingCreatorId], references: [id])
+  cuppingCreator         User                         @relation("CreatedCuppingsByUser", fields: [cuppingCreatorId], references: [id])
   cuppingName            String
   cuppingType            CuppingType
   eventDate              DateTime?
+  endDate                DateTime?
   companyId              Int
-  company                Company                     @relation(fields: [companyId], references: [id])
+  company                Company                      @relation(fields: [companyId], references: [id])
   settingsId             Int
-  settings               CuppingSettings             @relation(fields: [settingsId], references: [id])
+  settings               CuppingSettings              @relation(fields: [settingsId], references: [id])
   invitations            CuppingInvitation[]
-  coffeePacks            CoffeePack[]                @relation("CuppingCoffeePacks")
+  coffeePacks            CoffeePack[]                 @relation("CuppingCoffeePacks")
   sampleTestings         SampleTesting[]
-  cuppingResult          CuppingSampleTestingResult?
+  cuppingResult          CuppingSampleTestingResult[]
   cuppingHiddenPackNames CuppingHiddenPackName[]
 }
 
@@ -226,12 +227,14 @@ model CuppingSampleTestingResult {
   id                                 Int                                  @id @default(autoincrement())
   createdAt                          DateTime                             @default(now())
   updatedAt                          DateTime                             @updatedAt
-  cuppingId                          Int                                  @unique
+  cuppingId                          Int
   cupping                            Cupping                              @relation(fields: [cuppingId], references: [id])
   coffeePackId                       Int
   coffeePack                         CoffeePack                           @relation(fields: [coffeePackId], references: [id])
   averageScore                       Int
   cuppingSampleTestingPropertyResult CuppingSampleTestingPropertyResult[]
+
+  @@unique([cuppingId, coffeePackId])
 }
 
 model CuppingSampleTestingPropertyResult {
