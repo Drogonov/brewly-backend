@@ -332,20 +332,29 @@ export class MappingService {
             // b) If the cupping has ended → map the aggregated PropertyResult rows
             if (cupping.cuppingResult && cupping.cuppingResult.length > 0) {
                 const aggProps = aggregatedByPack.get(pack.id) || [];
+                const individualTesting = testsByPack.get(pack.id);
 
                 // find the matching CuppingSampleTestingResult to pull averageScore
                 const thisResult = cupping.cuppingResult.find(r => r.coffeePackId === pack.id);
-                base.averageScore = thisResult?.averageScore;
+                base.averageScore = thisResult.averageScore
+                base.test = aggProps.map(r => {
+                    // find the current user's own property result (if any)
+                    const userProp = individualTesting
+                        ? individualTesting.userSampleProperties.find(p => p.propertyType === r.propertyType)
+                        : undefined;
 
-                base.test = aggProps.map(r => ({
-                    type: this.translatePropertyToTestType(r.propertyType),
-                    intensivityAverageRate: r.averageIntensivityScore,
-                    intensivityChiefRate: r.averageChiefIntensivityScore,
-                    qualityAverageRate: r.averageQualityScore,
-                    qualityChiefRate: r.averageChiefQualityScore,
-                    commentUser: undefined,
-                    commentUsers: undefined,
-                }));
+                    return {
+                        type: this.translatePropertyToTestType(r.propertyType),
+                        intensivityUserRate: userProp ? userProp.intensity : undefined,
+                        intensivityAverageRate: r.averageIntensivityScore,
+                        intensivityChiefRate: r.averageChiefIntensivityScore,
+                        qualityUserRate: userProp ? userProp.quality : undefined,
+                        qualityAverageRate: r.averageQualityScore,
+                        qualityChiefRate: r.averageChiefQualityScore,
+                        commentUser: userProp ? userProp.comment : undefined,
+                        commentUsers: undefined,
+                    };
+                });
             }
             // c) If the cupping is still in progress → map the current user’s individual properties
             else {

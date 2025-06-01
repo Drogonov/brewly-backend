@@ -268,7 +268,7 @@ export class CuppingService {
                 await this.prisma.cupping.update({
                     where: { id: cuppingId },
                     data: { endDate: new Date() },
-                  });
+                });
             }
 
             console.log(`DEBUG: status changed to ${cuppingType}`);
@@ -453,6 +453,7 @@ export class CuppingService {
             samples: includeSamples ? this.mappingService.mapCuppingSamples(cupping, userId) : [],
         };
     }
+    
     private async saveCuppingResults(cuppingId: number) {
         try {
             console.log(`DEBUG: ➜ Entering saveCuppingResults for cuppingId=${cuppingId}`);
@@ -514,7 +515,10 @@ export class CuppingService {
                 `DEBUG: Distinct coffeePackIds = [${Array.from(testsByPack.keys()).join(", ")}]`
             );
 
-            // — STEP 3: For each coffeePackId, compute averages & re-insert result rows
+            // — STEP 3: For each coffeePackId, compute averages & re‐insert result rows
+            //    NOTE: we know there are exactly 5 PropertyType values, so propertyCount = 5
+            const propertyCount = 5;
+
             for (const [coffeePackId, testsForThisPack] of testsByPack.entries()) {
                 console.log(`\nDEBUG: ⤷ Processing coffeePackId=${coffeePackId}`);
                 console.log(`DEBUG:    testsForThisPack.length = ${testsForThisPack.length}`);
@@ -538,9 +542,16 @@ export class CuppingService {
                     console.log(`DEBUG:     → userId=${oneTest.userId} singleTesterTotal = ${singleTesterTotal}`);
                     sumOfTestersTotals += singleTesterTotal;
                 }
-                const overallAverageScore = Math.round(sumOfTestersTotals / testsForThisPack.length);
+
+                // Before: overallAverageScore = Math.round(sumOfTestersTotals / testsForThisPack.length)
+                // Now: divide by number of properties (5) to get 0–10 scale, then round.
+                const rawAveragePerTester = sumOfTestersTotals / testsForThisPack.length;
+                const overallAverageScore = Math.round(rawAveragePerTester / propertyCount);
+
                 console.log(`DEBUG:    sumOfTestersTotals = ${sumOfTestersTotals}`);
-                console.log(`DEBUG:    overallAverageScore = ${overallAverageScore}`);
+                console.log(`DEBUG:    rawAveragePerTester (0–50) = ${rawAveragePerTester}`);
+                console.log(`DEBUG:    propertyCount = ${propertyCount}`);
+                console.log(`DEBUG:    overallAverageScore (0–10) = ${overallAverageScore}`);
 
                 // 3b) For each PropertyType, compute averages and chief’s own value
                 type AggResult = {
@@ -622,17 +633,17 @@ export class CuppingService {
                 // 3c) Re-insert the CuppingSampleTestingResult row for this pack
                 console.log(`DEBUG:    ➜ Inserting CuppingSampleTestingResult for packId=${coffeePackId}`);
                 console.log(`DEBUG:    Data to write: {
-              cuppingId: ${cuppingId},
-              coffeePackId: ${coffeePackId},
-              averageScore: ${overallAverageScore},
-              properties: ${JSON.stringify(propertyResults.map(r => ({
+                  cuppingId: ${cuppingId},
+                  coffeePackId: ${coffeePackId},
+                  averageScore: ${overallAverageScore},
+                  properties: ${JSON.stringify(propertyResults.map(r => ({
                     propertyType: r.propertyType,
                     averageIntensity: r.averageIntensity,
                     averageQuality: r.averageQuality,
                     chiefIntensity: r.chiefIntensity,
                     chiefQuality: r.chiefQuality
                 })), null, 2)}
-            }`);
+                }`);
 
                 await this.prisma.cuppingSampleTestingResult.create({
                     data: {
