@@ -102,7 +102,6 @@ export class SamplesService {
         currentCompanyId: number,
         dto: SampleRequestDto
     ): Promise<IStatusResponse> {
-        console.log(dto);
         // Validation: update method requires sampleTypeId.
         if (!dto.sampleTypeInfo.sampleTypeId) {
             // You can also provide a more descriptive error message or adjust the validation.
@@ -343,8 +342,6 @@ export class SamplesService {
             barCode: pack.barCode,
             packIsOver: pack.packIsOver,
         }));
-
-        console.log(coffeePacksInfo);
 
         return { coffeePacksInfo };
     }

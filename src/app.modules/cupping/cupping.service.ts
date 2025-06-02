@@ -23,7 +23,6 @@ export class CuppingService {
         currentCompanyId: number,
         dto: CreateCuppingRequestDto
     ): Promise<IStatusResponse> {
-        console.log(dto);
         const { samples, settings, chosenUserIds } = dto;
 
         // Determine invited users
@@ -186,10 +185,8 @@ export class CuppingService {
                     break;
                 case CuppingType.STARTED:
                     if (this.hasUserEndTesting(cupping, userId)) {
-                        console.log("DEBUG: getLoaderCupping");
                         response = this.getLoaderCupping(userId, cupping, isUserHaveStrongPermissions);
                     } else {
-                        console.log("DEBUG: getInProgressCupping");
                         response = this.getInProgressCupping(userId, cupping, isUserHaveStrongPermissions);
                     }
                     break;
@@ -202,9 +199,6 @@ export class CuppingService {
                     break;
             }
 
-            console.log(`Type: ${cupping.cuppingType}`);
-            console.log("DEBUG: Response");
-            console.log(response);
             return response;
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
@@ -252,11 +246,8 @@ export class CuppingService {
             const { cuppingId, cuppingStatus } = dto;
             const cuppingType = this.mappingService.translateStatusToType(cuppingStatus);
 
-            console.log("DEBUG: start changing status");
             if (cuppingType == CuppingType.ARCHIVED) {
-                console.log("DEBUG: start saving results");
                 await this.saveCuppingResults(cuppingId);
-                console.log("DEBUG: results saved");
             }
 
             await this.prisma.cupping.update({
@@ -270,8 +261,6 @@ export class CuppingService {
                     data: { endDate: new Date() },
                 });
             }
-
-            console.log(`DEBUG: status changed to ${cuppingType}`);
 
             return {
                 status: StatusType.SUCCESS,
@@ -293,8 +282,6 @@ export class CuppingService {
         dto: SetCuppingTestsRequestDto,
     ): Promise<StatusResponseDto> {
         const { tests } = dto;
-
-        console.log(dto);
 
         // Validate at least one test
         if (!tests || tests.length === 0) {
@@ -443,7 +430,6 @@ export class CuppingService {
         isUserHaveStrongPermissions: boolean,
         includeSamples = true,
     ): IGetCuppingResponse {
-        console.log(`DEBUG: ${status}`);
         return {
             status,
             eventDate: cupping.eventDate?.toISOString(),
@@ -456,13 +442,10 @@ export class CuppingService {
     
     private async saveCuppingResults(cuppingId: number) {
         try {
-            console.log(`DEBUG: ➜ Entering saveCuppingResults for cuppingId=${cuppingId}`);
-
             // — STEP 0: Remove any old results for this cuppingId so we can re‐insert fresh ones
             const deletedCount = await this.prisma.cuppingSampleTestingResult.deleteMany({
                 where: { cuppingId },
             });
-            console.log(`DEBUG: Deleted ${deletedCount.count} existing result rows for cuppingId=${cuppingId}`);
 
             // — STEP 1: Load the cupping + all sampleTestings (including each user's properties)
             const cupping = await this.prisma.cupping.findUnique({
@@ -476,26 +459,18 @@ export class CuppingService {
             });
 
             if (!cupping) {
-                console.log(`DEBUG: ✖️ No cupping found with id=${cuppingId}`);
                 throw await this.errorHandlingService.getBusinessError(
                     ErrorSubCode.REQUEST_VALIDATION_ERROR
                 );
             }
-            console.log(`DEBUG: ✔︎ Found cupping. creatorId=${cupping.cuppingCreatorId}`);
 
             const allTestings = cupping.sampleTestings;
-            console.log(`DEBUG: sampleTestings.length = ${allTestings.length}`);
-            console.log(
-                `DEBUG: sampleTestings userIds = [${allTestings.map((t) => t.userId).join(", ")}]`
-            );
 
             if (allTestings.length === 0) {
-                console.log(`DEBUG: ➜ No sampleTestings; skipping aggregation`);
                 return;
             }
 
             const chiefUserId = cupping.cuppingCreatorId;
-            console.log(`DEBUG: chiefUserId = ${chiefUserId}`);
 
             // — STEP 2: Group all SampleTesting rows by coffeePackId
             const testsByPack = new Map<
@@ -510,36 +485,20 @@ export class CuppingService {
                 testsByPack.get(packId)!.push(testing);
             }
 
-            console.log(`DEBUG: Number of distinct coffeePackIds to aggregate = ${testsByPack.size}`);
-            console.log(
-                `DEBUG: Distinct coffeePackIds = [${Array.from(testsByPack.keys()).join(", ")}]`
-            );
-
             // — STEP 3: For each coffeePackId, compute averages & re‐insert result rows
             //    NOTE: we know there are exactly 5 PropertyType values, so propertyCount = 5
             const propertyCount = 5;
 
             for (const [coffeePackId, testsForThisPack] of testsByPack.entries()) {
-                console.log(`\nDEBUG: ⤷ Processing coffeePackId=${coffeePackId}`);
-                console.log(`DEBUG:    testsForThisPack.length = ${testsForThisPack.length}`);
-                console.log(
-                    `DEBUG:    testsForThisPack userIds = [${testsForThisPack.map((t) => t.userId).join(", ")}]`
-                );
 
                 // 3a) Compute overall averageScore for this pack
                 let sumOfTestersTotals = 0;
                 for (const oneTest of testsForThisPack) {
                     let singleTesterTotal = 0;
-                    console.log(
-                        `DEBUG:     → userId=${oneTest.userId} has ${oneTest.userSampleProperties.length} properties`
-                    );
+
                     for (const prop of oneTest.userSampleProperties) {
                         singleTesterTotal += prop.intensity + prop.quality;
-                        console.log(
-                            `DEBUG:        • propertyType=${prop.propertyType}, intensity=${prop.intensity}, quality=${prop.quality}`
-                        );
                     }
-                    console.log(`DEBUG:     → userId=${oneTest.userId} singleTesterTotal = ${singleTesterTotal}`);
                     sumOfTestersTotals += singleTesterTotal;
                 }
 
@@ -547,11 +506,6 @@ export class CuppingService {
                 // Now: divide by number of properties (5) to get 0–10 scale, then round.
                 const rawAveragePerTester = sumOfTestersTotals / testsForThisPack.length;
                 const overallAverageScore = Math.round(rawAveragePerTester / propertyCount);
-
-                console.log(`DEBUG:    sumOfTestersTotals = ${sumOfTestersTotals}`);
-                console.log(`DEBUG:    rawAveragePerTester (0–50) = ${rawAveragePerTester}`);
-                console.log(`DEBUG:    propertyCount = ${propertyCount}`);
-                console.log(`DEBUG:    overallAverageScore (0–10) = ${overallAverageScore}`);
 
                 // 3b) For each PropertyType, compute averages and chief’s own value
                 type AggResult = {
@@ -572,12 +526,8 @@ export class CuppingService {
                 ];
 
                 const chiefTesting = testsForThisPack.find((t) => t.userId === chiefUserId);
-                console.log(
-                    `DEBUG:    chiefTesting for this pack? ${chiefTesting ? "✅ yes" : "❌ no"}`
-                );
 
                 for (const propType of allPropertyTypes) {
-                    console.log(`DEBUG:    --- Computing for PropertyType=${propType} ---`);
 
                     // Collect all SampleProperty entries (of this propertyType) across all testers
                     const matchingProps: SampleProperty[] = [];
@@ -588,7 +538,6 @@ export class CuppingService {
                             }
                         }
                     }
-                    console.log(`DEBUG:       matchingProps.length = ${matchingProps.length}`);
 
                     let avgIntensity = 0;
                     let avgQuality = 0;
@@ -597,10 +546,6 @@ export class CuppingService {
                         const sumQuality = matchingProps.reduce((acc, p) => acc + p.quality, 0);
                         avgIntensity = Math.round(sumIntensity / matchingProps.length);
                         avgQuality = Math.round(sumQuality / matchingProps.length);
-                        console.log(`DEBUG:       sumIntensity=${sumIntensity}, sumQuality=${sumQuality}`);
-                        console.log(`DEBUG:       avgIntensity=${avgIntensity}, avgQuality=${avgQuality}`);
-                    } else {
-                        console.log(`DEBUG:       No matchingProps for propType=${propType}`);
                     }
 
                     let chiefIntensity = 0;
@@ -610,11 +555,6 @@ export class CuppingService {
                         if (chiefProp) {
                             chiefIntensity = chiefProp.intensity;
                             chiefQuality = chiefProp.quality;
-                            console.log(
-                                `DEBUG:       chiefProp found => intensity=${chiefIntensity}, quality=${chiefQuality}`
-                            );
-                        } else {
-                            console.log(`DEBUG:       chiefTest exists but no row for propType=${propType}`);
                         }
                     }
 
@@ -626,24 +566,6 @@ export class CuppingService {
                         chiefQuality,
                     });
                 }
-
-                console.log(`DEBUG:    propertyResults =`);
-                console.dir(propertyResults, { depth: null });
-
-                // 3c) Re-insert the CuppingSampleTestingResult row for this pack
-                console.log(`DEBUG:    ➜ Inserting CuppingSampleTestingResult for packId=${coffeePackId}`);
-                console.log(`DEBUG:    Data to write: {
-                  cuppingId: ${cuppingId},
-                  coffeePackId: ${coffeePackId},
-                  averageScore: ${overallAverageScore},
-                  properties: ${JSON.stringify(propertyResults.map(r => ({
-                    propertyType: r.propertyType,
-                    averageIntensity: r.averageIntensity,
-                    averageQuality: r.averageQuality,
-                    chiefIntensity: r.chiefIntensity,
-                    chiefQuality: r.chiefQuality
-                })), null, 2)}
-                }`);
 
                 await this.prisma.cuppingSampleTestingResult.create({
                     data: {
@@ -661,13 +583,8 @@ export class CuppingService {
                         },
                     },
                 });
-
-                console.log(
-                    `DEBUG:    ✔︎ Inserted CuppingSampleTestingResult for packId=${coffeePackId}`
-                );
             }
         } catch (error) {
-            console.error(`ERROR in saveCuppingResults for cuppingId=${cuppingId}:`, error);
             throw await this.errorHandlingService.getBusinessError(
                 ErrorSubCode.REQUEST_VALIDATION_ERROR
             );

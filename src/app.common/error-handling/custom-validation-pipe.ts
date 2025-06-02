@@ -22,9 +22,6 @@ export class CustomValidationPipe extends ValidationPipe {
       // 1) flatten everything…
       const flat = this.flattenErrors(validationErrors);
   
-      // 2) log only your flattened errors
-      console.log('Validation failures:', flat);
-  
       // 3) check for any business-mapped errors
       const businessErrors = await this.validationFieldErrors(
         flat.map(fe => ({

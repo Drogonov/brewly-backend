@@ -152,9 +152,6 @@ export class UserService {
       include: { cupping: true },
     }) as Array<CuppingInvitation & { cupping: Cupping }>;
 
-    console.log(userId);
-    console.log(cuppingInvitations);
-
     const notifications = await this.buildNotifications(friendRequests, teamInvitations, cuppingInvitations);
     return { notifications };
   }
@@ -476,7 +473,6 @@ export class UserService {
       });
     }
 
-    console.log(actions);
     return actions;
   }
 
