@@ -1,5 +1,6 @@
 {
     "CREATE_CUPPING_SUCCESS": "Cupping with id {{ cuppingId }} created",
     "CUPPING_STATUS_UPDATED": "Cupping {{ cuppingId }} set to {{ cuppingStatus }}",
-    "SAMPLE_TESTS_RECORDED": "{{ sampleTestsAmount }} sample tests recorded"
+    "SAMPLE_TESTS_RECORDED": "{{ sampleTestsAmount }} sample tests recorded",
+    "CUPPING_INVITATION": "You have been invited to cupping {{cuppingName}}"
 }

@@ -98,12 +98,12 @@ export class MappingService {
      */
     mapFriendRequest(
         friendship: Friendship,
-        receiver: User
+        localizedDescription: string
     ): IGetUserSendedRequestResponse {
         return {
             requestId: friendship.id,
             requestDate: friendship.createdAt.toISOString(),
-            description: `Friend request to ${receiver.userName}`,
+            description: localizedDescription,
             type: RequestTypeEnum.FRIEND,
         };
     }
@@ -114,12 +114,12 @@ export class MappingService {
      */
     mapTeamInvitation(
         invitation: TeamInvitation,
-        receiver: User
+        localizedDescription: string
     ): IGetUserSendedRequestResponse {
         return {
             requestId: invitation.id,
             requestDate: invitation.createdAt.toISOString(),
-            description: `Team invitation to ${receiver.userName}`,
+            description: localizedDescription,
             type: RequestTypeEnum.TEAM,
         };
     }
@@ -130,13 +130,15 @@ export class MappingService {
      */
     mapFriendRequestNotification(
         friendship: Friendship,
-        sender: User
+        sender: User,
+        iconName: string,
+        localizedDescription: string
     ): IGetUserNotificationResponse {
         return {
             notificationId: friendship.id,
             notificationDate: friendship.createdAt.toISOString(),
-            iconName: 'person',
-            description: `Friend request from ${sender.userName}`,
+            iconName: iconName,
+            description: localizedDescription,
             type: UserNotificationType.friendRequest,
             senderId: sender.id,
             wasLoadedByReceiver: friendship.wasLoadedByReceiver
@@ -149,13 +151,15 @@ export class MappingService {
      */
     mapTeamInvitationNotification(
         invitation: TeamInvitation,
-        sender: User
+        sender: User,
+        iconName: string,
+        localizedDescription: string
     ): IGetUserNotificationResponse {
         return {
             notificationId: invitation.id,
             notificationDate: invitation.createdAt.toISOString(),
-            iconName: 'group',
-            description: `Team invitation from ${sender.userName}`,
+            iconName: iconName,
+            description: localizedDescription,
             type: UserNotificationType.teamInvitation,
             senderId: sender.id,
             wasLoadedByReceiver: invitation.wasLoadedByReceiver
@@ -164,13 +168,15 @@ export class MappingService {
 
     mapCuppingInvitationNotification(
         invitation: CuppingInvitation,
-        cupping: Cupping
+        cupping: Cupping,
+        iconName: string,
+        localizedDescription: string
     ): IGetUserNotificationResponse {
         return {
             notificationId: invitation.id,
             notificationDate: invitation.createdAt.toISOString(),
-            iconName: 'cup.and.heat.waves.fill',
-            description: `You’ve been invited to cupping “${cupping.cuppingName}”`,
+            iconName: iconName,
+            description: localizedDescription,
             type: UserNotificationType.cuppingInvitation,
             senderId: cupping.cuppingCreatorId,
             cuppingId: cupping.id,

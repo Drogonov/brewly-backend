@@ -3,4 +3,6 @@ export enum IconKey {
     team = 'team',
     request = 'request',
     guide = 'guide',
+    team_invitation = 'team_invitation',
+    cupping_invitation = 'cupping_invitation'
 }

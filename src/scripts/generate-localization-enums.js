@@ -64,6 +64,8 @@ ${enumEntries}
 `;
   const outputFilePath = path.join(outputDir, `${baseName}.enum.ts`);
   fs.writeFileSync(outputFilePath, enumContent, 'utf8');
+  console.log(`${enumName} generated with ${keys.length} keys at ${outputFilePath}`);
+
   generatedEnumFiles.push(`${baseName}.enum`);
 });
 
@@ -79,6 +81,7 @@ ${localizationEnumEntries}
 `;
 const localizationEnumPath = path.join(outputDir, 'localization-key.enum.ts');
 fs.writeFileSync(localizationEnumPath, localizationEnumContent, 'utf8');
+console.log(`LocalizationKey enum generated with ${fileNames.length} entries at ${localizationEnumPath}`);
 generatedEnumFiles.push('localization-key.enum');
 
 // Generate the Languages enum from directories in i18n folder
@@ -98,6 +101,7 @@ ${languagesEnumEntries}
 `;
 const languagesEnumPath = path.join(outputDir, 'languages.enum.ts');
 fs.writeFileSync(languagesEnumPath, languagesEnumContent, 'utf8');
+console.log(`Languages enum generated with ${languages.length} entries at ${languagesEnumPath}`);
 generatedEnumFiles.push('languages.enum');
 
 // Generate the index.ts file re-exporting all generated enums
@@ -107,3 +111,4 @@ const indexContent = generatedEnumFiles
 
 const indexFilePath = path.join(outputDir, 'index.ts');
 fs.writeFileSync(indexFilePath, indexContent, 'utf8');
+console.log(`Index file generated at ${indexFilePath}`);

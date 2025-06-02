@@ -15,7 +15,7 @@ export class CuppingService {
         private readonly prisma: PrismaService,
         private readonly errorHandlingService: ErrorHandlingService,
         private localizationStringsService: LocalizationStringsService,
-        private mappingService: MappingService,
+        private mappingService: MappingService
     ) { }
 
     async createCupping(

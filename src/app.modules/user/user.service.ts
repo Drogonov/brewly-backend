@@ -41,6 +41,9 @@ import { UserKeys } from 'src/app.common/localization/generated/user.enum';
 import { MailService } from 'src/app.common/services/mail/mail.service';
 import * as argon from 'argon2';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
+import { IconsService } from 'src/app.common/services/icons/icons.service';
+import { IconKey } from 'src/app.common/services/icons/icon-keys.enum';
+import { CuppingKeys } from 'src/app.common/localization/generated';
 
 @Injectable()
 export class UserService {
@@ -51,7 +54,8 @@ export class UserService {
     private errorHandlingService: ErrorHandlingService,
     private localizationStringsService: LocalizationStringsService,
     private mailService: MailService,
-    private configService: ConfigurationService
+    private configService: ConfigurationService,
+    private iconsService: IconsService
   ) { }
 
   async searchUsers(
@@ -125,13 +129,19 @@ export class UserService {
     for (const req of friendRequests) {
       const targetUser = await this.prisma.user.findUnique({ where: { id: req.receiverId } });
       if (targetUser) {
-        requests.push(this.mappingService.mapFriendRequest(req, targetUser));
+        requests.push(this.mappingService.mapFriendRequest(
+          req,
+          await this.localizationStringsService.getUserText(UserKeys.FRIEND_REQUEST_TO, { userName: targetUser.userName })
+        ));
       }
     }
     for (const req of teamRequests) {
       const targetUser = await this.prisma.user.findUnique({ where: { id: req.receiverId } });
       if (targetUser) {
-        requests.push(this.mappingService.mapTeamInvitation(req, targetUser));
+        requests.push(this.mappingService.mapTeamInvitation(
+          req,
+          await this.localizationStringsService.getUserText(UserKeys.TEAM_INVITATION_TO, { userName: targetUser.userName })
+        ));
       }
     }
     return { requests };
@@ -515,18 +525,33 @@ export class UserService {
     for (const req of friendRequests) {
       const sender = await this.prisma.user.findUnique({ where: { id: req.senderId } });
       if (sender) {
-        notifications.push(this.mappingService.mapFriendRequestNotification(req, sender));
+        notifications.push(this.mappingService.mapFriendRequestNotification(
+          req,
+          sender,
+          await this.iconsService.getOSIcon(IconKey.user),
+          await this.localizationStringsService.getUserText(UserKeys.FRIEND_REQUEST_FROM, { userName: sender.userName })
+        ));
       }
     }
     for (const req of teamInvitations) {
       const sender = await this.prisma.user.findUnique({ where: { id: req.senderId } });
       if (sender) {
-        notifications.push(this.mappingService.mapTeamInvitationNotification(req, sender));
+        notifications.push(this.mappingService.mapTeamInvitationNotification(
+          req,
+          sender,
+          await this.iconsService.getOSIcon(IconKey.team_invitation),
+          await this.localizationStringsService.getUserText(UserKeys.TEAM_INVITATION_FROM, { userName: sender.userName })
+        ));
       }
     }
     for (const inv of cuppingInvitations) {
       notifications.push(
-        this.mappingService.mapCuppingInvitationNotification(inv, inv.cupping)
+        this.mappingService.mapCuppingInvitationNotification(
+          inv, 
+          inv.cupping,
+          await this.iconsService.getOSIcon(IconKey.cupping_invitation),
+          await this.localizationStringsService.getCuppingText(CuppingKeys.CUPPING_INVITATION, { cuppingName: inv.cupping.cuppingName })
+        )
       );
     }
     notifications.sort((a, b) => (a.notificationDate < b.notificationDate ? 1 : -1));

@@ -2,5 +2,7 @@
     "user": "person",
     "team": "person.3.sequence",
     "request": "arrow.up.message",
-    "guide": "questionmark.bubble"
+    "guide": "questionmark.bubble",
+    "team_invitation": "group",
+    "cupping_invitation": "cup.and.heat.waves.fill"
 }

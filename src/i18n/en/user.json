@@ -28,5 +28,9 @@
   "STRANGER": "Stranger",
   "FRIENDS": "Friends",
   "TEAMMATES": "Teammates",
-  "FRIENDS_TEAMMATES": "Friends, teammates"
+  "FRIENDS_TEAMMATES": "Friends, teammates",
+  "FRIEND_REQUEST_TO": "Friend request to {{ userName }}",
+  "FRIEND_REQUEST_FROM": "Friend request from {{ userName }}",
+  "TEAM_INVITATION_TO": "Team invitation to {{ userName }}",
+  "TEAM_INVITATION_FROM": "Team invitation from {{ userName }}"
 }
