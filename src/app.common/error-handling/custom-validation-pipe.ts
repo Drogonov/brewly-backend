@@ -1,9 +1,9 @@
 import { ArgumentMetadata, BadRequestException, Injectable, ValidationPipe, ValidationError } from '@nestjs/common';
-import { BusinessErrorException, ErrorFieldCodeType, ErrorFieldCode, ErrorSubCodeType, ErrorSubCode, ValidationErrorCodes } from './exceptions';
+import { BusinessErrorException, ErrorFieldCodeType, ErrorFieldCode, ValidationErrorCodes } from './exceptions';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { AuthKeys } from '../localization/generated/auth.enum';
 import { ErrorHandlingService } from './error-handling.service';
-import { ValidationErrorKeys } from '../localization/generated';
+import { BusinessErrorKeys, ValidationErrorKeys } from '../localization/generated';
 
 @Injectable()
 export class CustomValidationPipe extends ValidationPipe {
@@ -40,7 +40,7 @@ export class CustomValidationPipe extends ValidationPipe {
         .join('; ');
 
       const error = await this.errorHandlingService.getBusinessError(
-        ErrorSubCode.VALIDATION_NON_FIELD_ERROR,
+        BusinessErrorKeys.VALIDATION_NON_FIELD_ERROR,
         {
           property: `"${allProps}"`,
           message: `"${allConstraints}"`,

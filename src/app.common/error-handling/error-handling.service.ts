@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
-import { ValidationErrorCodes, BusinessErrorException, ErrorSubCodeType, ErrorSubCode } from './exceptions';
+import { ValidationErrorCodes, BusinessErrorException } from './exceptions';
 import { ErrorFieldResponseDto } from '../dto';
 import { BusinessErrorKeys, ErrorsKeys } from '../localization/generated';
 
@@ -10,9 +10,8 @@ export class ErrorHandlingService {
     private readonly localizationStringsService: LocalizationStringsService
   ) {}
 
-  async getBusinessError(errorSubCode: ErrorSubCodeType, args?: Record<string, any>): Promise<BusinessErrorException> {
-    const key = await this.getBusinessErrorKey(errorSubCode);
-    const errorMsg = await this.localizationStringsService.getBusinessErrorText(key, args);
+  async getBusinessError(errorSubCode: BusinessErrorKeys, args?: Record<string, any>): Promise<BusinessErrorException> {
+    const errorMsg = await this.localizationStringsService.getBusinessErrorText(errorSubCode, args);
     return new BusinessErrorException({
       errorSubCode,
       errorMsg,
@@ -33,21 +32,13 @@ export class ErrorHandlingService {
     );
   
     return new BusinessErrorException({
-      errorSubCode: ErrorSubCode.VALIDATION_ERROR,
+      errorSubCode: BusinessErrorKeys.VALIDATION_ERROR,
       errorFields,
     });
   }
 
   // MARK: - Private Methods
   
-  private getBusinessErrorKey(errorSubCode: ErrorSubCodeType): Promise<BusinessErrorKeys> {
-    return Promise.resolve(
-      this.isBusinessErrorKey(errorSubCode)
-        ? errorSubCode
-        : BusinessErrorKeys.UNEXPECTED_ERROR
-    );
-  }
-
   private isBusinessErrorKey(key: string): key is BusinessErrorKeys {
     return Object.values(BusinessErrorKeys).includes(key as BusinessErrorKeys);
   }

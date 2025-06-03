@@ -16,8 +16,7 @@ import { IconsService } from 'src/app.common/services/icons/icons.service';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { LocalizationOptionsListService } from 'src/app.common/localization/localization-options-list/localization-options-list.service';
 import { LocalizationOptionListConst } from 'src/app.common/localization/localization-options-list/localization-options-list.model';
-import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
-import { SamplesKeys } from 'src/app.common/localization/generated';
+import { BusinessErrorKeys, SamplesKeys } from 'src/app.common/localization/generated';
 import { ArchiveSampleDto } from './dto/archive-sample.request.dto';
 
 @Injectable()
@@ -93,7 +92,7 @@ export class SamplesService {
                 description: await this.localizationStringsService.getSamplesText(SamplesKeys.SAMPLE_CREATED_SUCCESSFULLY),
             };
         } catch (error) {
-            throw await this.errorHandlingService.getBusinessError(ErrorSubCode.SAMPLE_CREATION_FAILED);
+            throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.SAMPLE_CREATION_FAILED);
         }
     }
 
@@ -105,7 +104,7 @@ export class SamplesService {
         // Validation: update method requires sampleTypeId.
         if (!dto.sampleTypeInfo.sampleTypeId) {
             // You can also provide a more descriptive error message or adjust the validation.
-            throw await this.errorHandlingService.getBusinessError(ErrorSubCode.REQUEST_VALIDATION_ERROR);
+            throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.REQUEST_VALIDATION_ERROR);
         }
         const sampleTypeId = dto.sampleTypeInfo.sampleTypeId;
 
@@ -164,7 +163,7 @@ export class SamplesService {
                 ),
             };
         } catch (error) {
-            throw await this.errorHandlingService.getBusinessError(ErrorSubCode.SAMPLE_CREATION_FAILED);
+            throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.SAMPLE_CREATION_FAILED);
         }
     }
 
@@ -179,7 +178,7 @@ export class SamplesService {
         });
 
         if (!sample) {
-            throw await this.errorHandlingService.getBusinessError(ErrorSubCode.SAMPLE_DOESNT_EXIST);
+            throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.SAMPLE_DOESNT_EXIST);
         }
 
         try {
@@ -198,7 +197,7 @@ export class SamplesService {
             };
 
         } catch (error) {
-            throw await this.errorHandlingService.getBusinessError(ErrorSubCode.REQUEST_VALIDATION_ERROR);
+            throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.REQUEST_VALIDATION_ERROR);
         }
     }
 
@@ -215,7 +214,7 @@ export class SamplesService {
 
         // If the sample type doesn't exist, throw an error.
         if (!sample) {
-            throw await this.errorHandlingService.getBusinessError(ErrorSubCode.SAMPLE_DOESNT_EXIST);
+            throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.SAMPLE_DOESNT_EXIST);
         }
 
         // Retrieve localized option lists based on the sample's beanOriginCode and processingMethodCode.

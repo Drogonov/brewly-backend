@@ -11,9 +11,8 @@ import { Company, Role, TeamInvitationType } from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
-import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
-import { CompanyKeys, ErrorsKeys } from 'src/app.common/localization/generated';
+import { BusinessErrorKeys, CompanyKeys, ErrorsKeys } from 'src/app.common/localization/generated';
 
 @Injectable()
 export class CompanyService {
@@ -68,7 +67,7 @@ export class CompanyService {
 
       // Prevent deletion if the company is the current one or a personal company.
       if (companyId === currentCompanyId || deletedCompany?.isPersonal) {
-        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.COMPANY_DELETE_DENIED);
+        throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.COMPANY_DELETE_DENIED);
       }
 
       await this.prisma.userToCompanyRelation.deleteMany({
@@ -113,7 +112,7 @@ export class CompanyService {
         include: { relatedToUsers: true },
       });
       if (!company) {
-        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.COMPANY_NOT_FOUND);
+        throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.COMPANY_NOT_FOUND);
       }
 
       const relatedTeam = await this.prisma.userToCompanyRelation.findMany({
@@ -205,7 +204,7 @@ export class CompanyService {
     }
 
     if (!invitation || invitation.receiverId !== userId) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.NOTIFICATION_NOT_FOUND);
+      throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.NOTIFICATION_NOT_FOUND);
     }
 
     await this.prisma.teamInvitation.update({

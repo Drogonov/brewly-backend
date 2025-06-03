@@ -6,10 +6,10 @@ import { AuthRequestDto, IStatusResponse, OTPRequestDto, StatusResponseDto, Stat
 import { ITokensResponse } from 'src/app.common/dto';
 import { JWTSessionService } from 'src/app.common/services/jwt-session/jwt-session.service';
 import { MailService } from 'src/app.common/services/mail/mail.service';
-import { ErrorFieldCode, ErrorSubCode } from 'src/app.common/error-handling/exceptions';
+import { ErrorFieldCode } from 'src/app.common/error-handling/exceptions';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
-import { ErrorsKeys, ValidationErrorKeys } from 'src/app.common/localization/generated';
+import { BusinessErrorKeys, ErrorsKeys, ValidationErrorKeys } from 'src/app.common/localization/generated';
 
 @Injectable()
 export class AuthService {
@@ -70,7 +70,7 @@ export class AuthService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_ALREADY_EXIST);
+        throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_ALREADY_EXIST);
       } else {
         throw error;
       }
@@ -84,7 +84,7 @@ export class AuthService {
       });
 
       if (!user || !(await argon.verify(user.otpHash, dto.otp))) {
-        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.INCORRECT_OTP);
+        throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.INCORRECT_OTP);
       }
 
       await this.prisma.user.update({
@@ -103,7 +103,7 @@ export class AuthService {
       const { otp, hashedOtp } = await this.generateOtp();
       const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
       if (!user) {
-        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+        throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_DOESNT_EXIST);
       }
 
       const passwordMatches = await argon.verify(user.hash, dto.password);
@@ -138,7 +138,7 @@ export class AuthService {
       }
 
       if (!user.isVerificated) {
-        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_NOT_VERIFIED);
+        throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_NOT_VERIFIED);
       }
 
       const passwordMatches = await argon.verify(user.hash, dto.password);

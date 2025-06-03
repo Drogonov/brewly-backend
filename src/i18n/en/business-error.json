@@ -11,6 +11,8 @@
   "VALIDATION_NON_FIELD_ERROR": "Error occurs on property {property} with message {message}",
   "REQUEST_VALIDATION_ERROR": "Request validation error",
   "UNEXPECTED_ERROR": "You have some unexpected error",
+  "SAMPLE_DOESNT_EXIST": "Sample doesnt exist in that company",
+  "NOTIFICATION_NOT_FOUND": "This notification not found for the current user",
   "COMPANY_DELETE_DENIED": "We can't delete your company",
   "SAMPLE_CREATION_FAILED": "Can't create sample",
   "COMPANY_EDIT_DENIED": "You do not have permission to edit this company",

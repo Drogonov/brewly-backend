@@ -34,7 +34,6 @@ import {
 } from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
-import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { UserKeys } from 'src/app.common/localization/generated/user.enum';
@@ -43,7 +42,7 @@ import * as argon from 'argon2';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 import { IconsService } from 'src/app.common/services/icons/icons.service';
 import { IconKey } from 'src/app.common/services/icons/icon-keys.enum';
-import { CuppingKeys } from 'src/app.common/localization/generated';
+import { BusinessErrorKeys, CuppingKeys } from 'src/app.common/localization/generated';
 
 @Injectable()
 export class UserService {
@@ -99,7 +98,7 @@ export class UserService {
   ): Promise<IGetUserCardResponse> {
     const targetUser = await this.prisma.user.findUnique({ where: { id: dto.userId } });
     if (!targetUser) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+      throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_DOESNT_EXIST);
     }
     const userInfo = this.mappingService.mapUser(targetUser);
     const actions = await this.buildUserActions(userId, currentCompanyId, dto.userId);
@@ -110,7 +109,7 @@ export class UserService {
   async getUserInfo(userId: number): Promise<IUserInfoResponse> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+      throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_DOESNT_EXIST);
     }
     return this.mappingService.mapUser(user);
   }
@@ -240,7 +239,7 @@ export class UserService {
   ): Promise<StatusResponseDto> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+      throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_DOESNT_EXIST);
     }
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
@@ -265,7 +264,7 @@ export class UserService {
   ): Promise<StatusResponseDto> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+      throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_DOESNT_EXIST);
     }
     const isOtpValid = await argon.verify(user.otpHash, dto.otp);
     if (!isOtpValid) {
@@ -288,7 +287,7 @@ export class UserService {
   async resendNewEmailOTP(userId: number, newEmail: string): Promise<StatusResponseDto> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+      throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_DOESNT_EXIST);
     }
 
     const { otp, hashedOtp } = await this.generateOtp();
@@ -751,7 +750,7 @@ export class UserService {
   private async confirmEmailChange(userId: number, newEmail: string): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.USER_DOESNT_EXIST);
+      throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_DOESNT_EXIST);
     }
     const { otp, hashedOtp } = await this.generateOtp();
     await this.prisma.user.update({

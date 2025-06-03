@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import sgMail from '@sendgrid/mail';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
-import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
+import { BusinessErrorKeys } from 'src/app.common/localization/generated';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 
 @Injectable()
@@ -36,7 +36,7 @@ export class MailService {
     try {
       await sgMail.send(msg);
     } catch (error) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.CANT_DELIVER_VERIFICATION_EMAIL);
+      throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL);
     }
   }
 
@@ -66,7 +66,7 @@ export class MailService {
     try {
       await sgMail.send(msg);
     } catch (error) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.CANT_DELIVER_VERIFICATION_EMAIL);
+      throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL);
     }
   }
 

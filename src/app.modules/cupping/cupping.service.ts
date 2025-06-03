@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { CreateCuppingRequestDto, CuppingStatus, GetCuppingsListResponseDto, IGetCuppingSampleResponse, IGetCuppingSampleTest, IGetCuppingsListResponse, IGetCuppingStatusResponse, IStatusResponse, ISuccessIdResponse, SetCuppingStatusRequestDto, SetCuppingTestRequestDto, SetCuppingTestsRequestDto, StatusResponseDto, StatusType, TestType } from './dto';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
-import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
 import { Cupping, CuppingType, PropertyType, Role, SampleProperty, SampleTesting } from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { IGetCuppingResponse } from './dto/get-cupping.response.dto';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
-import { CuppingKeys } from 'src/app.common/localization/generated';
+import { BusinessErrorKeys, CuppingKeys } from 'src/app.common/localization/generated';
 
 @Injectable()
 export class CuppingService {
@@ -94,7 +93,7 @@ export class CuppingService {
             };
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR
+                BusinessErrorKeys.REQUEST_VALIDATION_ERROR
             );
         }
     }
@@ -121,7 +120,7 @@ export class CuppingService {
             };
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR
+                BusinessErrorKeys.REQUEST_VALIDATION_ERROR
             );
         }
     }
@@ -166,13 +165,13 @@ export class CuppingService {
 
             if (!cupping || cupping.companyId !== currentCompanyId) {
                 throw await this.errorHandlingService.getBusinessError(
-                    ErrorSubCode.REQUEST_VALIDATION_ERROR,
+                    BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
                 );
             }
             const invitedIds = cupping.invitations.map(i => i.userId);
             if (!invitedIds.includes(userId)) {
                 throw await this.errorHandlingService.getBusinessError(
-                    ErrorSubCode.REQUEST_VALIDATION_ERROR,
+                    BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
                 );
             }
 
@@ -202,7 +201,7 @@ export class CuppingService {
             return response;
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR
+                BusinessErrorKeys.REQUEST_VALIDATION_ERROR
             );
         }
     }
@@ -220,7 +219,7 @@ export class CuppingService {
 
             if (!cupping || cupping.companyId !== currentCompanyId) {
                 throw await this.errorHandlingService.getBusinessError(
-                    ErrorSubCode.REQUEST_VALIDATION_ERROR,
+                    BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
                 );
             }
 
@@ -232,7 +231,7 @@ export class CuppingService {
             }
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR
+                BusinessErrorKeys.REQUEST_VALIDATION_ERROR
             );
         }
     }
@@ -271,7 +270,7 @@ export class CuppingService {
             };
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR
+                BusinessErrorKeys.REQUEST_VALIDATION_ERROR
             );
         }
     }
@@ -286,7 +285,7 @@ export class CuppingService {
         // Validate at least one test
         if (!tests || tests.length === 0) {
             throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR,
+                BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
             );
         }
 
@@ -298,7 +297,7 @@ export class CuppingService {
         });
         if (!cupping || cupping.companyId !== currentCompanyId) {
             throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR,
+                BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
             );
         }
 
@@ -306,14 +305,14 @@ export class CuppingService {
         const invitedIds = cupping.invitations.map(i => i.userId);
         if (!invitedIds.includes(userId)) {
             throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR,
+                BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
             );
         }
 
         // Ensure that cupping isnt archived or still not started
         if (cupping.cuppingType != CuppingType.STARTED) {
             throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR,
+                BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
             );
         }
 
@@ -350,7 +349,7 @@ export class CuppingService {
             };
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR,
+                BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
             );
         }
     }
@@ -460,7 +459,7 @@ export class CuppingService {
 
             if (!cupping) {
                 throw await this.errorHandlingService.getBusinessError(
-                    ErrorSubCode.REQUEST_VALIDATION_ERROR
+                    BusinessErrorKeys.REQUEST_VALIDATION_ERROR
                 );
             }
 
@@ -586,7 +585,7 @@ export class CuppingService {
             }
         } catch (error) {
             throw await this.errorHandlingService.getBusinessError(
-                ErrorSubCode.REQUEST_VALIDATION_ERROR
+                BusinessErrorKeys.REQUEST_VALIDATION_ERROR
             );
         }
     }

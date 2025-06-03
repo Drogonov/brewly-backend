@@ -15,12 +15,11 @@ import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
 import { FriendshipType, Role, TeamInvitationType } from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
-import { ErrorSubCode } from 'src/app.common/error-handling/exceptions';
 import { IconsService } from 'src/app.common/services/icons/icons.service';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { SettingsKeys } from 'src/app.common/localization/generated/settings.enum';
 import { IconKey } from 'src/app.common/services/icons/icon-keys.enum';
-import { ErrorsKeys } from 'src/app.common/localization/generated';
+import { BusinessErrorKeys, ErrorsKeys } from 'src/app.common/localization/generated';
 
 @Injectable()
 export class SettingsService {
@@ -65,7 +64,7 @@ export class SettingsService {
       // Map the user's role using the relation in the company.
       const userRelation = currentCompany.relatedToUsers.find(rel => rel.userId === userId);
       if (!userRelation) {
-        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.COMPANY_NOT_FOUND);
+        throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.COMPANY_NOT_FOUND);
       }
 
       return {
@@ -186,7 +185,7 @@ export class SettingsService {
       });
 
       if (!company) {
-        throw await this.errorHandlingService.getBusinessError(ErrorSubCode.COMPANY_NOT_FOUND);
+        throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.COMPANY_NOT_FOUND);
       }
 
       const rulesForOwner = company.companyRules
@@ -289,7 +288,7 @@ export class SettingsService {
       include: { company: { include: { relatedToUsers: true, teamInvitations: true } } },
     });
     if (!relation) {
-      throw await this.errorHandlingService.getBusinessError(ErrorSubCode.COMPANY_NOT_FOUND);
+      throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.COMPANY_NOT_FOUND);
     }
 
     await this.prisma.user.update({
