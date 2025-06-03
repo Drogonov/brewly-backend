@@ -26,6 +26,7 @@ model User {
   about                   String?
   hash                    String
   otpHash                 String?
+  otpExpiresAt            DateTime?
   isVerificated           Boolean
   currentCompanyId        Int?
   currentCompany          Company?                 @relation("CurrentUserCompany", fields: [currentCompanyId], references: [id])

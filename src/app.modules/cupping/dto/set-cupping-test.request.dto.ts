@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsArray, ValidateNested, ArrayMinSize, IsOptional, IsIn, IsInt, Min, Max, IsString, MinLength, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { TestType } from '.';
+import { TestType } from 'src/app.modules/cupping/dto/types/test-type.enum';
 import { ValidationErrorKeys } from 'src/app.common/localization/generated';
 
 class PropertyDto {

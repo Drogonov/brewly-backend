@@ -28,5 +28,7 @@
   "CANNOT_RECORD_TESTS": "Cannot record tests: cupping is not in progress",
   "NO_TESTS_PROVIDED": "No tests provided in request",
   "SAMPLE_NOT_IN_CUPPING": "One or more samples do not belong to this cupping",
-  "NO_TEST_RESULTS": "Cannot archive cupping with no test results"
+  "NO_TEST_RESULTS": "Cannot archive cupping with no test results",
+  "USER_ALREADY_VERIFIED": "User is already verified",
+  "OTP_EXPIRED": "OTP has expired"
 }

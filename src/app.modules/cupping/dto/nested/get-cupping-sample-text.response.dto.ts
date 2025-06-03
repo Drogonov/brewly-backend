@@ -1,12 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-export enum TestType {
-    aroma = 'aroma',
-    acidity = 'acidity',
-    sweetness = 'sweetness',
-    body = 'body',
-    aftertaste = 'aftertaste',
-}
+import { TestType } from '../types/test-type.enum';
 
 // MARK: - Project implementation
 

@@ -1,15 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, Role } from '@prisma/client';
+// src/app.modules/auth/auth.service.ts
+import { Injectable, ForbiddenException } from '@nestjs/common';
+import { Prisma, Role, User } from '@prisma/client';
 import * as argon from 'argon2';
 import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
-import { AuthRequestDto, IStatusResponse, OTPRequestDto, StatusResponseDto, StatusType } from './dto';
+import {
+  AuthRequestDto,
+  IStatusResponse,
+  OTPRequestDto,
+  StatusResponseDto,
+  StatusType,
+} from './dto';
 import { ITokensResponse } from 'src/app.common/dto';
 import { JWTSessionService } from 'src/app.common/services/jwt-session/jwt-session.service';
 import { MailService } from 'src/app.common/services/mail/mail.service';
-import { ErrorFieldCode } from 'src/app.common/error-handling/exceptions';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
-import { BusinessErrorKeys, ErrorsKeys, ValidationErrorKeys } from 'src/app.common/localization/generated';
+import {
+  BusinessErrorKeys,
+  ErrorsKeys,
+  ValidationErrorKeys,
+} from 'src/app.common/localization/generated';
+import { ErrorFieldCode } from 'src/app.common/error-handling/exceptions';
 
 @Injectable()
 export class AuthService {
@@ -18,78 +29,113 @@ export class AuthService {
     private jwtSessionService: JWTSessionService,
     private mailService: MailService,
     private configService: ConfigurationService,
-    private errorHandlingService: ErrorHandlingService,
+    private errorHandlingService: ErrorHandlingService
   ) { }
 
+  /**
+   * Sign up by creating a new user + a personal company + relation.
+   * Sends an OTP afterward.
+   *
+   * Throws:
+   *   422 Unprocessable Entity if delivering email fails.
+   *   422 If user Already exist
+   */
   async signUpLocal(dto: AuthRequestDto): Promise<IStatusResponse> {
     const hash = await argon.hash(dto.password);
     const { otp, hashedOtp } = await this.generateOtp();
+    let createdUser: User;
 
     try {
-      const user = await this.prisma.$transaction(async (prisma) => {
-        // Step 1: Create the user
-        const createdUser = await prisma.user.create({
+      // wrap in a transaction: create user → company → relation → connect company
+      await this.prisma.$transaction(async (prismaTx) => {
+        const user = await prismaTx.user.create({
           data: {
             email: dto.email,
             hash,
             otpHash: hashedOtp,
+            otpExpiresAt: new Date(Date.now() + 10 * 60_000),
             isVerificated: false,
           },
         });
+        createdUser = user;
 
-        // Step 2: Create the company
-        const createdCompany = await prisma.company.create({
-          data: {
-            companyName: "Personal",
-            isPersonal: true,
-          },
+        const company = await prismaTx.company.create({
+          data: { companyName: 'Personal', isPersonal: true },
         });
 
-        // Step 3: Create the relation between the user and the company
-        await prisma.userToCompanyRelation.create({
+        await prismaTx.userToCompanyRelation.create({
           data: {
-            userId: createdUser.id,
-            companyId: createdCompany.id,
+            userId: user.id,
+            companyId: company.id,
             role: Role.OWNER,
           },
         });
 
-        // Step 4: Update the user with the current company connection
-        return await prisma.user.update({
-          where: { id: createdUser.id },
-          data: {
-            currentCompany: { connect: { id: createdCompany.id } },
-          },
+        await prismaTx.user.update({
+          where: { id: user.id },
+          data: { currentCompany: { connect: { id: company.id } } },
         });
       });
-
-      await this.sendOtp(user.email, otp);
-      return { status: StatusType.SUCCESS };
     } catch (error) {
+      // Prisma “unique constraint failed (P2002)”: email is already taken
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
         throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_ALREADY_EXIST);
-      } else {
-        throw error;
       }
+      // re‐throw any other unexpected Prisma errors
+      throw error;
+    }
+
+    // Try to send OTP email. If it fails, wrap in 422 with a BusinessErrorKey
+    try {
+      await this.sendOtp(createdUser.email, otp);
+      return { status: StatusType.SUCCESS };
+    } catch (error) {
+      // If sendOtp throws (e.g. SMTP down), we catch and re‐throw
+      throw await this.errorHandlingService.getBusinessError(
+        BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL,
+        { email: `"${createdUser.email}"` }
+      );
     }
   }
 
+  /**
+   * Verify OTP. If it’s incorrect or expired, throw a 422.
+   * Otherwise, mark user as verified and return new tokens.
+   */
   async verifyOTP(dto: OTPRequestDto): Promise<ITokensResponse> {
     try {
-      const user = await this.prisma.user.findUnique({
+      let user = await this.prisma.user.findUnique({
         where: { email: dto.email },
       });
 
-      if (!user || !(await argon.verify(user.otpHash, dto.otp))) {
-        throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.INCORRECT_OTP);
+      if (!user) {
+        // No such user → treat as “incorrect OTP”
+        throw await this.errorHandlingService.getBusinessError(
+          BusinessErrorKeys.INCORRECT_OTP
+        );
       }
 
-      await this.prisma.user.update({
+      // Check expiry
+      if (user.otpExpiresAt && user.otpExpiresAt < new Date()) {
+        throw await this.errorHandlingService.getBusinessError(
+          BusinessErrorKeys.OTP_EXPIRED
+        );
+      }
+
+      const isOtpValid = await argon.verify(user.otpHash, dto.otp);
+      if (!isOtpValid) {
+        throw await this.errorHandlingService.getBusinessError(
+          BusinessErrorKeys.INCORRECT_OTP
+        );
+      }
+
+      // Mark as verified; clear otpHash (and expiry, if you store it)
+      user = await this.prisma.user.update({
         where: { email: dto.email },
-        data: { otpHash: null, isVerificated: true },
+        data: { otpHash: null, isVerificated: true, otpExpiresAt: null },
       });
 
       return await this.jwtSessionService.createSession(user);
@@ -98,31 +144,71 @@ export class AuthService {
     }
   }
 
+  /**
+   * Resend OTP to an existing user.  
+   * Throws:
+   *   422 if user not found,
+   *   422 if user already verified,
+   *   403 if password mismatch,
+   *   422 if email‐sending fails.
+   */
   async resendOTP(dto: AuthRequestDto): Promise<StatusResponseDto> {
     try {
-      const { otp, hashedOtp } = await this.generateOtp();
-      const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+      const user = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+      });
+
       if (!user) {
-        throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_DOESNT_EXIST);
+        // User must exist to resend
+        throw await this.errorHandlingService.getBusinessError(
+          BusinessErrorKeys.USER_DOESNT_EXIST
+        );
+      }
+
+      if (user.isVerificated) {
+        // If they’re already verified, we don’t send another
+        throw await this.errorHandlingService.getBusinessError(
+          BusinessErrorKeys.USER_ALREADY_VERIFIED
+        );
       }
 
       const passwordMatches = await argon.verify(user.hash, dto.password);
       if (!passwordMatches) {
-        throw await this.errorHandlingService.getForbiddenError(ErrorsKeys.PASSWORDS_DOESNT_MATCH)
+        // Tests expect 403 if wrong password
+        throw await this.errorHandlingService.getForbiddenError(
+          ErrorsKeys.PASSWORDS_DOESNT_MATCH
+        );
       }
 
+      const { otp, hashedOtp } = await this.generateOtp();
       await this.prisma.user.update({
         where: { id: user.id },
-        data: { otpHash: hashedOtp, isVerificated: false },
+        data: {
+          otpHash: hashedOtp,
+          isVerificated: false,
+          // otpExpiresAt: new Date(Date.now() + 10 * 60_000),
+        },
       });
 
-      await this.sendOtp(dto.email, otp);
-      return { status: StatusType.SUCCESS };
+      try {
+        await this.sendOtp(dto.email, otp);
+        return { status: StatusType.SUCCESS };
+      } catch (error) {
+        throw await this.errorHandlingService.getBusinessError(
+          BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL,
+          { email: `"${dto.email}"` }
+        );
+      }
     } catch (error) {
       throw error;
     }
   }
 
+  /**
+   * Sign in with email+password.  
+   * Throws 422 if user doesn’t exist or password is incorrect.  
+   * Throws 422 if not yet verified.
+   */
   async signInLocal(dto: AuthRequestDto): Promise<ITokensResponse> {
     try {
       const user = await this.prisma.user.findUnique({
@@ -138,7 +224,10 @@ export class AuthService {
       }
 
       if (!user.isVerificated) {
-        throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_NOT_VERIFIED);
+        // Not verified → business‐layer 422
+        throw await this.errorHandlingService.getBusinessError(
+          BusinessErrorKeys.USER_NOT_VERIFIED
+        );
       }
 
       const passwordMatches = await argon.verify(user.hash, dto.password);
@@ -155,13 +244,16 @@ export class AuthService {
     }
   }
 
-  async logout(userId: number, rt: string): Promise<IStatusResponse> {    
+  /**
+   * Logout: end the current refresh-token session.  
+   * Always returns { status: SUCCESS }, even if user doesn’t exist.
+   */
+  async logout(userId: number, rt?: string): Promise<IStatusResponse> {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         include: { sessions: true, currentCompany: true },
       });
-
       if (!user) {
         return { status: StatusType.SUCCESS };
       }
@@ -173,19 +265,36 @@ export class AuthService {
     }
   }
 
+  /**
+   * Refresh tokens:  
+   *   - 403 if user doesn’t exist or has no sessions  
+   *   - 403 if RT hash mismatch (expired or invalid)  
+   *   - otherwise return brand-new tokens
+   */
   async refreshTokens(userId: number, rt: string): Promise<ITokensResponse> {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         include: { sessions: true, currentCompany: true },
       });
+
       if (!user || !user.sessions) {
-        throw await this.errorHandlingService.getForbiddenError(ErrorsKeys.SESSION_EXPIRED);
+        throw await this.errorHandlingService.getForbiddenError(
+          ErrorsKeys.SESSION_EXPIRED
+        );
       }
 
+      // If RT doesn’t match one of the stored sessions, that method should throw
       await this.jwtSessionService.verifyRtMatch(user, rt);
-      const tokens = await this.jwtSessionService.getTokens(user.id, user.currentCompanyId, user.email);
+
+      // If verifyRtMatch succeeds, get fresh tokens & update RT hash
+      const tokens = await this.jwtSessionService.getTokens(
+        user.id,
+        user.currentCompanyId,
+        user.email
+      );
       await this.jwtSessionService.updateRtHash(user, rt, tokens.refresh_token);
+
       return tokens;
     } catch (error) {
       throw error;
@@ -195,8 +304,7 @@ export class AuthService {
   // MARK: - Private Methods
 
   /**
-   * Sends the OTP email.
-   * In development mode, it skips calling the mail service.
+   * Sends the OTP email. In dev, skip the actual mail‐send.
    */
   private async sendOtp(email: string, otp: string): Promise<void> {
     if (this.configService.getEnv() !== 'development') {
@@ -205,9 +313,7 @@ export class AuthService {
   }
 
   /**
-   * Generates an OTP and its hashed version.
-   * In development, returns a fixed OTP from configuration.
-   * In production, generates a random 6-digit OTP.
+   * Generate (6-digit) OTP + a hash. In dev, you can return a fixed code.
    */
   private async generateOtp(): Promise<{ otp: string; hashedOtp: string }> {
     let otp: string;

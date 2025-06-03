@@ -11,6 +11,7 @@ export * from './nested/get-cupping-sample.response.dto'
 export * from './nested/cupping.response'
 
 export * from './types/cupping-status.enum'
+export * from './types/test-type.enum'
 
 export * from "src/app.common/dto/status-response.dto"
 export * from "src/app.common/dto/success.id-response.dto"
