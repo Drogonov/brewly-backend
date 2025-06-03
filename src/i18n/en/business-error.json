@@ -20,5 +20,13 @@
   "NOT_COMPANY_OWNER": "Only the owner can perform this action",
   "INVITATION_NOT_FOUND": "This invitation does not exist or is no longer valid",
   "TEAM_INVITATION_ALREADY_ACCEPTED": "This invitation has already been accepted",
-  "ALREADY_MEMBER_OF_COMPANY": "You are already a member of this company"
+  "ALREADY_MEMBER_OF_COMPANY": "You are already a member of this company",
+  "CUPPING_NOT_FOUND": "Cupping not found",
+  "CUPPING_ACCESS_DENIED": "You are not a member of that cupping",
+  "USER_NOT_INVITED": "You have not been invited to this cupping",
+  "INVALID_CUPPING_STATUS_TRANSITION": "Cannot change cupping to the requested status",
+  "CANNOT_RECORD_TESTS": "Cannot record tests: cupping is not in progress",
+  "NO_TESTS_PROVIDED": "No tests provided in request",
+  "SAMPLE_NOT_IN_CUPPING": "One or more samples do not belong to this cupping",
+  "NO_TEST_RESULTS": "Cannot archive cupping with no test results"
 }

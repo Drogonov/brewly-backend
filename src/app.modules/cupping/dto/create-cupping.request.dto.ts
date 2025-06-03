@@ -1,28 +1,40 @@
-import { IsNotEmpty, IsString, IsEmail, IsOptional, IsNumber, IsArray } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsOptional, IsNumber, IsArray, ArrayMinSize, ValidateNested, IsInt } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { CuppingSettingsRequestDto } from './nested/cupping-settings.request.dto';
 import { CuppingSampleRequestDto } from './nested/cupping-sample.request.dto';
 import { Type } from 'class-transformer';
+import { ValidationErrorKeys } from 'src/app.common/localization/generated';
 
 export class CreateCuppingRequestDto {
-    @IsNotEmpty()
+    @IsArray({
+        context: { validationErrorKey: ValidationErrorKeys.TESTS_ARRAY_REQUIRED },
+    })
+    @ArrayMinSize(1, {
+        context: { validationErrorKey: ValidationErrorKeys.TESTS_ARRAY_REQUIRED },
+    })
+    @ValidateNested({ each: true })
     @Type(() => CuppingSampleRequestDto)
-    @ApiProperty({ description: "IDs of sample items from warehouse witch are included to cupping" })
+    @ApiProperty({
+        description: 'At least one sample is required',
+        type: [CuppingSampleRequestDto],
+      })
     samples: CuppingSampleRequestDto[]
 
-    @IsNotEmpty()
+    @ValidateNested()
     @Type(() => CuppingSettingsRequestDto)
-    @ApiProperty({ description: "Cupping Settings" })
+    @ApiProperty({ description: 'Cupping settings object' })
     settings: CuppingSettingsRequestDto
 
-    @ApiProperty({
-        description: "IDs of Users who will be invited to cupping",
-        type: [Number],
-        example: [1, 3, 777],
-    })
     @IsOptional()
-    @IsArray()
-    @IsNumber({}, { each: true })
+    @IsArray({
+      context: { validationErrorKey: ValidationErrorKeys.USER_ID_MUST_BE_POSITIVE },
+    })
+    @IsInt({ each: true, context: { validationErrorKey: ValidationErrorKeys.USER_ID_MUST_BE_INT } })
     @Type(() => Number)
+    @ApiProperty({
+      description: 'IDs of users to invite (optional)',
+      type: [Number],
+      example: [1, 3, 777],
+    })
     chosenUserIds?: number[]
 }

@@ -92,9 +92,7 @@ export class CuppingService {
                 )
             };
         } catch (error) {
-            throw await this.errorHandlingService.getBusinessError(
-                BusinessErrorKeys.REQUEST_VALIDATION_ERROR
-            );
+            throw error;
         }
     }
 
@@ -119,9 +117,7 @@ export class CuppingService {
                 ))
             };
         } catch (error) {
-            throw await this.errorHandlingService.getBusinessError(
-                BusinessErrorKeys.REQUEST_VALIDATION_ERROR
-            );
+            throw error;
         }
     }
 
@@ -200,9 +196,7 @@ export class CuppingService {
 
             return response;
         } catch (error) {
-            throw await this.errorHandlingService.getBusinessError(
-                BusinessErrorKeys.REQUEST_VALIDATION_ERROR
-            );
+            throw error;
         }
     }
 
@@ -230,9 +224,7 @@ export class CuppingService {
                 )
             }
         } catch (error) {
-            throw await this.errorHandlingService.getBusinessError(
-                BusinessErrorKeys.REQUEST_VALIDATION_ERROR
-            );
+            throw error;
         }
     }
 
@@ -269,9 +261,7 @@ export class CuppingService {
                 )
             };
         } catch (error) {
-            throw await this.errorHandlingService.getBusinessError(
-                BusinessErrorKeys.REQUEST_VALIDATION_ERROR
-            );
+            throw error;
         }
     }
 
@@ -348,9 +338,7 @@ export class CuppingService {
                 ),
             };
         } catch (error) {
-            throw await this.errorHandlingService.getBusinessError(
-                BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
-            );
+            throw error;
         }
     }
 
@@ -438,7 +426,7 @@ export class CuppingService {
             samples: includeSamples ? this.mappingService.mapCuppingSamples(cupping, userId) : [],
         };
     }
-    
+
     private async saveCuppingResults(cuppingId: number) {
         try {
             // — STEP 0: Remove any old results for this cuppingId so we can re‐insert fresh ones
@@ -584,9 +572,7 @@ export class CuppingService {
                 });
             }
         } catch (error) {
-            throw await this.errorHandlingService.getBusinessError(
-                BusinessErrorKeys.REQUEST_VALIDATION_ERROR
-            );
+            throw error;
         }
     }
 }
