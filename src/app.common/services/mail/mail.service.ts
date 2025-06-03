@@ -20,7 +20,7 @@ export class MailService {
    */
   async sendOtpEmail(email: string, otp: string) {
     const header = 'Welcome to Brewly!';
-    const message = 'Thank you for signing up. Your journey to awesomeness starts here.';
+    const message = 'Thank you for signing up. Your journey to best cupping experience starts here.';
     const subject = '🌟 Verify Your Account with Brewly!';
     const htmlContent = this.buildHtmlTemplate({ header, message, otp });
     const textContent = `Welcome to Brewly!\n\nThank you for signing up.\nYour Verification Code: ${otp}\nGitHub: ${MailServiceConst.followUsLink}`;

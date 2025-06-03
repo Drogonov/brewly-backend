@@ -1,8 +1,8 @@
 {
     "DELETE_USER_COMPANY_SUCCESS": "Вся информация о компании удалена",
     "CHANGE_CURRENT_COMPANY_SUCCESS": "Ваша текущая компания изменена",
-    "EDIT_COMPANY_UPDATE_SUCCESS": "Компания {{ companyName }} обновлена",
-    "EDIT_COMPANY_CREATE_SUCCESS": "Компания {{ companyName }} создана",
+    "EDIT_COMPANY_UPDATE_SUCCESS": "Компания {companyName} обновлена",
+    "EDIT_COMPANY_CREATE_SUCCESS": "Компания {companyName} создана",
     "TEAM_INVITATION_ACCEPTED": "You have successfully joined the team",
     "NOTIFICATION_NOT_FOUND": "Team invitation not found or already processed",
     "TEAM_INVITATION_ALREADY_ACCEPTED": "You already accepted team invitation"

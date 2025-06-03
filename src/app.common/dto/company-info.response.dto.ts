@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { UserRole } from 'src/app.common/dto';
 
 // MARK: - Project implementation
 

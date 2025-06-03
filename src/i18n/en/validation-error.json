@@ -1,6 +1,12 @@
 {
     "INCORRECT_EMAIL": "Incorrect Email",
     "INCORRECT_PASSWORD": "Incorrect Password",
-    "PASSWORD_IS_SHORT": "Password should be longer then 8 symbols",
-    "USER_DOESNT_EXIST": "User doesn't exist"
+    "PASSWORD_IS_SHORT": "Password should be longer than 8 symbols",
+    "USER_DOESNT_EXIST": "User doesn't exist",
+    "COMPANY_NAME_REQUIRED": "Company name is required",
+    "COMPANY_NAME_TOO_SHORT": "Company name must be at least 2 characters",
+    "COMPANY_NAME_TOO_LONG": "Company name cannot exceed 50 characters",
+    "COMPANY_NAME_INVALID_CHARS": "Company name contains invalid characters",
+    "COMPANY_ID_MUST_BE_INT": "Company ID must be an integer",
+    "COMPANY_ID_MUST_BE_POSITIVE": "Company ID must be a positive number"
 }

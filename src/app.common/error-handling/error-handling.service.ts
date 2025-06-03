@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
-import { ErrorFieldCodeType, ValidationErrorCodes, BusinessErrorException, ErrorSubCodeType, ErrorSubCode } from './exceptions';
+import { ValidationErrorCodes, BusinessErrorException, ErrorSubCodeType, ErrorSubCode } from './exceptions';
 import { ErrorFieldResponseDto } from '../dto';
 import { BusinessErrorKeys, ErrorsKeys } from '../localization/generated';
 
@@ -10,9 +10,9 @@ export class ErrorHandlingService {
     private readonly localizationStringsService: LocalizationStringsService
   ) {}
 
-  async getBusinessError(errorSubCode: ErrorSubCodeType): Promise<BusinessErrorException> {
+  async getBusinessError(errorSubCode: ErrorSubCodeType, args?: Record<string, any>): Promise<BusinessErrorException> {
     const key = await this.getBusinessErrorKey(errorSubCode);
-    const errorMsg = await this.localizationStringsService.getBusinessErrorText(key);
+    const errorMsg = await this.localizationStringsService.getBusinessErrorText(key, args);
     return new BusinessErrorException({
       errorSubCode,
       errorMsg,
