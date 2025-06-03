@@ -1,10 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { CreateCuppingRequestDto, CuppingStatus, GetCuppingsListResponseDto, IGetCuppingSampleResponse, IGetCuppingSampleTest, IGetCuppingsListResponse, IGetCuppingStatusResponse, IStatusResponse, ISuccessIdResponse, SetCuppingStatusRequestDto, SetCuppingTestRequestDto, SetCuppingTestsRequestDto, StatusResponseDto, StatusType, TestType } from './dto';
+import {
+    CreateCuppingRequestDto,
+    CuppingStatus,
+    IGetCuppingResponse,
+    IGetCuppingsListResponse,
+    IGetCuppingStatusResponse,
+    IStatusResponse,
+    SetCuppingStatusRequestDto,
+    SetCuppingTestsRequestDto,
+    StatusResponseDto,
+    StatusType,
+} from './dto';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
-import { Cupping, CuppingType, PropertyType, Role, SampleProperty, SampleTesting } from '@prisma/client';
+import {
+    Cupping,
+    CuppingType,
+    PropertyType,
+    Role,
+    SampleProperty,
+    SampleTesting,
+} from '@prisma/client';
 import { MappingService } from 'src/app.common/services/mapping.service';
-import { IGetCuppingResponse } from './dto/get-cupping.response.dto';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { BusinessErrorKeys, CuppingKeys } from 'src/app.common/localization/generated';
 
@@ -13,14 +30,17 @@ export class CuppingService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly errorHandlingService: ErrorHandlingService,
-        private localizationStringsService: LocalizationStringsService,
-        private mappingService: MappingService
+        private readonly localizationStringsService: LocalizationStringsService,
+        private readonly mappingService: MappingService,
     ) { }
 
+    //
+    // ─── 1) CREATE CUPPING ────────────────────────────────────────────────────────
+    //
     async createCupping(
         userId: number,
         currentCompanyId: number,
-        dto: CreateCuppingRequestDto
+        dto: CreateCuppingRequestDto,
     ): Promise<IStatusResponse> {
         const { samples, settings, chosenUserIds } = dto;
 
@@ -31,12 +51,11 @@ export class CuppingService {
                     where: { companyId: currentCompanyId },
                     select: { userId: true },
                 })
-            )
-                .map(r => r.userId)
-            : chosenUserIds;
+            ).map((r) => r.userId)
+            : chosenUserIds || [];
 
-        // Add current user to the array 
-        if (invitedUserIds.some(ids => ids == userId)) {
+        // Ensure the creator is included
+        if (!invitedUserIds.includes(userId)) {
             invitedUserIds.push(userId);
         }
 
@@ -60,19 +79,19 @@ export class CuppingService {
                             },
                         },
                         coffeePacks: {
-                            connect: samples.map(s => ({ id: s.packId })),
+                            connect: samples.map((s) => ({ id: s.packId })),
                         },
                     },
                 }),
             ]);
 
-            // 2) Add Hidden sample names
+            // 2) Add hidden sample names (if needed)
             if (!settings.openSampleNameCupping) {
                 await this.prisma.cuppingHiddenPackName.createMany({
-                    data: samples.map(sample => ({
+                    data: samples.map((sample) => ({
                         cuppingId: created.id,
                         coffeePackId: sample.packId,
-                        coffeePackName: sample.hiddenSampleName
+                        coffeePackName: sample.hiddenSampleName,
                     })),
                     skipDuplicates: true,
                 });
@@ -80,53 +99,62 @@ export class CuppingService {
 
             // 3) Bulk create invitations, skip duplicates
             await this.prisma.cuppingInvitation.createMany({
-                data: invitedUserIds.map(uId => ({ cuppingId: created.id, userId: uId })),
+                data: invitedUserIds.map((uId) => ({ cuppingId: created.id, userId: uId })),
                 skipDuplicates: true,
-            })
+            });
 
             return {
                 status: StatusType.SUCCESS,
                 description: await this.localizationStringsService.getCuppingText(
                     CuppingKeys.CREATE_CUPPING_SUCCESS,
-                    { cuppingId: created.id }
-                )
+                    { cuppingId: created.id },
+                ),
             };
         } catch (error) {
             throw error;
         }
     }
 
+    //
+    // ─── 2) GET CUPPINGS LIST ─────────────────────────────────────────────────────
+    //
     async getCuppingsList(
         userId: number,
-        currentCompanyId: number
+        currentCompanyId: number,
     ): Promise<IGetCuppingsListResponse> {
         try {
             const cuppings = await this.prisma.cupping.findMany({
                 where: { companyId: currentCompanyId },
                 include: {
                     settings: true,
-                    sampleTestings: { select: { userId: true } }
+                    sampleTestings: { select: { userId: true } },
                 },
                 orderBy: { createdAt: 'desc' },
             });
 
             return {
-                cuppings: cuppings.map(cupping => this.mappingService.mapCupping(
-                    cupping as Cupping & { settings: any },
-                    this.hasUserEndTesting(cupping, userId)
-                ))
+                cuppings: cuppings.map((cup) =>
+                    this.mappingService.mapCupping(
+                        cup as Cupping & { settings: any },
+                        this.hasUserEndTesting(cup, userId),
+                    ),
+                ),
             };
         } catch (error) {
             throw error;
         }
     }
 
+    //
+    // ─── 3) GET SINGLE CUPPING ────────────────────────────────────────────────────
+    //
     async getCupping(
         userId: number,
         currentCompanyId: number,
         cuppingId: number,
     ): Promise<IGetCuppingResponse> {
         try {
+            // 1) Fetch the cupping (with all related data we need)
             const cupping = await this.prisma.cupping.findUnique({
                 where: { id: cuppingId },
                 include: {
@@ -143,128 +171,214 @@ export class CuppingService {
                     },
                     cuppingHiddenPackNames: true,
                     cuppingResult: {
-                        include: {
-                            cuppingSampleTestingPropertyResult: true,
-                        },
+                        include: { cuppingSampleTestingPropertyResult: true },
                     },
                 },
             });
 
-            const relation = await this.prisma.userToCompanyRelation.findUnique({
-                where: {
-                    userId_companyId: {
-                        userId,
-                        companyId: currentCompanyId,
-                    },
-                }
-            });
-
-            if (!cupping || cupping.companyId !== currentCompanyId) {
+            // 2) Not found?
+            if (!cupping) {
                 throw await this.errorHandlingService.getBusinessError(
-                    BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
+                    BusinessErrorKeys.CUPPING_NOT_FOUND,
                 );
             }
-            const invitedIds = cupping.invitations.map(i => i.userId);
+
+            // 3) Wrong company?
+            if (cupping.companyId !== currentCompanyId) {
+                throw await this.errorHandlingService.getBusinessError(
+                    BusinessErrorKeys.CUPPING_ACCESS_DENIED,
+                );
+            }
+
+            // 4) Not invited?
+            const invitedIds = cupping.invitations.map((inv) => inv.userId);
             if (!invitedIds.includes(userId)) {
                 throw await this.errorHandlingService.getBusinessError(
-                    BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
+                    BusinessErrorKeys.USER_NOT_INVITED,
                 );
             }
 
-            const isUserHaveStrongPermissions = (cupping.cuppingCreatorId === userId) || (relation.role == Role.OWNER);
+            // 5) Does user have “strong” permissions?
+            const relation = await this.prisma.userToCompanyRelation.findUnique({
+                where: {
+                    userId_companyId: { userId, companyId: currentCompanyId },
+                },
+            });
+            const isUserHaveStrongPermissions =
+                cupping.cuppingCreatorId === userId || relation?.role === Role.OWNER;
 
-            let response: Promise<IGetCuppingResponse>;
+            // 6) Choose the appropriate subtype response
+            let responsePromise: IGetCuppingResponse;
+
             switch (cupping.cuppingType) {
                 case CuppingType.CREATED:
-                    response = this.getCreatedCupping(userId, cupping, isUserHaveStrongPermissions);
+                    responsePromise = await this.getCreatedCupping(
+                        userId,
+                        cupping,
+                        isUserHaveStrongPermissions,
+                    );
                     break;
+
                 case CuppingType.STARTED:
                     if (this.hasUserEndTesting(cupping, userId)) {
-                        response = this.getLoaderCupping(userId, cupping, isUserHaveStrongPermissions);
+                        responsePromise = await this.getLoaderCupping(
+                            userId,
+                            cupping,
+                            isUserHaveStrongPermissions,
+                        );
                     } else {
-                        response = this.getInProgressCupping(userId, cupping, isUserHaveStrongPermissions);
+                        responsePromise = await this.getInProgressCupping(
+                            userId,
+                            cupping,
+                            isUserHaveStrongPermissions,
+                        );
                     }
                     break;
+
                 case CuppingType.ARCHIVED:
-                    response = this.getEndedCupping(userId, cupping);
+                    responsePromise = await this.getEndedCupping(userId, cupping);
                     break;
+
                 default:
-                    // fallback
-                    response = this.getCreatedCupping(userId, cupping, isUserHaveStrongPermissions);
+                    responsePromise = await this.getCreatedCupping(
+                        userId,
+                        cupping,
+                        isUserHaveStrongPermissions,
+                    );
                     break;
             }
 
-            return response;
+            return responsePromise;
         } catch (error) {
             throw error;
         }
     }
 
+    //
+    // ─── 4) GET CUPPING STATUS ───────────────────────────────────────────────────
+    //
     async getCuppingStatus(
         userId: number,
         currentCompanyId: number,
         cuppingId: number,
     ): Promise<IGetCuppingStatusResponse> {
-        try {
-            const cupping = await this.prisma.cupping.findUnique({
-                where: { id: cuppingId },
-                include: { sampleTestings: true }
-            });
+        // Fetch just enough to check companyId & sampleTestings
+        const cupping = await this.prisma.cupping.findUnique({
+            where: { id: cuppingId },
+            include: { sampleTestings: true },
+        });
 
-            if (!cupping || cupping.companyId !== currentCompanyId) {
-                throw await this.errorHandlingService.getBusinessError(
-                    BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
-                );
-            }
-
-            return {
-                status: this.mappingService.translateTypeToStatus(
-                    cupping.cuppingType,
-                    this.hasUserEndTesting(cupping, userId)
-                )
-            }
-        } catch (error) {
-            throw error;
+        if (!cupping) {
+            throw await this.errorHandlingService.getBusinessError(
+                BusinessErrorKeys.CUPPING_NOT_FOUND,
+            );
         }
+
+        if (cupping.companyId !== currentCompanyId) {
+            throw await this.errorHandlingService.getBusinessError(
+                BusinessErrorKeys.CUPPING_ACCESS_DENIED,
+            );
+        }
+
+        return {
+            status: this.mappingService.translateTypeToStatus(
+                cupping.cuppingType,
+                this.hasUserEndTesting(cupping, userId),
+            ),
+        };
     }
 
+    //
+    // ─── 5) SET CUPPING STATUS ───────────────────────────────────────────────────
+    //
     async setCuppingStatus(
         userId: number,
         currentCompanyId: number,
         dto: SetCuppingStatusRequestDto,
     ): Promise<StatusResponseDto> {
-        try {
-            const { cuppingId, cuppingStatus } = dto;
-            const cuppingType = this.mappingService.translateStatusToType(cuppingStatus);
+        const { cuppingId, cuppingStatus } = dto;
 
-            if (cuppingType == CuppingType.ARCHIVED) {
-                await this.saveCuppingResults(cuppingId);
-            }
+        // 1) Fetch the cupping along with its creator & companyId
+        const cupping = await this.prisma.cupping.findUnique({
+            where: { id: cuppingId },
+            select: { cuppingCreatorId: true, companyId: true, cuppingType: true },
+        });
 
+        if (!cupping) {
+            throw await this.errorHandlingService.getBusinessError(
+                BusinessErrorKeys.CUPPING_NOT_FOUND,
+            );
+        }
+
+        if (cupping.companyId !== currentCompanyId) {
+            throw await this.errorHandlingService.getBusinessError(
+                BusinessErrorKeys.CUPPING_ACCESS_DENIED,
+            );
+        }
+
+        // 2) Check permissions: only the creator or company OWNER can change status
+        const relation = await this.prisma.userToCompanyRelation.findUnique({
+            where: {
+                userId_companyId: { userId, companyId: currentCompanyId },
+            },
+        });
+        const isOwnerOrCreator =
+            cupping.cuppingCreatorId === userId || relation?.role === Role.OWNER;
+        if (!isOwnerOrCreator) {
+            throw await this.errorHandlingService.getBusinessError(
+                BusinessErrorKeys.CUPPING_ACCESS_DENIED,
+            );
+        }
+
+        // 3) Validate status transition
+        const currentType = cupping.cuppingType;
+        const requestedType = this.mappingService.translateStatusToType(
+            cuppingStatus,
+        );
+
+        // Only allow: CREATED → STARTED → ARCHIVED (no other jumps)
+        const allowedTransitions: Record<CuppingType, CuppingType[]> = {
+            [CuppingType.CREATED]: [CuppingType.STARTED],
+            [CuppingType.STARTED]: [CuppingType.ARCHIVED],
+            [CuppingType.ARCHIVED]: [], // once archived, no changes
+        };
+
+        if (!allowedTransitions[currentType].includes(requestedType)) {
+            throw await this.errorHandlingService.getBusinessError(
+                BusinessErrorKeys.INVALID_CUPPING_STATUS_TRANSITION,
+            );
+        }
+
+        // 4) If archiving, ensure there are test results to save
+        if (requestedType === CuppingType.ARCHIVED) {
+            await this.saveCuppingResults(cuppingId);
+        }
+
+        // 5) Update the cuppingType (and if ARCHIVED, also set endDate)
+        await this.prisma.cupping.update({
+            where: { id: cuppingId },
+            data: { cuppingType: requestedType },
+        });
+
+        if (requestedType === CuppingType.ARCHIVED) {
             await this.prisma.cupping.update({
                 where: { id: cuppingId },
-                data: { cuppingType },
+                data: { endDate: new Date() },
             });
-
-            if (cuppingType == CuppingType.ARCHIVED) {
-                await this.prisma.cupping.update({
-                    where: { id: cuppingId },
-                    data: { endDate: new Date() },
-                });
-            }
-
-            return {
-                status: StatusType.SUCCESS,
-                description: await this.localizationStringsService.getCuppingText(
-                    CuppingKeys.CUPPING_STATUS_UPDATED,
-                    { cuppingId: cuppingId, cuppingStatus: cuppingType }
-                )
-            };
-        } catch (error) {
-            throw error;
         }
+
+        return {
+            status: StatusType.SUCCESS,
+            description: await this.localizationStringsService.getCuppingText(
+                CuppingKeys.CUPPING_STATUS_UPDATED,
+                { cuppingId, cuppingStatus: requestedType },
+            ),
+        };
     }
 
+    //
+    // ─── 6) SET CUPPING TESTS ────────────────────────────────────────────────────
+    //
     async setCuppingTests(
         userId: number,
         currentCompanyId: number,
@@ -272,44 +386,70 @@ export class CuppingService {
     ): Promise<StatusResponseDto> {
         const { tests } = dto;
 
-        // Validate at least one test
+        // 1) Must provide at least one test
         if (!tests || tests.length === 0) {
             throw await this.errorHandlingService.getBusinessError(
-                BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
+                BusinessErrorKeys.NO_TESTS_PROVIDED,
             );
         }
 
-        // Ensure cupping belongs to company
+        // 2) Extract cuppingId from the first test (all tests must have the same cuppingId)
         const cuppingId = tests[0].cuppingId;
+
+        // 3) Fetch the cupping along with its invitations & type
         const cupping = await this.prisma.cupping.findUnique({
             where: { id: cuppingId },
-            select: { companyId: true, cuppingType: true, invitations: { select: { userId: true } } },
+            select: {
+                companyId: true,
+                cuppingType: true,
+                invitations: { select: { userId: true } },
+                coffeePacks: { select: { id: true } },
+            },
         });
-        if (!cupping || cupping.companyId !== currentCompanyId) {
+
+        if (!cupping) {
             throw await this.errorHandlingService.getBusinessError(
-                BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
+                BusinessErrorKeys.CUPPING_NOT_FOUND,
             );
         }
 
-        // Ensure user is invited
-        const invitedIds = cupping.invitations.map(i => i.userId);
+        if (cupping.companyId !== currentCompanyId) {
+            throw await this.errorHandlingService.getBusinessError(
+                BusinessErrorKeys.CUPPING_ACCESS_DENIED,
+            );
+        }
+
+        // 4) Ensure user is invited
+        const invitedIds = cupping.invitations.map((inv) => inv.userId);
         if (!invitedIds.includes(userId)) {
             throw await this.errorHandlingService.getBusinessError(
-                BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
+                BusinessErrorKeys.USER_NOT_INVITED,
             );
         }
 
-        // Ensure that cupping isnt archived or still not started
-        if (cupping.cuppingType != CuppingType.STARTED) {
+        // 5) Ensure cupping is “in progress”
+        if (cupping.cuppingType !== CuppingType.STARTED) {
             throw await this.errorHandlingService.getBusinessError(
-                BusinessErrorKeys.REQUEST_VALIDATION_ERROR,
+                BusinessErrorKeys.CANNOT_RECORD_TESTS,
             );
         }
 
+        // 6) Check that each coffeePackId belongs to this cupping
+        const packIdsInCupping = new Set<number>(
+            cupping.coffeePacks.map((p) => p.id),
+        );
+        for (const test of tests) {
+            if (!packIdsInCupping.has(test.coffeePackId)) {
+                throw await this.errorHandlingService.getBusinessError(
+                    BusinessErrorKeys.SAMPLE_NOT_IN_CUPPING,
+                );
+            }
+        }
+
+        // 7) Create all SampleTesting + nested properties in a transaction
         try {
-            // Create all sampleTesting records in a single transaction
             const createdEntries = await this.prisma.$transaction(
-                tests.map(test => {
+                tests.map((test) => {
                     const { coffeePackId, properties } = test;
                     return this.prisma.sampleTesting.create({
                         data: {
@@ -318,8 +458,10 @@ export class CuppingService {
                             cuppingId,
                             coffeePackId,
                             userSampleProperties: {
-                                create: properties.map(p => ({
-                                    propertyType: this.mappingService.translateTestToPropertyType(p.testPropertyType),
+                                create: properties.map((p) => ({
+                                    propertyType: this.mappingService.translateTestToPropertyType(
+                                        p.testPropertyType,
+                                    ),
                                     intensity: p.intensity,
                                     quality: p.quality,
                                     comment: p.comment,
@@ -334,7 +476,7 @@ export class CuppingService {
                 status: StatusType.SUCCESS,
                 description: await this.localizationStringsService.getCuppingText(
                     CuppingKeys.SAMPLE_TESTS_RECORDED,
-                    { sampleTestsAmount: createdEntries.length }
+                    { sampleTestsAmount: createdEntries.length },
                 ),
             };
         } catch (error) {
@@ -344,29 +486,28 @@ export class CuppingService {
 
     // MARK: - Private Methods
 
+    /** Returns true if the given user has already submitted any SampleTesting */
     private hasUserEndTesting(
         cupping: Cupping & { sampleTestings: { userId: number }[] },
         userId: number,
     ): boolean {
-        return cupping.sampleTestings.some(t => t.userId === userId);
+        return cupping.sampleTestings.some((t) => t.userId === userId);
     }
 
-    // Get cupping template when chief still doesnt start it
     private async getCreatedCupping(
         userId: number,
         cupping: Cupping & any,
-        isUserHaveStrongPermissions: boolean
+        isUserHaveStrongPermissions: boolean,
     ): Promise<IGetCuppingResponse> {
         return this.buildResponse(
             userId,
             cupping,
             CuppingStatus.planned,
             isUserHaveStrongPermissions,
-            false
+            false,
         );
     }
 
-    // Get cupping data when chief start it
     private async getInProgressCupping(
         userId: number,
         cupping: Cupping & any,
@@ -377,26 +518,24 @@ export class CuppingService {
             cupping,
             CuppingStatus.inProgress,
             isUserHaveStrongPermissions,
-            true
+            true,
         );
     }
 
-    // Get loader after user pass all data and now status for him doneByCurrentUser
     private async getLoaderCupping(
         userId: number,
         cupping: Cupping & any,
-        isUserHaveStrongPermissions: boolean
+        isUserHaveStrongPermissions: boolean,
     ): Promise<IGetCuppingResponse> {
         return this.buildResponse(
             userId,
             cupping,
             CuppingStatus.doneByCurrentUser,
             isUserHaveStrongPermissions,
-            false
+            false,
         );
     }
 
-    // Get info about cupping when it is over and archived so we can show results on front
     private async getEndedCupping(
         userId: number,
         cupping: Cupping & any,
@@ -406,7 +545,7 @@ export class CuppingService {
             cupping,
             CuppingStatus.ended,
             false,
-            true
+            true,
         );
     }
 
@@ -423,18 +562,25 @@ export class CuppingService {
             endDate: cupping.endDate?.toISOString() ?? null,
             canUserStartCupiing: isUserHaveStrongPermissions,
             canUserEndCupiing: isUserHaveStrongPermissions,
-            samples: includeSamples ? this.mappingService.mapCuppingSamples(cupping, userId) : [],
+            samples: includeSamples
+                ? this.mappingService.mapCuppingSamples(cupping, userId)
+                : [],
         };
     }
 
+    /**
+     * When archiving a cupping, first delete any old results, then re‐compute
+     * and insert new ones. If the cupping cannot be found → CUPPING_NOT_FOUND.
+     * If there are zero sampleTestings → NO_TEST_RESULTS (we disallow archiving).
+     */
     private async saveCuppingResults(cuppingId: number) {
         try {
-            // — STEP 0: Remove any old results for this cuppingId so we can re‐insert fresh ones
-            const deletedCount = await this.prisma.cuppingSampleTestingResult.deleteMany({
+            // STEP 0: Delete old results for this cupping, if any exist
+            await this.prisma.cuppingSampleTestingResult.deleteMany({
                 where: { cuppingId },
             });
 
-            // — STEP 1: Load the cupping + all sampleTestings (including each user's properties)
+            // STEP 1: Reload the cupping plus all sampleTestings + nested properties
             const cupping = await this.prisma.cupping.findUnique({
                 where: { id: cuppingId },
                 select: {
@@ -447,19 +593,21 @@ export class CuppingService {
 
             if (!cupping) {
                 throw await this.errorHandlingService.getBusinessError(
-                    BusinessErrorKeys.REQUEST_VALIDATION_ERROR
+                    BusinessErrorKeys.CUPPING_NOT_FOUND,
                 );
             }
 
             const allTestings = cupping.sampleTestings;
-
             if (allTestings.length === 0) {
-                return;
+                // You cannot archive a cupping with no test results
+                throw await this.errorHandlingService.getBusinessError(
+                    BusinessErrorKeys.NO_TEST_RESULTS,
+                );
             }
 
             const chiefUserId = cupping.cuppingCreatorId;
 
-            // — STEP 2: Group all SampleTesting rows by coffeePackId
+            // STEP 2: Group SampleTesting rows by coffeePackId
             const testsByPack = new Map<
                 number,
                 (SampleTesting & { userSampleProperties: SampleProperty[] })[]
@@ -472,29 +620,25 @@ export class CuppingService {
                 testsByPack.get(packId)!.push(testing);
             }
 
-            // — STEP 3: For each coffeePackId, compute averages & re‐insert result rows
-            //    NOTE: we know there are exactly 5 PropertyType values, so propertyCount = 5
-            const propertyCount = 5;
-
+            // STEP 3: For each coffeePackId, compute averages & insert results
+            const propertyCount = 5; // We know there are exactly 5 PropertyType values
             for (const [coffeePackId, testsForThisPack] of testsByPack.entries()) {
-
                 // 3a) Compute overall averageScore for this pack
                 let sumOfTestersTotals = 0;
                 for (const oneTest of testsForThisPack) {
                     let singleTesterTotal = 0;
-
                     for (const prop of oneTest.userSampleProperties) {
                         singleTesterTotal += prop.intensity + prop.quality;
                     }
                     sumOfTestersTotals += singleTesterTotal;
                 }
 
-                // Before: overallAverageScore = Math.round(sumOfTestersTotals / testsForThisPack.length)
-                // Now: divide by number of properties (5) to get 0–10 scale, then round.
-                const rawAveragePerTester = sumOfTestersTotals / testsForThisPack.length;
+                // Divide by number of testers, then by propertyCount, then round
+                const rawAveragePerTester =
+                    sumOfTestersTotals / testsForThisPack.length;
                 const overallAverageScore = Math.round(rawAveragePerTester / propertyCount);
 
-                // 3b) For each PropertyType, compute averages and chief’s own value
+                // 3b) Compute per‐PropertyType averages and chief’s value
                 type AggResult = {
                     propertyType: PropertyType;
                     averageIntensity: number;
@@ -512,11 +656,12 @@ export class CuppingService {
                     PropertyType.AFTERTASTE,
                 ];
 
-                const chiefTesting = testsForThisPack.find((t) => t.userId === chiefUserId);
+                const chiefTesting = testsForThisPack.find(
+                    (t) => t.userId === chiefUserId,
+                );
 
                 for (const propType of allPropertyTypes) {
-
-                    // Collect all SampleProperty entries (of this propertyType) across all testers
+                    // Collect all SampleProperty entries of this propertyType
                     const matchingProps: SampleProperty[] = [];
                     for (const oneTest of testsForThisPack) {
                         for (const prop of oneTest.userSampleProperties) {
@@ -529,8 +674,14 @@ export class CuppingService {
                     let avgIntensity = 0;
                     let avgQuality = 0;
                     if (matchingProps.length > 0) {
-                        const sumIntensity = matchingProps.reduce((acc, p) => acc + p.intensity, 0);
-                        const sumQuality = matchingProps.reduce((acc, p) => acc + p.quality, 0);
+                        const sumIntensity = matchingProps.reduce(
+                            (acc, p) => acc + p.intensity,
+                            0,
+                        );
+                        const sumQuality = matchingProps.reduce(
+                            (acc, p) => acc + p.quality,
+                            0,
+                        );
                         avgIntensity = Math.round(sumIntensity / matchingProps.length);
                         avgQuality = Math.round(sumQuality / matchingProps.length);
                     }
@@ -538,7 +689,9 @@ export class CuppingService {
                     let chiefIntensity = 0;
                     let chiefQuality = 0;
                     if (chiefTesting) {
-                        const chiefProp = chiefTesting.userSampleProperties.find((p) => p.propertyType === propType);
+                        const chiefProp = chiefTesting.userSampleProperties.find(
+                            (p) => p.propertyType === propType,
+                        );
                         if (chiefProp) {
                             chiefIntensity = chiefProp.intensity;
                             chiefQuality = chiefProp.quality;
@@ -554,6 +707,7 @@ export class CuppingService {
                     });
                 }
 
+                // STEP 4: Insert a new cuppingSampleTestingResult row
                 await this.prisma.cuppingSampleTestingResult.create({
                     data: {
                         cupping: { connect: { id: cuppingId } },

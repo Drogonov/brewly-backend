@@ -340,7 +340,7 @@ export class CompanyService {
     }
   }
 
-  // Private Methods
+  // MARK: - Private Methods
 
   private async updateCompany(
     userId: number,
