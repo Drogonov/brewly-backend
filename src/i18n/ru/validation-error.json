@@ -74,5 +74,6 @@
     "INVALID_CHARS": "That value must be string",
     "ARRAY_REQUIRED": "That value must be an array",
     "ARRAY_MUST_BE_NOT_EMPTY": "Array must include at least one value",
-    "VALUE_REQUIRED": "That value must be provided for success request"
+    "VALUE_REQUIRED": "That value must be provided for success request",
+    "USERNAME_TOO_SHORT": "Username should be longer than 2 symbols"
 }
