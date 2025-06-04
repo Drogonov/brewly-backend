@@ -30,5 +30,6 @@
   "SAMPLE_NOT_IN_CUPPING": "One or more samples do not belong to this cupping",
   "NO_TEST_RESULTS": "Cannot archive cupping with no test results",
   "USER_ALREADY_VERIFIED": "User is already verified",
-  "OTP_EXPIRED": "OTP has expired"
+  "OTP_EXPIRED": "OTP has expired",
+  "SAMPLE_UPDATE_FAILED": "Could not update sample" 
 }
