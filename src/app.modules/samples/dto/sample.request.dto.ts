@@ -13,12 +13,6 @@ export class SampleRequestDto {
   sampleTypeInfo: SampleTypeRequestDto;
 
   @IsOptional()
-  @Type(() => CoffeePackRequestDto)
-  @ApiProperty({ example: 'Current coffee packs of that sample type' })
-
-
-
-  @IsOptional()
   @IsArray({ context: { validationErrorKey: ValidationErrorKeys.ARRAY_REQUIRED } })
   @ArrayNotEmpty({ context: { validationErrorKey: ValidationErrorKeys.ARRAY_REQUIRED } })
   @ValidateNested({ each: true })

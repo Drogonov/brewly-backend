@@ -73,5 +73,6 @@
     "NUMBER_MUST_BE_POSITIVE": "That number must be greater then 0",
     "INVALID_CHARS": "That value must be string",
     "ARRAY_REQUIRED": "That value must be an array",
+    "ARRAY_MUST_BE_NOT_EMPTY": "Array must include at least one value",
     "VALUE_REQUIRED": "That value must be provided for success request"
 }

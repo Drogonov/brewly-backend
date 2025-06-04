@@ -274,7 +274,7 @@ export class SettingsService {
     }
   }
 
-  // PRIVATE METHODS
+  // MARK: Private Methods
 
   /**
    * Resolves the current company for the user. If no current company exists,
