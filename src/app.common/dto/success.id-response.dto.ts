@@ -10,7 +10,10 @@ export interface ISuccessIdResponse {
 // MARK: - Swagger class
 
 export class SuccessIdResponseDto implements ISuccessIdResponse {
-    @ApiProperty({ example: 666 })
+    @ApiProperty({
+        description: 'The generated primary key for the created resource',
+        example: 666,
+    })
     @Type(() => Number)
     id: number;
 }

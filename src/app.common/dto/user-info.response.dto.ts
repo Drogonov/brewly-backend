@@ -29,9 +29,14 @@ export class UserInfoResponseDto implements IUserInfoResponse {
     @ApiProperty({ example: 'test@test.com' })
     email: string;
 
-    @ApiProperty({ description: "will be achieved if we provide company for user", example: "barista" })
+    @ApiPropertyOptional({
+        description: 'User role within the company (if assigned)',
+        example: UserRole.barista,
+        enum: UserRole,
+        required: false,
+    })
     role?: UserRole;
 
-    @ApiProperty({ example: 'Some info about user' })
+    @ApiPropertyOptional({ example: 'Some info about user' })
     about?: string;
 }
