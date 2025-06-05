@@ -18,6 +18,8 @@ services:
       - "${SERVER_PORT}:${APP_PORT}"
     depends_on:
       - db-prod
+    volumes:
+      - app-logs:/var/log/brewly-backend
 
   db-prod:
     image: postgres:13
@@ -40,5 +42,42 @@ services:
     depends_on:
       - db-prod
 
+  loki:
+    image: grafana/loki:2.7.3
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki-data:/loki
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:2.7.3
+    container_name: promtail
+    restart: unless-stopped
+    volumes:
+      - app-logs:/var/log/brewly-backend:ro
+      - ./promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - promtail-positions:/tmp
+    command: -config.file=/etc/promtail/promtail-config.yaml
+
+  grafana:
+    image: grafana/grafana:9.2.0
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+
 volumes:
   db-prod:
+  app-logs:
+  promtail-positions:
+  grafana-data:
+  loki-data:

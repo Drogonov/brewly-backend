@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Scope } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { configuration } from 'src/app.common/services/config/configuration';
 import { validationSchema } from 'src/app.common/services/config/validationSchema';
@@ -19,6 +19,10 @@ import { TestingModule } from '@nestjs/testing';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { ErrorHandlingModule } from 'src/app.common/error-handling/error-handling.module';
+import { LoggerModule, PinoLogger } from 'nestjs-pino';
+import { LoggingInterceptor } from 'src/interceptor';
+import { createWriteStream, existsSync, mkdirSync } from 'fs';
+import path, { join } from 'path';
 
 @Module({
   imports: [
@@ -30,15 +34,46 @@ import { ErrorHandlingModule } from 'src/app.common/error-handling/error-handlin
       validationSchema,
     }),
     I18nModule.forRoot({
-      fallbackLanguage: 'en',
       loaderOptions: {
-        path: `${process.cwd()}/src/i18n/`,
-        watch: true,
+        path:
+          process.env.NODE_ENV === 'production'
+            ? join(process.cwd(), 'dist', 'i18n')
+            : join(process.cwd(), 'src', 'i18n'),
+        watch: false,
       },
+      fallbackLanguage: 'en',
       resolvers: [
         { use: QueryResolver, options: ['lang'] },
         AcceptLanguageResolver,
       ],
+    }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+        ...(process.env.NODE_ENV === 'production'
+          ? {
+            // ensure the directory exists (redundant with Dockerfile, but safe)
+            stream: (() => {
+              const logDir = '/var/log/brewly-backend';
+              if (!existsSync(logDir)) {
+                mkdirSync(logDir, { recursive: true });
+              }
+              return createWriteStream(join(logDir, 'app.log'), { flags: 'a' });
+            })(),
+            prettyPrint: false, // raw JSON only
+          }
+          : {
+            // dev: pretty‐print to console
+            transport: {
+              target: 'pino-pretty',
+              options: {
+                colorize: true,
+                levelFirst: true,
+                translateTime: true,
+              },
+            },
+          }),
+      },
     }),
     ConfigurationModule,
     ErrorHandlingModule,
@@ -62,6 +97,8 @@ import { ErrorHandlingModule } from 'src/app.common/error-handling/error-handlin
       useClass: AtGuard,
     },
     LocalizationStringsService,
+    PinoLogger,
+    LoggingInterceptor,
   ],
 })
 export class AppModule { }

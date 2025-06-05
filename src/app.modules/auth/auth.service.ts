@@ -21,6 +21,7 @@ import {
   ValidationErrorKeys,
 } from 'src/app.common/localization/generated';
 import { ErrorFieldCode } from 'src/app.common/error-handling/exceptions';
+import { PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class AuthService {
@@ -29,8 +30,11 @@ export class AuthService {
     private jwtSessionService: JWTSessionService,
     private mailService: MailService,
     private configService: ConfigurationService,
-    private errorHandlingService: ErrorHandlingService
-  ) { }
+    private errorHandlingService: ErrorHandlingService,
+    private readonly logger: PinoLogger,
+  ) { 
+    this.logger.setContext(AuthService.name);
+  }
 
   /**
    * Sign up by creating a new user + a personal company + relation.

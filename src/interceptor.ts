@@ -1,40 +1,46 @@
 import {
-    Injectable,
-    NestInterceptor,
-    ExecutionContext,
-    CallHandler,
-  } from '@nestjs/common';
-  import { Observable } from 'rxjs';
-  import { tap } from 'rxjs/operators';
-  
-  @Injectable()
-  export class LoggingInterceptor implements NestInterceptor {
-    intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-      const now = Date.now();
-      const request = context.switchToHttp().getRequest();
-  
-      // Basic info
-      console.log(`\n[${request.method}] ${request.originalUrl} — Request received`);
-  
-      // Log headers
-      console.log('Headers:', JSON.stringify(request.headers, null, 2));
-  
-      // Log the parsed body object
-      console.log('Parsed body keys:', Object.keys(request.body));
-      console.dir(request.body, { depth: null });
-  
-      // If you’ve set up the raw-body middleware (see below), you’ll also get the raw JSON here:
-      if (request.rawBody) {
-        console.log('Raw JSON body:', request.rawBody);
-      }
-  
-      return next.handle().pipe(
-        tap(() => {
-          console.log(
-            `[${request.method}] ${request.originalUrl} — Response sent (${Date.now() -
-              now}ms)\n`,
-          );
-        }),
-      );
-    }
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import { PinoLogger } from 'nestjs-pino';
+
+@Injectable()
+export class LoggingInterceptor implements NestInterceptor {
+  constructor(private readonly logger: PinoLogger) {
+    // Tag every log line with "LoggingInterceptor" as the context
+    this.logger.setContext(LoggingInterceptor.name);
   }
+
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const now = Date.now();
+    const request = context.switchToHttp().getRequest();
+
+    const { method, originalUrl, headers, body, rawBody } = request;
+
+    // Instead of console.log, emit a Pino-friendly JSON line
+    this.logger.info(
+      {
+        method,
+        url: originalUrl,
+        headers,
+        body: Object.keys(body).length ? body : undefined,
+        rawBody: rawBody ? rawBody : undefined,
+      },
+      'Request received'
+    );
+
+    return next.handle().pipe(
+      tap(() => {
+        const duration = Date.now() - now;
+        this.logger.info(
+          { method, url: originalUrl, statusCode: context.switchToHttp().getResponse().statusCode, duration },
+          'Response sent'
+        );
+      })
+    );
+  }
+}
