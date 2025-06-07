@@ -343,6 +343,9 @@ export class CuppingService {
             [CuppingType.ARCHIVED]: [], // once archived, no changes
         };
 
+        console.log(allowedTransitions);
+        console.log(requestedType);
+
         if (!allowedTransitions[currentType].includes(requestedType)) {
             throw await this.errorHandlingService.getBusinessError(
                 BusinessErrorKeys.INVALID_CUPPING_STATUS_TRANSITION,
@@ -646,6 +649,7 @@ export class CuppingService {
                     averageQuality: number;
                     chiefIntensity: number;
                     chiefQuality: number;
+                    comments: string[]
                 };
 
                 const propertyResults: AggResult[] = [];
@@ -699,12 +703,15 @@ export class CuppingService {
                         }
                     }
 
+                    const comments = matchingProps.map((prop) => prop.comment)
+
                     propertyResults.push({
                         propertyType: propType,
                         averageIntensity: avgIntensity,
                         averageQuality: avgQuality,
                         chiefIntensity,
                         chiefQuality,
+                        comments
                     });
                 }
 
@@ -721,6 +728,7 @@ export class CuppingService {
                                 averageQualityScore: r.averageQuality,
                                 averageChiefIntensivityScore: r.chiefIntensity,
                                 averageChiefQualityScore: r.chiefQuality,
+                                comments: r.comments
                             })),
                         },
                     },

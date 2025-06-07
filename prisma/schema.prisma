@@ -249,6 +249,7 @@ model CuppingSampleTestingPropertyResult {
   averageQualityScore          Int
   averageChiefIntensivityScore Int
   averageChiefQualityScore     Int
+  comments                     String[]
 }
 
 model CuppingSettings {

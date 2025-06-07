@@ -357,7 +357,7 @@ export class MappingService {
                         qualityAverageRate: r.averageQualityScore,
                         qualityChiefRate: r.averageChiefQualityScore,
                         commentUser: userProp ? userProp.comment : undefined,
-                        commentUsers: undefined,
+                        commentUsers: r.comments,
                     };
                 });
             }
