@@ -558,6 +558,7 @@ export class CuppingService {
     ): IGetCuppingResponse {
         return {
             status,
+            cuppingName: cupping.cuppingName,
             eventDate: cupping.eventDate?.toISOString(),
             endDate: cupping.endDate?.toISOString() ?? null,
             canUserStartCupiing: isUserHaveStrongPermissions,

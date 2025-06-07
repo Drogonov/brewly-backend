@@ -8,6 +8,7 @@ import { IGetCuppingSampleResponse } from './nested/get-cupping-sample.response.
 
 export interface IGetCuppingResponse {
     status: CuppingStatus;
+    cuppingName: string;
     eventDate?: string;
     endDate?: string;
     canUserStartCupiing: boolean;
@@ -21,6 +22,9 @@ export class GetCuppingResponseDto implements IGetCuppingResponse {
 
     @ApiProperty({ description: 'Status of the cupping, type is important for frontend' })
     status: CuppingStatus;
+
+    @ApiProperty({ description: 'Name of the cupping' })
+    cuppingName: string;
 
     @ApiProperty({ description: 'Date of the event start' })
     eventDate?: string;
