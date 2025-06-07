@@ -286,7 +286,7 @@ export class MappingService {
                 cuppingSampleTestingPropertyResult: CuppingSampleTestingPropertyResult[];
             })[];
         },
-        currentUserId: number
+        currentUserId: number,
     ): IGetCuppingSampleResponse[] {
         // 1) Build a hidden-name lookup (packId → hiddenSampleName)
         const hiddenNameMap = new Map<number, string>(

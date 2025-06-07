@@ -3,6 +3,7 @@ import {
     CreateCuppingRequestDto,
     CuppingStatus,
     IGetCuppingResponse,
+    IGetCuppingSampleResponse,
     IGetCuppingsListResponse,
     IGetCuppingStatusResponse,
     IStatusResponse,
@@ -231,6 +232,7 @@ export class CuppingService {
                             userId,
                             cupping,
                             isUserHaveStrongPermissions,
+                            cupping.settings.randomSamplesOrder
                         );
                     }
                     break;
@@ -508,6 +510,7 @@ export class CuppingService {
             CuppingStatus.planned,
             isUserHaveStrongPermissions,
             false,
+            false,
         );
     }
 
@@ -515,6 +518,7 @@ export class CuppingService {
         userId: number,
         cupping: Cupping & any,
         isUserHaveStrongPermissions: boolean,
+        shouldUseRandomSampleOrder: boolean
     ): Promise<IGetCuppingResponse> {
         return this.buildResponse(
             userId,
@@ -522,6 +526,7 @@ export class CuppingService {
             CuppingStatus.inProgress,
             isUserHaveStrongPermissions,
             true,
+            shouldUseRandomSampleOrder,
         );
     }
 
@@ -536,6 +541,7 @@ export class CuppingService {
             CuppingStatus.doneByCurrentUser,
             isUserHaveStrongPermissions,
             false,
+            false
         );
     }
 
@@ -549,6 +555,7 @@ export class CuppingService {
             CuppingStatus.ended,
             false,
             true,
+            false
         );
     }
 
@@ -558,7 +565,12 @@ export class CuppingService {
         status: CuppingStatus,
         isUserHaveStrongPermissions: boolean,
         includeSamples = true,
+        shouldUseRandomSampleOrder: boolean,
     ): IGetCuppingResponse {
+        const samples = includeSamples
+        ? this.mappingService.mapCuppingSamples(cupping, userId)
+        : []
+
         return {
             status,
             cuppingName: cupping.cuppingName,
@@ -566,9 +578,7 @@ export class CuppingService {
             endDate: cupping.endDate?.toISOString() ?? null,
             canUserStartCupiing: isUserHaveStrongPermissions,
             canUserEndCupiing: isUserHaveStrongPermissions,
-            samples: includeSamples
-                ? this.mappingService.mapCuppingSamples(cupping, userId)
-                : [],
+            samples: shouldUseRandomSampleOrder ? this.shuffle(samples) : samples,
         };
     }
 
@@ -738,4 +748,22 @@ export class CuppingService {
             throw error;
         }
     }
+
+    private shuffle(array: IGetCuppingSampleResponse[]): IGetCuppingSampleResponse[] {
+        let currentIndex = array.length;
+      
+        // While there remain elements to shuffle...
+        while (currentIndex != 0) {
+      
+          // Pick a remaining element...
+          let randomIndex = Math.floor(Math.random() * currentIndex);
+          currentIndex--;
+      
+          // And swap it with the current element.
+          [array[currentIndex], array[randomIndex]] = [
+            array[randomIndex], array[currentIndex]];
+        }
+
+        return array;
+      }
 }
