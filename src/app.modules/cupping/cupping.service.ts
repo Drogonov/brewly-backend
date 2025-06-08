@@ -391,6 +391,8 @@ export class CuppingService {
     ): Promise<StatusResponseDto> {
         const { tests } = dto;
 
+        console.log(tests);
+
         // 1) Must provide at least one test
         if (!tests || tests.length === 0) {
             throw await this.errorHandlingService.getBusinessError(
@@ -568,8 +570,8 @@ export class CuppingService {
         shouldUseRandomSampleOrder: boolean,
     ): IGetCuppingResponse {
         const samples = includeSamples
-        ? this.mappingService.mapCuppingSamples(cupping, userId)
-        : []
+            ? this.mappingService.mapCuppingSamples(cupping, userId)
+            : []
 
         return {
             status,
@@ -713,7 +715,9 @@ export class CuppingService {
                         }
                     }
 
-                    const comments = matchingProps.map((prop) => prop.comment)
+                    const comments = matchingProps
+                        .map((prop) => prop.comment)
+                        .filter((c): c is string => !!c);
 
                     propertyResults.push({
                         propertyType: propType,
@@ -751,19 +755,19 @@ export class CuppingService {
 
     private shuffle(array: IGetCuppingSampleResponse[]): IGetCuppingSampleResponse[] {
         let currentIndex = array.length;
-      
+
         // While there remain elements to shuffle...
         while (currentIndex != 0) {
-      
-          // Pick a remaining element...
-          let randomIndex = Math.floor(Math.random() * currentIndex);
-          currentIndex--;
-      
-          // And swap it with the current element.
-          [array[currentIndex], array[randomIndex]] = [
-            array[randomIndex], array[currentIndex]];
+
+            // Pick a remaining element...
+            let randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+
+            // And swap it with the current element.
+            [array[currentIndex], array[randomIndex]] = [
+                array[randomIndex], array[currentIndex]];
         }
 
         return array;
-      }
+    }
 }

@@ -353,7 +353,7 @@ model SampleProperty {
   propertyType    PropertyType
   intensity       Int
   quality         Int
-  comment         String
+  comment         String?
   sampleTestingId Int
   sampleTesting   SampleTesting @relation(fields: [sampleTestingId], references: [id])
 }
