@@ -4,12 +4,14 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
   Public,
   GetCurrentUserId,
-  GetCurrentUser
+  GetCurrentUser,
+  GetCurrentUserLanguage
 } from 'src/app.common/decorators';
 import { RtGuard } from 'src/app.common/guards';
 import { AuthService } from './auth.service';
@@ -101,7 +103,24 @@ export class AuthController {
   refreshTokens(
     @GetCurrentUserId() userId: number,
     @GetCurrentUser('refreshToken') refreshToken: string,
+    @GetCurrentUserLanguage() language: string
   ): Promise<TokensResponseDto> {
-    return this.authService.refreshTokens(userId, refreshToken);
+    return this.authService.refreshTokens(userId, refreshToken, language);
   }
+
+  // @Public()
+  // @UseGuards(RtGuard)
+  // @Post('refresh')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth('refresh-token')
+  // @ApiOperation({ summary: 'Refresh access and refresh tokens' })
+  // @ApiOkResponse({ description: 'Returns new access and refresh tokens', type: TokensResponseDto })
+  // @ApiUnprocessableEntityResponse({ description: 'Returns business top layer error', type: ErrorResponseDto })
+  // refreshTokensWithLanguage(
+  //   @GetCurrentUserId() userId: number,
+  //   @GetCurrentUser('refreshToken') refreshToken: string,
+  //   @Query('language') language: string
+  // ): Promise<TokensResponseDto> {
+  //   return this.authService.refreshTokens(userId, refreshToken, language);
+  // }
 }

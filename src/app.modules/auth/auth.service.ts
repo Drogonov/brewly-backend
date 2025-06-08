@@ -142,7 +142,7 @@ export class AuthService {
         data: { otpHash: null, isVerificated: true, otpExpiresAt: null },
       });
 
-      return await this.jwtSessionService.createSession(user);
+      return await this.jwtSessionService.createSession(user, dto.language);
     } catch (error) {
       throw error;
     }
@@ -242,7 +242,7 @@ export class AuthService {
         }]);
       }
 
-      return await this.jwtSessionService.createSession(user);
+      return await this.jwtSessionService.createSession(user, dto.language);
     } catch (error) {
       throw error;
     }
@@ -275,7 +275,7 @@ export class AuthService {
    *   - 403 if RT hash mismatch (expired or invalid)  
    *   - otherwise return brand-new tokens
    */
-  async refreshTokens(userId: number, rt: string): Promise<ITokensResponse> {
+  async refreshTokens(userId: number, rt: string, language: string): Promise<ITokensResponse> {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
@@ -295,7 +295,8 @@ export class AuthService {
       const tokens = await this.jwtSessionService.getTokens(
         user.id,
         user.currentCompanyId,
-        user.email
+        user.email,
+        language
       );
       await this.jwtSessionService.updateRtHash(user, rt, tokens.refresh_token);
 

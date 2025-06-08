@@ -14,4 +14,9 @@ export class OTPRequestDto {
   @Matches(/^\d{6}$/, { context: { validationErrorKey: ValidationErrorKeys.OTP_OUT_OF_RANGE } })
   @ApiProperty({ description: 'One Time Password', example: '123456' })
   otp: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({ description: 'The user system language', example: 'en' })
+  language: string;
 }

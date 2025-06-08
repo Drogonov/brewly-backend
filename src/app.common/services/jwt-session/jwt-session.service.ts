@@ -24,8 +24,8 @@ export class JWTSessionService {
    * Creates a new session by generating tokens, storing the hashed refresh token,
    * and cleaning up any expired sessions.
    */
-  async createSession(user: User & { sessions?: Session[] }): Promise<ITokensResponse> {
-    const tokens = await this.getTokens(user.id, user.currentCompanyId, user.email);
+  async createSession(user: User & { sessions?: Session[] }, language: string): Promise<ITokensResponse> {
+    const tokens = await this.getTokens(user.id, user.currentCompanyId, user.email, language);
     const hashedRt = await argon.hash(tokens.refresh_token);
 
     const session = await this.prisma.session.create({
@@ -82,8 +82,8 @@ export class JWTSessionService {
   /**
    * Generates access and refresh tokens.
    */
-  async getTokens(userId: number, currentCompanyId: number, email: string): Promise<ITokensResponse> {
-    const jwtPayload: JwtPayload = { userId, currentCompanyId, email };
+  async getTokens(userId: number, currentCompanyId: number, email: string, language: string): Promise<ITokensResponse> {
+    const jwtPayload: JwtPayload = { userId, currentCompanyId, email, language };
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(jwtPayload, {

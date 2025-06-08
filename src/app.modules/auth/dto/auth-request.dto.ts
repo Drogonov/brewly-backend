@@ -14,4 +14,9 @@ export class AuthRequestDto {
   @MinLength(8, { context: { validationErrorKey: ValidationErrorKeys.PASSWORD_IS_SHORT } })
   @ApiProperty({ description: 'The users password', example: 'qqqqqqqq' })
   password: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({ description: 'The user system language', example: 'en' })
+  language: string;
 }
