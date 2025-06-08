@@ -43,6 +43,7 @@ import { ConfigurationService } from 'src/app.common/services/config/configurati
 import { IconsService } from 'src/app.common/services/icons/icons.service';
 import { IconKey } from 'src/app.common/services/icons/icon-keys.enum';
 import { BusinessErrorKeys, CuppingKeys } from 'src/app.common/localization/generated';
+import { UserRole } from 'src/app.common/dto';
 
 @Injectable()
 export class UserService {
@@ -540,7 +541,7 @@ export class UserService {
   ): Promise<IGetUserAction[]> {
     const currentUser = await this.prisma.user.findUnique({
       where: { id: currentUserId },
-      include: { currentCompany: true },
+      include: { currentCompany: true, relatedToCompanies: true },
     });
     const actions: IGetUserAction[] = [];
     const friendship = await this.prisma.friendship.findFirst({
@@ -563,9 +564,6 @@ export class UserService {
       where: { userId: targetUserId, companyId: currentCompanyId },
     });
 
-    const showMakeChief = await this.companyRulesService.shouldShowMakeChiefAction(
-      currentCompanyId,
-    );
     const isFriend = friendship ? friendship.type === FriendshipType.FRIEND : false;
     const isIncomingFriendRequest = friendship
       ? friendship.type === FriendshipType.REQUEST
@@ -575,6 +573,11 @@ export class UserService {
       ? teamInvitation.type === TeamInvitationType.REQUEST
       : false;
     const isCompanyPersonal = currentUser.currentCompany?.isPersonal;
+
+    const userRole = currentUser.relatedToCompanies.find((relation) => relation.companyId == currentCompanyId).role
+    const showMakeChief = await this.companyRulesService.shouldShowMakeChiefAction(
+      currentCompanyId,
+    ) || (userRole == Role.OWNER && isTeammate);
 
     actions.push({
       type: UserActionType.addToFriends,
