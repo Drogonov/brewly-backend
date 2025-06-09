@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Scope, Inject } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import {
   AuthKeys,
@@ -15,19 +15,26 @@ import {
   UserKeys,
   ValidationErrorKeys
 } from './generated';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
+import { JwtPayload } from '../services/jwt-session/types';
 
 @Injectable()
 export class LocalizationStringsService {
-  private currentLang: Languages = Languages.en;
 
-  constructor(private readonly i18n: I18nService) { }
+  constructor(
+    private readonly i18n: I18nService,
+    @Inject(REQUEST)
+    private readonly request: Request & { user?: JwtPayload },
+  ) { }
 
-  setLanguage(lang: Languages): void {
-    this.currentLang = lang;
-  }
-
-  getLanguage(): string {
-    return this.currentLang;
+  private get currentLang(): Languages {
+    const langRaw = this.request.user?.language;
+    if (langRaw && (Object.values (Languages) as string[]).includes(langRaw)) {
+      return langRaw as Languages;
+    } else {
+      return Languages.en;
+    }
   }
 
   async getAuthText(key: AuthKeys, args?: Record<string, any>): Promise<string> {
