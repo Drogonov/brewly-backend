@@ -108,19 +108,19 @@ export class AuthController {
     return this.authService.refreshTokens(userId, refreshToken, language);
   }
 
-  // @Public()
-  // @UseGuards(RtGuard)
-  // @Post('refresh')
-  // @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth('refresh-token')
-  // @ApiOperation({ summary: 'Refresh access and refresh tokens' })
-  // @ApiOkResponse({ description: 'Returns new access and refresh tokens', type: TokensResponseDto })
-  // @ApiUnprocessableEntityResponse({ description: 'Returns business top layer error', type: ErrorResponseDto })
-  // refreshTokensWithLanguage(
-  //   @GetCurrentUserId() userId: number,
-  //   @GetCurrentUser('refreshToken') refreshToken: string,
-  //   @Query('language') language: string
-  // ): Promise<TokensResponseDto> {
-  //   return this.authService.refreshTokens(userId, refreshToken, language);
-  // }
+  @Public()
+  @UseGuards(RtGuard)
+  @Post('refresh-language')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('refresh-token')
+  @ApiOperation({ summary: 'Refresh access and refresh tokens with new language' })
+  @ApiOkResponse({ description: 'Returns new access and refresh tokens with sended language', type: TokensResponseDto })
+  @ApiUnprocessableEntityResponse({ description: 'Returns business top layer error', type: ErrorResponseDto })
+  refreshTokensWithLanguage(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUser('refreshToken') refreshToken: string,
+    @Query('language') language: string
+  ): Promise<TokensResponseDto> {
+    return this.authService.refreshTokens(userId, refreshToken, language);
+  }
 }
