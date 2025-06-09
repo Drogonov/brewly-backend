@@ -1,9 +1,9 @@
 {
     "FRIENDS_LABEL": "Friends",
-    "TEAMMATES_LABEL": "Team Mates",
+    "TEAMMATES_LABEL": "Teammates",
     "REQUESTS_LABEL": "Sent Requests",
     "GUIDE_LABEL": "Guide",
     "DEFAULT_CUPPING_SETTINGS_SAVE_SUCCESS": "Default cupping settings saved successfully.",
     "DEFAULT_CUPPING_NAME": "Cupping",
-    "COMPANY_RULES_SAVE_SUCCESS": "company rules updated successfully."
+    "COMPANY_RULES_SAVE_SUCCESS": "Company rules updated successfully."
   }

@@ -1,4 +1,4 @@
 {
     "SESSION_EXPIRED": "Session expired.",
-    "PASSWORDS_DOESNT_MATCH": "We have got incorrect password, pls try again."
+    "PASSWORDS_DOESNT_MATCH": "Passwords don't match. Please try again."
 }

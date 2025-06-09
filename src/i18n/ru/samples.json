@@ -1,5 +1,5 @@
 {
-    "SAMPLE_CREATED_SUCCESSFULLY": "We created new sample",
-    "SAMPLE_UPDATED_SUCCESSFULLY": "We updated new sample",
-    "SAMPLE_DOESNT_EXIST": "Sample doesnt exist"
+    "SAMPLE_CREATED_SUCCESSFULLY": "Новый образец создан",
+    "SAMPLE_UPDATED_SUCCESSFULLY": "Образец обновлён",
+    "SAMPLE_DOESNT_EXIST": "Образец не существует"
 }

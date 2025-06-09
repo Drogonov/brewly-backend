@@ -2,8 +2,8 @@
     "FRIENDS_LABEL": "Друзья",
     "TEAMMATES_LABEL": "Коллеги",
     "REQUESTS_LABEL": "Отправленные запросы",
-    "GUIDE_LABEL": "Гайд",
-    "DEFAULT_CUPPING_SETTINGS_SAVE_SUCCESS": "Настройки по умолчанию успешно сохранены.",
-    "DEFAULT_CUPPING_NAME": "Cupping",
+    "GUIDE_LABEL": "Руководство",
+    "DEFAULT_CUPPING_SETTINGS_SAVE_SUCCESS": "Настройки каппинга по умолчанию успешно сохранены.",
+    "DEFAULT_CUPPING_NAME": "Каппинг",
     "COMPANY_RULES_SAVE_SUCCESS": "Правила компании успешно обновлены."
-}
+  }
