@@ -1,3 +1,11 @@
 {
-    "TEST": "TEST"
-  }
+  "ONBOARDING_PAGE_1_SUBTITLE": "Store",
+  "ONBOARDING_PAGE_1_TEXT_1": "Keep track of the coffee you have on hand. Next time you get the same bag, you’ll instantly remember its flavor notes — no need to write everything down again.",
+  "ONBOARDING_PAGE_2_SUBTITLE": "Collaborate",
+  "ONBOARDING_PAGE_2_TEXT_1": "Cupping alone? Turn on Personal mode — only you will see the results.",
+  "ONBOARDING_PAGE_2_TEXT_2": "Or gather your friends and cup together!",
+  "ONBOARDING_PAGE_2_TEXT_3": "You can hide sample names or keep them visible. Want a real challenge? Shuffle the samples randomly for each participant.",
+  "ONBOARDING_PAGE_3_SUBTITLE": "Don’t forget",
+  "ONBOARDING_PAGE_3_TEXT_1": "All your cupping results are saved directly in the app — nothing gets lost.",
+  "ONBOARDING_PAGE_3_TEXT_2": "Soon, you’ll be able to see them right in the sample cards to always remember which coffee you liked best."
+}
