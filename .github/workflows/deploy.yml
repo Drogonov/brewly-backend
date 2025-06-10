@@ -3,46 +3,25 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - master
+      - master  # Specify the branch you want to trigger the deploy
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup SSH key for VPS
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_KEY }}
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Pull & Deploy on VPS
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            set -eux
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_KEY }}
 
-            # Ensure Docker Compose plugin is installed (for `docker compose`)
-            if ! docker compose version >/dev/null 2>&1; then
-              apt-get update
-              apt-get install -y docker-compose-plugin
-            fi
-
-            # Navigate to your application directory
-            cd /root/brewly-backend
-
-            # Trust GitHub's host key to avoid verification failures
-            mkdir -p ~/.ssh
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-
-            # Use the SSH URL for pulling code
-            git remote set-url origin git@github.com:Drogonov/brewly-backend.git
-
-            # Fetch the latest commits and reset
-            git fetch --all
-            git reset --hard origin/master
-
-            # Deploy with Docker Compose plugin
-            docker compose \
-              -f docker-compose-prod.yaml \
-              --env-file config/production.env \
-              up --build -d
-          EOF
+    - name: Run SSH Commands
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          cd ${{ secrets.REPO_PATH }}
+          git pull origin master
+          docker-compose -f docker-compose-prod.yaml --env-file ${{ secrets.ENV_FILE_PATH }} up --build -d
+        EOF
