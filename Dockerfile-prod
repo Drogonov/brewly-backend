@@ -46,4 +46,7 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 # Ensure the database is ready before starting the application
-CMD ["sh", "-c", \ "dockerize -wait tcp://${DB_HOST}:${DB_PORT} -timeout 60s && npm run prisma:generate-prod && npm run prisma:db-migrate-prod && npm run start:prod"]
+CMD ["sh", "-c", "dockerize -wait tcp://${DB_HOST}:${DB_PORT} -timeout 60s \
+  && npm run prisma:generate-prod \
+  && npm run prisma:db-migrate-prod \
+  && npm run start:prod"]
