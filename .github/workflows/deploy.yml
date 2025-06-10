@@ -10,23 +10,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Setup SSH key
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Pull & Restart on VPS
+      - name: Pull & Deploy on VPS
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            set -eux
+
+            # Navigate to your application directory
             cd /root/brewly-backend
 
-            # ensure origin is SSH
+            # Trust GitHub's host key to avoid verification failures
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+            # Ensure Git remote uses SSH
             git remote set-url origin git@github.com:${{ github.repository }}.git
 
-            # fetch & reset to master
+            # Fetch the latest changes and reset to master
             git fetch --all
             git reset --hard origin/master
 
-            # use the newer Docker CLI plugin to avoid distutils errors
-            docker compose -f docker-compose-prod.yaml --env-file ${{ secrets.ENV_FILE_PATH }} up --build -d
+            # Deploy using the Docker Compose plugin (no Python dependency)
+            docker compose \
+              -f docker-compose-prod.yaml \
+              --env-file /root/brewly-backend/config/production.env \
+              up --build -d
           EOF
