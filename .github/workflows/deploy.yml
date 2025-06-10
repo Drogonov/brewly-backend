@@ -8,36 +8,39 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      GH_PAT: ${{ secrets.GH_PAT }}        # 1️⃣ expose your PAT to the step
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup SSH key
+      - name: Setup SSH key for VPS
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
       - name: Pull & Deploy on VPS
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no \
+              ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF   # ← no quotes around EOF
             set -eux
 
-            # Navigate to your application directory
             cd /root/brewly-backend
 
-            # Trust GitHub's host key to avoid verification failures
+            # trust GitHub host key
             mkdir -p ~/.ssh
             ssh-keyscan github.com >> ~/.ssh/known_hosts
 
-            # Ensure Git remote uses SSH
-            git remote set-url origin git@github.com:Drogonov/brewly-backend.git
+            # 2️⃣ switch remote to HTTPS+token
+            git remote set-url origin \
+              https://$GH_PAT@github.com/Drogonov/brewly-backend.git
 
-            # Fetch the latest changes and reset to master
+            # fetch and reset
             git fetch --all
             git reset --hard origin/master
 
-            # Deploy using the Docker Compose plugin (no Python dependency)
+            # 3️⃣ deploy with docker compose
             docker compose \
               -f docker-compose-prod.yaml \
               --env-file /root/brewly-backend/config/production.env \
