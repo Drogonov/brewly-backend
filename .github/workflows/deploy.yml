@@ -31,7 +31,7 @@ jobs:
             ssh-keyscan github.com >> ~/.ssh/known_hosts
 
             # Ensure Git remote uses SSH
-            git remote set-url origin git@github.com:${{ github.repository }}.git
+            git remote set-url origin git@github.com:Drogonov/brewly-backend.git
 
             # Fetch the latest changes and reset to master
             git fetch --all
