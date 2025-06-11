@@ -23,5 +23,5 @@ jobs:
         ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
           cd ${{ secrets.REPO_PATH }}
           git pull origin master
-          docker-compose -f docker-compose-prod.yaml --env-file ${{ secrets.ENV_FILE_PATH }} up --build -d
+          docker compose -f docker-compose-prod.yaml --env-file ${{ secrets.ENV_FILE_PATH }} up --build -d
         EOF
