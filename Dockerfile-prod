@@ -1,6 +1,10 @@
 FROM node:20-alpine as builder
 WORKDIR /usr/src/app
 
+ARG NODE_ENV=production
+ARG DB_PORT=5432
+ARG DB_HOST=db-prod
+
 # Install Nest CLI globally
 RUN npm install -g @nestjs/cli
 
