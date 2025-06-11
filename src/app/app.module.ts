@@ -15,7 +15,6 @@ import { SamplesModule } from 'src/app.modules/samples/samples.module';
 import { UserModule } from 'src/app.modules/user/user.module';
 import { CompanyModule } from 'src/app.modules/company/company.module';
 import { CuppingModule } from 'src/app.modules/cupping/cupping.module';
-import { TestingModule } from '@nestjs/testing';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { ErrorHandlingModule } from 'src/app.common/error-handling/error-handling.module';
@@ -87,7 +86,6 @@ import path, { join } from 'path';
     OnboardingModule,
     SamplesModule,
     SettingsModule,
-    TestingModule,
     UserModule,
   ],
   controllers: [],

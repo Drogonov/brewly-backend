@@ -42,7 +42,6 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^8.0.7",
-    "@nestjs/testing": "^10.0.0",
     "@prisma/client": "^5.22.0",
     "@sendgrid/mail": "^8.1.4",
     "argon2": "^0.41.1",
