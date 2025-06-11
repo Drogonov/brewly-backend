@@ -5,11 +5,11 @@ import { CompanyService } from './company.service';
 import { MappingService } from 'src/app.common/services/mapping.service';
 import { CompanyRulesService } from 'src/app.common/services/company-rules.service';
 import { ErrorHandlingModule } from 'src/app.common/error-handling/error-handling.module';
-import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
+import { LocalizationModule } from 'src/app.common/localization/localization-strings.module';
 
 @Module({
-  imports: [ErrorHandlingModule],
+  imports: [LocalizationModule, ErrorHandlingModule],
   controllers: [CompanyController],
-  providers: [CompanyService, ConfigurationService, MappingService, CompanyRulesService, LocalizationStringsService],
+  providers: [CompanyService, ConfigurationService, MappingService, CompanyRulesService],
 })
 export class CompanyModule {}

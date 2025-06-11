@@ -1,10 +1,11 @@
 import { Global, Module } from '@nestjs/common';
-import { LocalizationStringsService } from '../localization/localization-strings.service';
 import { ErrorHandlingService } from './error-handling.service';
+import { LocalizationModule } from '../localization/localization-strings.module';
 
 @Global()
 @Module({
-  providers: [ErrorHandlingService, LocalizationStringsService],
+  imports: [LocalizationModule],
+  providers: [ErrorHandlingService],
   exports: [ErrorHandlingService],
 })
 export class ErrorHandlingModule {}

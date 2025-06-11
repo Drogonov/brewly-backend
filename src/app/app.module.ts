@@ -16,12 +16,15 @@ import { UserModule } from 'src/app.modules/user/user.module';
 import { CompanyModule } from 'src/app.modules/company/company.module';
 import { CuppingModule } from 'src/app.modules/cupping/cupping.module';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
-import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
 import { ErrorHandlingModule } from 'src/app.common/error-handling/error-handling.module';
 import { LoggerModule, PinoLogger } from 'nestjs-pino';
 import { LoggingInterceptor } from 'src/interceptor';
 import { createWriteStream, existsSync, mkdirSync } from 'fs';
 import path, { join } from 'path';
+import { LocalizationModule } from 'src/app.common/localization/localization-strings.module';
+import { APP_PIPE } from '@nestjs/core';
+import { CustomValidationPipe } from 'src/app.common/error-handling/custom-validation-pipe';
+import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 
 @Module({
   imports: [
@@ -74,12 +77,15 @@ import path, { join } from 'path';
           }),
       },
     }),
+    // core modules
     ConfigurationModule,
+    LocalizationModule,
     ErrorHandlingModule,
     JWTSessionModule,
     MailModule,
     PrismaModule,
-    // app.modules
+
+    // feature modules
     AuthModule,
     CompanyModule,
     CuppingModule,
@@ -90,11 +96,7 @@ import path, { join } from 'path';
   ],
   controllers: [],
   providers: [
-    {
-      provide: APP_GUARD,
-      useClass: AtGuard,
-    },
-    LocalizationStringsService,
+    { provide: APP_GUARD, useClass: AtGuard },
     PinoLogger,
     LoggingInterceptor,
   ],

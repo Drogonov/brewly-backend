@@ -1,10 +1,11 @@
 import { Global, Module } from '@nestjs/common';
 import { LocalizationOptionsListService } from './localization-options-list.service';
-import { LocalizationStringsService } from '../localization-strings.service';
+import { LocalizationModule } from '../localization-strings.module';
 
 @Global()
 @Module({
-  providers: [LocalizationOptionsListService, LocalizationStringsService],
+  imports: [LocalizationModule],
+  providers: [LocalizationOptionsListService],
   exports: [LocalizationOptionsListService],
 })
-export class LocalizationOptionsListModule {}
+export class LocalizationOptionsListModule { }

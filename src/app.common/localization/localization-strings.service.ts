@@ -19,7 +19,7 @@ import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 import { JwtPayload } from '../services/jwt-session/types';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class LocalizationStringsService {
 
   constructor(

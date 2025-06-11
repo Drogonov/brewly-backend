@@ -26,10 +26,8 @@ async function bootstrap() {
     );
     
     app.useGlobalInterceptors(app.get(LoggingInterceptor));
+    app.useGlobalPipes(new CustomValidationPipe(errorHandlingService));
   }
-
-  // Use our custom validation pipe globally.
-  app.useGlobalPipes(new CustomValidationPipe(errorHandlingService));
 
   if (configService.getAppPort() !== 'production') {
     const config = new DocumentBuilder()

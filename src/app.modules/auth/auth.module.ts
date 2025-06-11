@@ -8,9 +8,10 @@ import { JWTSessionService } from 'src/app.common/services//jwt-session/jwt-sess
 import { MailService } from 'src/app.common/services/mail/mail.service';
 import { ErrorHandlingModule } from 'src/app.common/error-handling/error-handling.module';
 import { PinoLogger } from 'nestjs-pino';
+import { LocalizationModule } from 'src/app.common/localization/localization-strings.module';
 
 @Module({
-  imports: [JwtModule.register({}), ErrorHandlingModule],
+  imports: [JwtModule.register({}), LocalizationModule, ErrorHandlingModule],
   controllers: [AuthController],
   providers: [AuthService, AtStrategy, RtStrategy, ConfigurationService, JWTSessionService, MailService, PinoLogger],
 })
