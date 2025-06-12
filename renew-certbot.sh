@@ -1,3 +1,4 @@
+# renew-certbot.sh
 #!/bin/sh
 set -e
 
@@ -6,9 +7,10 @@ docker compose run --rm certbot certonly \
   --noninteractive \
   --agree-tos \
   --email tech@brewly.ru \
-  --webroot -w ./certbot/www \
+  --webroot \
+    --webroot-path=/var/www/certbot \
   --force-renewal \
+  --deploy-hook "nginx -s reload" \
   -d brewly.ru
 
-# 2) Reload nginx so it picks up any new cert
-docker compose exec nginx nginx -s reload
+# (no separate reload needed; deploy-hook covers it)

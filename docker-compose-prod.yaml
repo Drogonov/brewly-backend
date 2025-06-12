@@ -1,3 +1,4 @@
+# docker-compose-prod.yaml
 version: '3.8'
 
 services:
@@ -110,6 +111,11 @@ services:
       - ./certbot/conf:/etc/letsencrypt
     networks:
       - brewly_net
+    command: >
+      certbot renew
+      --webroot
+      --webroot-path=/var/www/certbot
+      --deploy-hook "nginx -s reload"
 
 networks:
   brewly_net:
