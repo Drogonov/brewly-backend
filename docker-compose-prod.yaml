@@ -104,7 +104,7 @@ services:
 
 
   certbot:
-    image: certbot/certbot:2.0.0
+    image: certbot/certbot:latest
     container_name: certbot
     restart: unless-stopped
     volumes:
