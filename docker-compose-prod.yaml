@@ -2,8 +2,6 @@ version: '3.8'
 
 services:
   app:
-    networks:
-      - brewly_net
     container_name: app
     build:
       context: .
@@ -93,7 +91,7 @@ services:
       - app
 
 networks:
-  brewly_net:
+  default:
     driver: bridge
     enable_ipv6: true
     ipam:
