@@ -1,7 +1,6 @@
 #!/bin/sh
 CERT_DIR=/etc/letsencrypt/live/brewly.ru
 
-# Если сертификатов нет — создаём самоподписанный:
 if [ ! -f "$CERT_DIR/fullchain.pem" ] || [ ! -f "$CERT_DIR/privkey.pem" ]; then
   echo "[entrypoint] Generating dummy SSL certificate for brewly.ru …"
   mkdir -p "$CERT_DIR"
@@ -9,5 +8,5 @@ if [ ! -f "$CERT_DIR/fullchain.pem" ] || [ ! -f "$CERT_DIR/privkey.pem" ]; then
     -subj "/CN=brewly.ru" \
     -newkey rsa:2048 \
     -keyout "$CERT_DIR/privkey.pem" \
-    -out "$CERT_DIR/fullchain.pem"
+    -out    "$CERT_DIR/fullchain.pem"
 fi
