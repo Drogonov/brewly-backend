@@ -18,6 +18,8 @@ services:
       - db-prod
     volumes:
       - app-logs:/var/log/brewly-backend
+    networks:
+      - brewly_net
 
   db-prod:
     image: postgres:13
@@ -26,6 +28,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    networks:
+      - brewly_net
 
   pgadmin:
     image: dpage/pgadmin4
@@ -37,6 +41,8 @@ services:
       - "${SERVER_PGADMIN_PORT}:${PGADMIN_PORT}"
     depends_on:
       - db-prod
+    networks:
+      - brewly_net
 
   loki:
     image: grafana/loki:2.7.3
@@ -46,6 +52,8 @@ services:
       - ./loki-config.yaml:/etc/loki/loki-config.yaml:ro
       - loki-data:/loki
     restart: unless-stopped
+    networks:
+      - brewly_net
 
   promtail:
     image: grafana/promtail:2.7.3
@@ -56,6 +64,8 @@ services:
       - ./promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
       - promtail-positions:/tmp
     command: -config.file=/etc/promtail/promtail-config.yaml
+    networks:
+      - brewly_net
 
   grafana:
     image: grafana/grafana:9.2.0
@@ -68,12 +78,14 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
     restart: unless-stopped
+    networks:
+      - brewly_net
 
   nginx:
     build:
       context: ./nginx
       dockerfile: Dockerfile
-    image: brewly-backend-nginx
+    image: brewly-backend-nginx:latest
     container_name: nginx
     restart: unless-stopped
     ports:
@@ -85,13 +97,13 @@ services:
     environment:
       - NGINX_IPV6_ADDRESS=${NGINX_IPV6_ADDRESS}
     networks:
-      default:
+      brewly_net:
         ipv6_address: ${NGINX_IPV6_ADDRESS}
     depends_on:
       - app
 
 networks:
-  default:
+  brewly_net:
     driver: bridge
     enable_ipv6: true
     ipam:
