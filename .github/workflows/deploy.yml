@@ -26,4 +26,4 @@ jobs:
           docker compose -f docker-compose-prod.yaml --env-file ${{ secrets.ENV_FILE_PATH }} up --build -d
         EOF
 
-        docker compose -f docker-compose-prod.yaml --env-file /root/brewly-backend/config/production.env up --build -d
+# docker compose -f docker-compose-prod.yaml --env-file /root/brewly-backend/config/production.env up --build -d
