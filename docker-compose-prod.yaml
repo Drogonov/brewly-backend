@@ -102,6 +102,40 @@ services:
     depends_on:
       - app
 
+  certbot:
+    image: certbot/certbot:2.0.0
+    container_name: certbot
+    restart: unless-stopped
+    entrypoint: >
+      sh -c "
+        # …same as before…
+      "
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    networks:
+      - brewly_net
+    depends_on:
+      - nginx
+    entrypoint: >
+      sh -c "
+        # on first start, fetch/renew any expiring certs;
+        # afterward sleep & loop forever
+        certbot certonly \
+          --noninteractive \
+          --agree-tos \
+          --email tech@brewly.ru \
+          --webroot -w /var/www/certbot \
+          --force-renewal \
+          -d brewly.ru \
+        && nginx -s reload \
+        && while true; do
+             sleep 12h;
+             certbot renew --webroot -w /var/www/certbot \
+               && nginx -s reload;
+           done
+      "
+
 networks:
   brewly_net:
     driver: bridge
