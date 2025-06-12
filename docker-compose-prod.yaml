@@ -94,7 +94,6 @@ services:
     volumes:
       - ./certbot/www:/var/www/certbot:rw
       - ./certbot/conf:/etc/letsencrypt:rw
-      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - NGINX_IPV6_ADDRESS=${NGINX_IPV6_ADDRESS}
     networks:
@@ -103,49 +102,14 @@ services:
     depends_on:
       - app
 
-
   certbot:
     image: certbot/certbot:latest
-    container_name: certbot
-    restart: unless-stopped
+    profiles: ["renew"]
     volumes:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
-      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - brewly_net
-    depends_on:
-      - nginx
-
-    entrypoint:
-      - "/bin/sh"
-      - "-euxo"
-      - "pipefail"
-      # -e  → exit on any error
-      # -u  → error on undefined var
-      # -x  → print each command (helpful when debugging)
-      # -o pipefail → catch failures in pipes
-    command: |
-      # install docker CLI
-      apt-get update
-      apt-get install -y docker.io
-
-      # immediate cert obtain/renew
-      certbot certonly \
-        --webroot -w /var/www/certbot \
-        --noninteractive \
-        --agree-tos \
-        --email tech@brewly.ru \
-        --force-renewal \
-        -d brewly.ru \
-      && docker exec nginx nginx -s reload
-
-      # now loop every 12 h
-      while true; do
-        sleep 12h
-        certbot renew --webroot -w /var/www/certbot \
-          && docker exec nginx nginx -s reload
-      done
 
 networks:
   brewly_net:
