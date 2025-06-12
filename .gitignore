@@ -63,3 +63,7 @@ src/app/homepage/pages/**/*.html
 # Except specific ones
 !example.env
 !prisma-studio.env
+
+# Let’s Encrypt / Certbot
+certbot/conf/
+certbot/www/
