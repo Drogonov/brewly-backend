@@ -94,6 +94,7 @@ services:
     volumes:
       - ./certbot/www:/var/www/certbot:rw
       - ./certbot/conf:/etc/letsencrypt:rw
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - NGINX_IPV6_ADDRESS=${NGINX_IPV6_ADDRESS}
     networks:
@@ -107,7 +108,6 @@ services:
     image: certbot/certbot:latest
     container_name: certbot
     restart: unless-stopped
-    # Mount both the certbot volumes *and* the Docker socket:
     volumes:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
@@ -119,10 +119,16 @@ services:
 
     entrypoint:
       - "/bin/sh"
-      - "-c"
+      - "-euxo"
+      - "pipefail"
+      # -e  → exit on any error
+      # -u  → error on undefined var
+      # -x  → print each command (helpful when debugging)
+      # -o pipefail → catch failures in pipes
     command: |
       # install docker CLI
-      apk add --no-cache docker-cli
+      apt-get update
+      apt-get install -y docker.io
 
       # immediate cert obtain/renew
       certbot certonly \
@@ -134,7 +140,7 @@ services:
         -d brewly.ru \
       && docker exec nginx nginx -s reload
 
-      # now loop every 12 h
+      # now loop every 12 h
       while true; do
         sleep 12h
         certbot renew --webroot -w /var/www/certbot \

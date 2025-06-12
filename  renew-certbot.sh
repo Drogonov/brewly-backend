@@ -1,5 +1,5 @@
 #!/bin/sh
-# renew-certbot.sh
+set -e
 
 # 1) Obtain or renew any certificates
 docker compose run --rm certbot certonly \
