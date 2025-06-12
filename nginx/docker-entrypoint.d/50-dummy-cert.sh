@@ -1,5 +1,3 @@
-mkdir -p nginx/docker-entrypoint.d
-cat > nginx/docker-entrypoint.d/50-dummy-cert.sh << 'EOF'
 #!/bin/sh
 CERT_DIR=/etc/letsencrypt/live/brewly.ru
 
@@ -13,6 +11,3 @@ if [ ! -f "$CERT_DIR/fullchain.pem" ] || [ ! -f "$CERT_DIR/privkey.pem" ]; then
     -keyout "$CERT_DIR/privkey.pem" \
     -out "$CERT_DIR/fullchain.pem"
 fi
-EOF
-
-chmod +x nginx/docker-entrypoint.d/50-dummy-cert.sh
