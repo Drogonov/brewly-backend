@@ -114,22 +114,28 @@ services:
       - brewly_net
     depends_on:
       - nginx
-    entrypoint: >
-      sh -c "
+    entrypoint:
+      - "/bin/sh"
+      - "-c"
+    command:
+      - |
+        # first obtain or force-renew your cert
         certbot certonly \
+          --webroot -w /var/www/certbot \
           --noninteractive \
           --agree-tos \
           --email tech@brewly.ru \
-          --webroot -w /var/www/certbot \
           --force-renewal \
-          -d brewly.ru \
-        && nginx -s reload \
-        && while true; do
-             sleep 12h;
-             certbot renew --webroot -w /var/www/certbot \
-               && nginx -s reload;
-           done
-      "
+          -d brewly.ru
+
+        # (you’ll need to reload nginx from outside this container;
+        #  see note below)
+
+        # now loop and renew every 12 hours
+        while true; do
+          sleep 12h
+          certbot renew --webroot -w /var/www/certbot
+        done
 
 networks:
   brewly_net:
