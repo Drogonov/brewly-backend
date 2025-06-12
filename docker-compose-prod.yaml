@@ -82,6 +82,11 @@ services:
     volumes:
       - ./certbot/www:/var/www/certbot:rw
       - ./certbot/conf:/etc/letsencrypt:rw
+    environment:
+      - NGINX_IPV6_ADDRESS=${NGINX_IPV6_ADDRESS}
+    networks:
+      default:
+        ipv6_address: ${NGINX_IPV6_ADDRESS}
     depends_on:
       - app
 
