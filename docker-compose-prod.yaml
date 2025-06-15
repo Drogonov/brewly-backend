@@ -109,7 +109,7 @@ networks:
     enable_ipv6: true
     ipam:
       config:
-        - subnet: 2001:1bb0:e000:1e::/64
+        - subnet: fd00:dead:beef::/64
 
 volumes:
   db-prod:
