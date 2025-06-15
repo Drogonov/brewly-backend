@@ -38,4 +38,4 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 # Utilizing a shell to dynamically check the DB hostname and port
-CMD ["sh", "-c", "npm run prisma:generate-dev & npm run prisma:db-push-dev & dockerize -wait tcp://${DB_HOST}:${DB_PORT} -timeout 60m npm run start:dev"]
+CMD ["sh", "-c", "npm run prisma:generate-dev && npm run prisma:db-push-dev && dockerize -wait tcp://${DB_HOST}:${DB_PORT} -timeout 60m npm run start:dev"]

@@ -1,4 +1,4 @@
-import { Module, Scope } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { configuration } from 'src/app.common/services/config/configuration';
 import { validationSchema } from 'src/app.common/services/config/validationSchema';
@@ -15,7 +15,7 @@ import { SamplesModule } from 'src/app.modules/samples/samples.module';
 import { UserModule } from 'src/app.modules/user/user.module';
 import { CompanyModule } from 'src/app.modules/company/company.module';
 import { CuppingModule } from 'src/app.modules/cupping/cupping.module';
-import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
+import { AcceptLanguageResolver, I18nJsonLoader, I18nModule, QueryResolver } from 'nestjs-i18n';
 import { ErrorHandlingModule } from 'src/app.common/error-handling/error-handling.module';
 import { LoggerModule, PinoLogger } from 'nestjs-pino';
 import { LoggingInterceptor } from 'src/interceptor';
@@ -24,7 +24,7 @@ import path, { join } from 'path';
 import { LocalizationModule } from 'src/app.common/localization/localization-strings.module';
 import { APP_PIPE } from '@nestjs/core';
 import { CustomValidationPipe } from 'src/app.common/error-handling/custom-validation-pipe';
-import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
+import { LanguageUserBodyResolver } from 'src/app.common/localization/language-user-body.resolver';
 
 @Module({
   imports: [
@@ -36,6 +36,8 @@ import { ErrorHandlingService } from 'src/app.common/error-handling/error-handli
       validationSchema,
     }),
     I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loader: I18nJsonLoader,
       loaderOptions: {
         path:
           process.env.NODE_ENV === 'production'
@@ -43,8 +45,8 @@ import { ErrorHandlingService } from 'src/app.common/error-handling/error-handli
             : join(process.cwd(), 'src', 'i18n'),
         watch: false,
       },
-      fallbackLanguage: 'en',
       resolvers: [
+        LanguageUserBodyResolver,
         { use: QueryResolver, options: ['lang'] },
         AcceptLanguageResolver,
       ],
@@ -96,7 +98,9 @@ import { ErrorHandlingService } from 'src/app.common/error-handling/error-handli
   ],
   controllers: [],
   providers: [
+    LanguageUserBodyResolver,
     { provide: APP_GUARD, useClass: AtGuard },
+    { provide: APP_PIPE, useClass: CustomValidationPipe },
     PinoLogger,
     LoggingInterceptor,
   ],

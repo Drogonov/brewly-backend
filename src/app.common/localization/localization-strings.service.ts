@@ -1,5 +1,5 @@
 import { Injectable, Scope, Inject } from '@nestjs/common';
-import { I18nService } from 'nestjs-i18n';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 import {
   AuthKeys,
   BusinessErrorKeys,
@@ -28,13 +28,8 @@ export class LocalizationStringsService {
     private readonly request: Request & { user?: JwtPayload },
   ) { }
 
-  private get currentLang(): Languages {
-    const langRaw = this.request.user?.language;
-    if (langRaw && (Object.values (Languages) as string[]).includes(langRaw)) {
-      return langRaw as Languages;
-    } else {
-      return Languages.en;
-    }
+  private get currentLang(): string {
+    return I18nContext.current()?.lang ?? 'en';
   }
 
   async getAuthText(key: AuthKeys, args?: Record<string, any>): Promise<string> {

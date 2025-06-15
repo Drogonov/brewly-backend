@@ -1,11 +1,9 @@
-import { ArgumentMetadata, BadRequestException, Injectable, ValidationPipe, ValidationError } from '@nestjs/common';
+import { Injectable, ValidationPipe, ValidationError, Scope } from '@nestjs/common';
 import { BusinessErrorException, ErrorFieldCodeType, ErrorFieldCode, ValidationErrorCodes } from './exceptions';
-import { LocalizationStringsService } from 'src/app.common/localization/localization-strings.service';
-import { AuthKeys } from '../localization/generated/auth.enum';
 import { ErrorHandlingService } from './error-handling.service';
 import { BusinessErrorKeys, ValidationErrorKeys } from '../localization/generated';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class CustomValidationPipe extends ValidationPipe {
   constructor(
     private readonly errorHandlingService: ErrorHandlingService

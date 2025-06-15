@@ -26,7 +26,6 @@ async function bootstrap() {
     );
     
     app.useGlobalInterceptors(app.get(LoggingInterceptor));
-    app.useGlobalPipes(new CustomValidationPipe(errorHandlingService));
   }
 
   if (configService.getAppPort() !== 'production') {

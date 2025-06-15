@@ -190,7 +190,7 @@ export class AuthService {
         data: {
           otpHash: hashedOtp,
           isVerificated: false,
-          // otpExpiresAt: new Date(Date.now() + 10 * 60_000),
+          otpExpiresAt: new Date(Date.now() + 10 * 60_000),
         },
       });
 
