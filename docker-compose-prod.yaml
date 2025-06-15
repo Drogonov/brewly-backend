@@ -103,27 +103,13 @@ services:
     depends_on:
       - app
 
-  certbot:
-    image: certbot/certbot:latest
-    profiles: ["renew"]
-    volumes:
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
-    networks:
-      - brewly_net
-    command: >
-      certbot renew
-      --webroot
-      --webroot-path=/var/www/certbot
-      --deploy-hook "nginx -s reload"
-
 networks:
   brewly_net:
     driver: bridge
     enable_ipv6: true
     ipam:
       config:
-        - subnet: fd00:dead:beef::/64
+        - subnet: 2001:1bb0:e000:1e::ae/64
 
 volumes:
   db-prod:
