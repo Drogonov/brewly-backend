@@ -45,6 +45,10 @@ export class GetCuppingSampleTestDto implements IGetCuppingSampleTest {
     @ApiProperty({ description: 'Comment left by user' })
     commentUser?: string;
 
-    @ApiProperty({ description: 'Comments left by other users' })
+    @ApiPropertyOptional({
+        description: 'Comments left by other users',
+        type: String,
+        isArray: true,
+    })
     commentUsers?: string[];
 }
