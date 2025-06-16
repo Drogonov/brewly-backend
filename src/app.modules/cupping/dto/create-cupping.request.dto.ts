@@ -37,9 +37,9 @@ export class CreateCuppingRequestDto {
   @Type(() => Number)
   @ApiProperty({
     description: 'IDs of users to invite (optional)',
-    type: [Number],
-    isArray: true,
     example: [1, 3, 777],
+    type: () => Number,
+    isArray: true
   })
   chosenUserIds?: number[]
 }

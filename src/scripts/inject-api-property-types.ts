@@ -7,9 +7,7 @@ async function main() {
     tsConfigFilePath: path.resolve(__dirname, "../../tsconfig.json"),
   });
 
-  // grab all your dto files
   const files = project.addSourceFilesAtPaths("src/**/*.dto.ts");
-
   for (const sf of files) {
     let madeChange = false;
 
@@ -18,12 +16,11 @@ async function main() {
         const typeNode = prop.getTypeNode();
         if (!typeNode) continue;
 
-        // 1) figure out raw name & whether it's an array
+        // 1) detect raw type name & array-ness
         let rawName: string;
-        let isArray = false;
-
+        let declaredIsArray = false;
         if (typeNode.getKind() === SyntaxKind.ArrayType) {
-          isArray = true;
+          declaredIsArray = true;
           rawName = (typeNode as any).getElementTypeNode().getText();
         } else if (typeNode.getKind() === SyntaxKind.TypeReference) {
           rawName = typeNode.getText();
@@ -31,73 +28,88 @@ async function main() {
           continue;
         }
 
-        // 2) determine what kind of "type" to inject
-        let swaggerTypeExpr: string | null = null;
-        let className: string | null = null;
+        // 2) pick the right swagger‐decorator “type” target
+        let typeIdentifier: string | null = null;
+        let needsImportOf: string | null = null;
 
-        // a) nested DTO already
         if (rawName.endsWith("Dto")) {
-          swaggerTypeExpr = rawName;
-          className = rawName;
+          // already a DTO
+          typeIdentifier = rawName;
+          needsImportOf = rawName;
         }
-        // b) interface I*Response → XxxResponseDto
         else if (/^I.*Response$/.test(rawName)) {
-          className = rawName.slice(1) + "Dto";
-          swaggerTypeExpr = className;
+          // IThingResponse → ThingResponseDto
+          needsImportOf = rawName.slice(1) + "Dto";
+          typeIdentifier = needsImportOf;
         }
-        // c) primitive
         else {
-          const prim = rawName.toLowerCase();
-          if (prim === "number") {
-            swaggerTypeExpr = "Number";
-          } else if (prim === "string") {
-            swaggerTypeExpr = "String";
-          } else if (prim === "boolean") {
-            swaggerTypeExpr = "Boolean";
-          }
+          // plain primitives
+          const p = rawName.toLowerCase();
+          if (p === "number")      typeIdentifier = "Number";
+          else if (p === "string") typeIdentifier = "String";
+          else if (p === "boolean")typeIdentifier = "Boolean";
         }
-        if (!swaggerTypeExpr) continue;
+        if (!typeIdentifier) continue;
 
-        // 3) ensure import for class DTOs
-        if (className) {
-          const hasImport = sf.getImportDeclarations().some(impt =>
-            impt.getNamedImports().some(n => n.getName() === className)
+        // 3) ensure import if needed (for DTO classes)
+        if (needsImportOf) {
+          const already = sf.getImportDeclarations().some(impt =>
+            impt.getNamedImports().some(n => n.getName() === needsImportOf)
           );
-          if (!hasImport) {
-            const declSF = project.getSourceFiles().find(sf2 =>
-              sf2.getClass(className!)
+          if (!already) {
+            const decl = project.getSourceFiles().find(f2 =>
+              f2.getClass(needsImportOf!)
             );
-            if (!declSF) {
-              console.warn(`⚠️ Missing DTO class ${className} for ${sf.getBaseName()}:${prop.getName()}`);
-              continue;
+            if (decl) {
+              let rel = path.relative(
+                path.dirname(sf.getFilePath()),
+                decl.getFilePath()
+              ).replace(/\\/g, "/").replace(/\.ts$/, "");
+              if (!rel.startsWith(".")) rel = "./" + rel;
+              sf.addImportDeclaration({
+                namedImports: [needsImportOf],
+                moduleSpecifier: rel,
+              });
+            } else {
+              console.warn(
+                `⚠️ DTO class ${needsImportOf} not found for ${sf.getBaseName()}:${prop.getName()}`
+              );
             }
-            let rel = path.relative(
-              path.dirname(sf.getFilePath()),
-              declSF.getFilePath()
-            ).replace(/\\/g, "/").replace(/\.ts$/, "");
-            if (!rel.startsWith(".")) rel = "./" + rel;
-            sf.addImportDeclaration({
-              namedImports: [className],
-              moduleSpecifier: rel,
-            });
           }
         }
 
-        // 4) inject into @ApiProperty / @ApiPropertyOptional
+        // 4) adjust @ApiProperty / Optional
         for (const deco of prop.getDecorators()) {
           if (!/ApiProperty(Optional)?/.test(deco.getName())) continue;
           const [arg] = deco.getArguments();
           const obj = arg?.asKind(SyntaxKind.ObjectLiteralExpression);
-          if (!obj || obj.getProperty("type")) continue;
+          if (!obj) continue;
 
-          // add `type: () => XxxDto` or `() => Number`
+          // see if there's an existing "type" prop
+          const existing = obj.getProperty("type");
+          if (existing) {
+            // if it’s an ArrayLiteral ([FooDto]), remove it so we can re-add correctly
+            const init = (existing as any).getInitializer?.();
+            if (
+              init?.getKind() === SyntaxKind.ArrayLiteralExpression
+              && init.getChildren().length === 3 /* [ X ] */
+            ) {
+              existing.remove();
+            } else {
+              // has a correct scalar type already → skip
+              continue;
+            }
+          }
+
+          // now inject our correct shape:
+          //  type: () => Xxx or Number/String/Boolean
           obj.addPropertyAssignment({
             name: "type",
-            initializer: `() => ${swaggerTypeExpr}`,
+            initializer: `() => ${typeIdentifier}`,
           });
 
-          // if array, also `isArray: true`
-          if (isArray) {
+          // array if either declared or originally array-literal
+          if (declaredIsArray || !!existing) {
             obj.addPropertyAssignment({
               name: "isArray",
               initializer: "true",
@@ -111,11 +123,11 @@ async function main() {
 
     if (madeChange) {
       await sf.save();
-      console.log(`✔︎ Updated ${sf.getBaseName()}`);
+      console.log(`✔︎ Patched ${sf.getBaseName()}`);
     }
   }
 
-  console.log("✅ All done!");
+  console.log("All done!");
 }
 
 main().catch(err => {

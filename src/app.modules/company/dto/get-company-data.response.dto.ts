@@ -21,7 +21,10 @@ export class GetCompanyDataResponseDto implements IGetCompanyDataResponse {
     @Type(() => CompanyInfoResponseDto)
     companyInfo: ICompanyInfoResponse;
 
-    @ApiPropertyOptional({ description: "Team of the company with all roles", type: [UserInfoResponseDto] })
+    @ApiPropertyOptional({ description: "Team of the company with all roles",
+        type: () => UserInfoResponseDto,
+        isArray: true
+    })
     @IsOptional()
     @Type(() => UserInfoResponseDto)
     team?: IUserInfoResponse[];

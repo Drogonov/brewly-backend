@@ -51,7 +51,11 @@ export class SampleTypeInfoResponseDto implements ISampleTypeInfoResponse {
   @ApiPropertyOptional({ example: 7, type: Number })
   grindType?: number;
 
-  @ApiPropertyOptional({ example: ['Decaf', 'Microlot'], type: [String] })
+  @ApiPropertyOptional({
+    example: ['Decaf', 'Microlot'],
+    type: () => String,
+    isArray: true
+  })
   labels?: string[];
 
   @ApiPropertyOptional({ description: 'Description of packs in warehouse', example: '1 pack 250g', type: String })

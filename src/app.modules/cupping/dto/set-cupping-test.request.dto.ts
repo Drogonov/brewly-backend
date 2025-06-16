@@ -98,7 +98,10 @@ export class SetCuppingTestRequestDto {
   })
   @ValidateNested({ each: true })
   @Type(() => PropertyDto)
-  @ApiProperty({ type: [PropertyDto] })
+  @ApiProperty({
+    type: () => PropertyDto,
+    isArray: true
+  })
   properties: PropertyDto[];
 }
 
