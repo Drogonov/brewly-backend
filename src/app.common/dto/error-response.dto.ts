@@ -40,7 +40,9 @@ export class ErrorResponseDto implements IErrorResponse {
         example: [{
             fieldCode: "email",
             errorMsg: "This email isnt email please check it"
-        }]
+        }],
+        type: () => ErrorFieldResponseDto,
+        isArray: true
     })
     @Type(() => ErrorFieldResponseDto)
     errorFields?: ErrorFieldResponseDto[];

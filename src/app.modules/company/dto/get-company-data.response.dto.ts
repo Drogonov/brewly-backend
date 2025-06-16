@@ -13,7 +13,10 @@ export interface IGetCompanyDataResponse {
 // MARK: - Swagger class
 
 export class GetCompanyDataResponseDto implements IGetCompanyDataResponse {
-    @ApiProperty({ description: "Info about Company" })
+    @ApiProperty({
+        description: "Info about Company",
+        type: () => CompanyInfoResponseDto
+    })
     @IsNotEmpty()
     @Type(() => CompanyInfoResponseDto)
     companyInfo: ICompanyInfoResponse;

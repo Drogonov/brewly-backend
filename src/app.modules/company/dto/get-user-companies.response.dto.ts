@@ -13,7 +13,10 @@ export interface IGetUserCompaniesResponse {
 // MARK: - Swagger class
 
 export class GetUserCompaniesResponseDto implements IGetUserCompaniesResponse {
-    @ApiProperty({ description: 'Current company of the user' })
+    @ApiProperty({
+        description: 'Current company of the user',
+        type: () => CompanyInfoResponseDto
+    })
     @IsNotEmpty()
     @Type(() => CompanyInfoResponseDto)
     currentCompany: ICompanyInfoResponse;
