@@ -16,17 +16,17 @@ export interface IUserInfoResponse {
 // MARK: - Swagger class
 
 export class UserInfoResponseDto implements IUserInfoResponse {
-    @ApiProperty({ example: 666 })
+    @ApiProperty({ example: 666, type: Number })
     @Type(() => Number)
     userId: number;
 
-    @ApiProperty({ example: 'John Wayne' })
+    @ApiProperty({ example: 'John Wayne', type: String })
     userName: string;
 
-    @ApiPropertyOptional({ description: 'Image of the user', example: "https://picsum.photos/seed/picsum/200/300" })
+    @ApiPropertyOptional({ description: 'Image of the user', example: 'https://picsum.photos/200/300', type: String })
     userImageURL?: string;
 
-    @ApiProperty({ example: 'test@test.com' })
+    @ApiProperty({ example: 'test@test.com', type: String })
     email: string;
 
     @ApiPropertyOptional({
@@ -34,9 +34,10 @@ export class UserInfoResponseDto implements IUserInfoResponse {
         example: UserRole.barista,
         enum: UserRole,
         required: false,
+        type: String,
     })
     role?: UserRole;
 
-    @ApiPropertyOptional({ example: 'Some info about user' })
+    @ApiPropertyOptional({ example: 'Some info about user', type: String })
     about?: string;
 }

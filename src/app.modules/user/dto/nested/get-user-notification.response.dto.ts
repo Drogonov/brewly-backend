@@ -18,32 +18,36 @@ export interface IGetUserNotificationResponse {
 // MARK: - Swagger class
 
 export class GetUserNotificationResponseDto implements IGetUserNotificationResponse {
-    @ApiProperty({ example: 666 })
+    @ApiProperty({ example: 666, type: Number })
     notificationId: number;
 
-    // must be ISO8601
-    @ApiProperty({ example: "2025-01-01T00:00:00Z" })
+    @ApiProperty({
+        example: '2025-01-01T00:00:00Z',
+        description: 'ISO8601 date',
+        type: String,
+    })
     notificationDate: string;
 
-    @ApiProperty({ example: "trash" })
+    @ApiProperty({ example: 'trash', type: String })
     iconName: string;
 
-    @ApiProperty({ example: "Заявка на добавление в друзья пользователя Some User" })
+    @ApiProperty({ example: '… description …', type: String })
     description: string;
 
     @ApiProperty({
         description: 'Type of the notification',
         enum: UserNotificationType,
         example: UserNotificationType.friendRequest,
+        type: String,
     })
     type: UserNotificationType;
 
-    @ApiProperty({ example: 666 })
+    @ApiProperty({ example: 666, type: Number })
     senderId: number;
 
-    @ApiProperty({ example: 666 })
+    @ApiPropertyOptional({ example: 666, type: Number })
     cuppingId?: number;
 
-    @ApiProperty({ example: false })
+    @ApiProperty({ example: false, type: Boolean })
     wasLoadedByReceiver: boolean;
 }

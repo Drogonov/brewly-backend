@@ -21,7 +21,7 @@ export class GetUserCardResponseDto implements IGetUserCardResponse {
     @Type(() => UserInfoResponseDto)
     userInfo: IUserInfoResponse;
 
-    @ApiProperty({ example: 'Friend, teammate' })
+    @ApiProperty({ example: 'Friend, teammate', type: String })
     status: string;
 
     @ApiProperty({
@@ -30,5 +30,5 @@ export class GetUserCardResponseDto implements IGetUserCardResponse {
         isArray: true,
     })
     @Type(() => GetUserActionDto)
-    actions: IGetUserAction[]
+    actions: IGetUserAction[];
 }
