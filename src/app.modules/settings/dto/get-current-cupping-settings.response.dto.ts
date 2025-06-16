@@ -11,9 +11,17 @@ export interface IGetCurrentCuppingSettingsResponse {
 // MARK: - Swagger class
 
 export class GetCurrentCuppingSettingsResponseDto implements IGetCurrentCuppingSettingsResponse {
-  @ApiPropertyOptional({ description: 'Number to add to the cupping name', example: "123" })
+  @ApiProperty({
+    description: 'Number to add to the cupping name',
+    example: '123',
+    type: String,
+  })
   cuppingNumber: string;
 
-  @ApiProperty({ description: 'Amount of users invited by default', example: 6 })
+  @ApiPropertyOptional({
+    description: 'Amount of users invited by default',
+    example: 6,
+    type: Number,
+  })
   chosenUsersAmount?: number;
 }

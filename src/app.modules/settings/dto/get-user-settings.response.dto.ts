@@ -18,30 +18,52 @@ export interface IGetUserSettingsResponse {
 // MARK: - Swagger class
 
 export class GetUserSettingsResponseDto implements IGetUserSettingsResponse {
-    @ApiProperty({ description: 'User Information' })
+    @ApiProperty({
+        description: 'User Information',
+        type: () => UserInfoResponseDto,
+    })
     @Type(() => UserInfoResponseDto)
     userInfo: UserInfoResponseDto;
 
-    @ApiProperty({ description: 'Company Information' })
+    @ApiProperty({
+        description: 'Company Information',
+        type: () => CompanyInfoResponseDto,
+    })
     @Type(() => CompanyInfoResponseDto)
     companyInfo: CompanyInfoResponseDto;
 
-    @ApiPropertyOptional({ description: 'Friends Info' })
+    @ApiPropertyOptional({
+        description: 'Friends Info',
+        type: () => IconTextNumberInfoBlockResponseDto,
+    })
     @Type(() => IconTextNumberInfoBlockResponseDto)
     friendsBlock?: IconTextNumberInfoBlockResponseDto;
 
-    @ApiPropertyOptional({ description: 'Teammates Info' })
+    @ApiPropertyOptional({
+        description: 'Teammates Info',
+        type: () => IconTextNumberInfoBlockResponseDto,
+    })
     @Type(() => IconTextNumberInfoBlockResponseDto)
     teamMatesBlock?: IconTextNumberInfoBlockResponseDto;
 
-    @ApiPropertyOptional({ description: 'Sent requests' })
+    @ApiPropertyOptional({
+        description: 'Sent requests',
+        type: () => IconTextNumberInfoBlockResponseDto,
+    })
     @Type(() => IconTextNumberInfoBlockResponseDto)
     requestsBlock?: IconTextNumberInfoBlockResponseDto;
 
-    @ApiPropertyOptional({ description: 'Onboarding Info' })
+    @ApiPropertyOptional({
+        description: 'Onboarding Info',
+        type: () => IconTextNumberInfoBlockResponseDto,
+    })
     @Type(() => IconTextNumberInfoBlockResponseDto)
     onboardingBlock?: IconTextNumberInfoBlockResponseDto;
 
-    @ApiPropertyOptional({ description: 'True if user have new notifications' })
+    @ApiProperty({
+        description: 'True if user have new notifications',
+        example: true,
+        type: Boolean,
+    })
     isUserHaveNewNotifications: boolean;
 }
