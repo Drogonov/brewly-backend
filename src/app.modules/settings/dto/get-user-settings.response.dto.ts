@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IIconTextNumberInfoBlockResponse } from './nested/icon-text-number-info-block.response.dto';
-import { ICompanyInfoResponse, IUserInfoResponse } from 'src/app.common/dto';
+import { IconTextNumberInfoBlockResponseDto, IIconTextNumberInfoBlockResponse } from './nested/icon-text-number-info-block.response.dto';
+import { CompanyInfoResponseDto, ICompanyInfoResponse, IUserInfoResponse, UserInfoResponseDto } from 'src/app.common/dto';
+import { Type } from 'class-transformer';
 
 // MARK: - Project implementation
 
@@ -18,22 +19,28 @@ export interface IGetUserSettingsResponse {
 
 export class GetUserSettingsResponseDto implements IGetUserSettingsResponse {
     @ApiProperty({ description: 'User Information' })
-    userInfo: IUserInfoResponse;
+    @Type(() => UserInfoResponseDto)
+    userInfo: UserInfoResponseDto;
 
     @ApiProperty({ description: 'Company Information' })
-    companyInfo: ICompanyInfoResponse;
+    @Type(() => CompanyInfoResponseDto)
+    companyInfo: CompanyInfoResponseDto;
 
     @ApiPropertyOptional({ description: 'Friends Info' })
-    friendsBlock?: IIconTextNumberInfoBlockResponse;
+    @Type(() => IconTextNumberInfoBlockResponseDto)
+    friendsBlock?: IconTextNumberInfoBlockResponseDto;
 
     @ApiPropertyOptional({ description: 'Teammates Info' })
-    teamMatesBlock?: IIconTextNumberInfoBlockResponse;
+    @Type(() => IconTextNumberInfoBlockResponseDto)
+    teamMatesBlock?: IconTextNumberInfoBlockResponseDto;
 
-    @ApiPropertyOptional({ description: 'Sended requests' })
-    requestsBlock?: IIconTextNumberInfoBlockResponse;
+    @ApiPropertyOptional({ description: 'Sent requests' })
+    @Type(() => IconTextNumberInfoBlockResponseDto)
+    requestsBlock?: IconTextNumberInfoBlockResponseDto;
 
     @ApiPropertyOptional({ description: 'Onboarding Info' })
-    onboardingBlock?: IIconTextNumberInfoBlockResponse;
+    @Type(() => IconTextNumberInfoBlockResponseDto)
+    onboardingBlock?: IconTextNumberInfoBlockResponseDto;
 
     @ApiPropertyOptional({ description: 'True if user have new notifications' })
     isUserHaveNewNotifications: boolean;

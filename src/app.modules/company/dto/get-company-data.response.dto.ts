@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { IsNotEmpty, IsOptional } from 'class-validator';
-import { ICompanyInfoResponse, IUserInfoResponse } from 'src/app.common/dto';
+import { CompanyInfoResponseDto, ICompanyInfoResponse, IUserInfoResponse, UserInfoResponseDto } from 'src/app.common/dto';
 
 // MARK: - Project implementation
 
@@ -14,9 +15,11 @@ export interface IGetCompanyDataResponse {
 export class GetCompanyDataResponseDto implements IGetCompanyDataResponse {
     @ApiProperty({ description: "Info about Company" })
     @IsNotEmpty()
+    @Type(() => CompanyInfoResponseDto)
     companyInfo: ICompanyInfoResponse;
 
-    @ApiProperty({ description: "Team of the company with all roles" })
+    @ApiPropertyOptional({ description: "Team of the company with all roles", type: [UserInfoResponseDto] })
     @IsOptional()
+    @Type(() => UserInfoResponseDto)
     team?: IUserInfoResponse[];
 }

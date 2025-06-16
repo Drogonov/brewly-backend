@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { ErrorFieldCode, ErrorFieldCodeType } from 'src/app.common/error-handling/exceptions';
 
 // MARK: - Project implementation
@@ -31,7 +32,7 @@ export class ErrorResponseDto implements IErrorResponse {
     @ApiProperty({
         description: 'Machine-readable sub-code for this business error',
         example: 'INCORRECT_EMAIL',
-      })
+    })
     errorSubCode: string;
 
     @ApiPropertyOptional({
@@ -41,5 +42,6 @@ export class ErrorResponseDto implements IErrorResponse {
             errorMsg: "This email isnt email please check it"
         }]
     })
+    @Type(() => ErrorFieldResponseDto)
     errorFields?: ErrorFieldResponseDto[];
 }

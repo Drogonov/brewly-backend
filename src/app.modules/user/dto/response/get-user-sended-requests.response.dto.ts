@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IGetUserSendedRequestResponse } from '../nested/get-user-sended-request.response.dto';
+import { GetUserSendedRequestResponseDto, IGetUserSendedRequestResponse } from '../nested/get-user-sended-request.response.dto';
+import { Type } from 'class-transformer';
 
 // MARK: - Project implementation
 
@@ -10,6 +11,11 @@ export interface IGetUserSendedRequestsResponse {
 // MARK: - Swagger class
 
 export class GetUserSendedRequestsResponseDto implements IGetUserSendedRequestsResponse {
-    @ApiProperty({ description: "Array of requests" })
+    @ApiProperty({
+        description: 'Array of requests',
+        type: () => GetUserSendedRequestResponseDto,
+        isArray: true,
+    })
+    @Type(() => GetUserSendedRequestResponseDto)
     requests: IGetUserSendedRequestResponse[];
 }

@@ -31,7 +31,11 @@ export class GetUserNotificationResponseDto implements IGetUserNotificationRespo
     @ApiProperty({ example: "Заявка на добавление в друзья пользователя Some User" })
     description: string;
 
-    @ApiPropertyOptional({ example: UserNotificationType.friendRequest })
+    @ApiProperty({
+        description: 'Type of the notification',
+        enum: UserNotificationType,
+        example: UserNotificationType.friendRequest,
+    })
     type: UserNotificationType;
 
     @ApiProperty({ example: 666 })
