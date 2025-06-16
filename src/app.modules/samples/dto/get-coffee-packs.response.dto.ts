@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ICoffeePackInfoResponse } from './nested/coffee-pack-info.response.dto';
+import { CoffeePackInfoResponseDto, ICoffeePackInfoResponse } from './nested/coffee-pack-info.response.dto';
 import { ISampleTypeInfoResponse } from './nested/sample-type-info.response.dto';
+import { Type } from 'class-transformer';
 
 // MARK: - Project implementation
 
@@ -11,6 +12,11 @@ export interface IGetCoffeePacksInfoResponse {
 // MARK: - Swagger class
 
 export class GetCoffeePacksInfoResponseDto implements IGetCoffeePacksInfoResponse {
-    @ApiProperty({ example: 'Current coffee packs of that sample type' })
+    @ApiProperty({
+        description: 'Current coffee packs of that sample type',
+        type: () => CoffeePackInfoResponseDto,
+        isArray: true,
+    })
+    @Type(() => CoffeePackInfoResponseDto)
     coffeePacksInfo: ICoffeePackInfoResponse[];
 }
