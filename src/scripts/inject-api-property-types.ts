@@ -7,7 +7,7 @@ async function main() {
     tsConfigFilePath: path.resolve(__dirname, "../../tsconfig.json"),
   });
 
-  // pick up all your dto files
+  // grab all your dto files
   const files = project.addSourceFilesAtPaths("src/**/*.dto.ts");
 
   for (const sf of files) {
@@ -18,73 +18,92 @@ async function main() {
         const typeNode = prop.getTypeNode();
         if (!typeNode) continue;
 
-        // figure out if it's an array or a single TypeReference
-        let rawTypeName: string;
+        // 1) figure out raw name & whether it's an array
+        let rawName: string;
         let isArray = false;
+
         if (typeNode.getKind() === SyntaxKind.ArrayType) {
           isArray = true;
-          rawTypeName = (typeNode as any).getElementTypeNode().getText();
+          rawName = (typeNode as any).getElementTypeNode().getText();
         } else if (typeNode.getKind() === SyntaxKind.TypeReference) {
-          rawTypeName = typeNode.getText();
+          rawName = typeNode.getText();
         } else {
           continue;
         }
 
-        // determine which DTO class this should map to:
-        // - if it's already a *Dto, just use that
-        // - else if it's an I*Response, strip the leading I and add Dto
-        let className: string;
-        if (rawTypeName.endsWith("Dto")) {
-          className = rawTypeName;
-        } else if (/^I.*Response$/.test(rawTypeName)) {
-          className = rawTypeName.slice(1) + "Dto";
-        } else {
-          continue;
-        }
+        // 2) determine what kind of "type" to inject
+        let swaggerTypeExpr: string | null = null;
+        let className: string | null = null;
 
-        // ensure we have an import for that DTO
-        const hasImport = sf.getImportDeclarations().some(impt =>
-          impt.getNamedImports().some(n => n.getName() === className)
-        );
-        if (!hasImport) {
-          const declSF = project.getSourceFiles().find(sf2 =>
-            sf2.getClass(className)
-          );
-          if (!declSF) {
-            console.warn(
-              `⚠️ Couldn’t locate class ${className}, skipping ${sf.getBaseName()}:${prop.getName()}`
-            );
-            continue;
+        // a) nested DTO already
+        if (rawName.endsWith("Dto")) {
+          swaggerTypeExpr = rawName;
+          className = rawName;
+        }
+        // b) interface I*Response → XxxResponseDto
+        else if (/^I.*Response$/.test(rawName)) {
+          className = rawName.slice(1) + "Dto";
+          swaggerTypeExpr = className;
+        }
+        // c) primitive
+        else {
+          const prim = rawName.toLowerCase();
+          if (prim === "number") {
+            swaggerTypeExpr = "Number";
+          } else if (prim === "string") {
+            swaggerTypeExpr = "String";
+          } else if (prim === "boolean") {
+            swaggerTypeExpr = "Boolean";
           }
-          let rel = path
-            .relative(path.dirname(sf.getFilePath()), declSF.getFilePath())
-            .replace(/\\/g, "/")
-            .replace(/\.ts$/, "");
-          if (!rel.startsWith(".")) rel = "./" + rel;
-          sf.addImportDeclaration({
-            namedImports: [className],
-            moduleSpecifier: rel,
-          });
+        }
+        if (!swaggerTypeExpr) continue;
+
+        // 3) ensure import for class DTOs
+        if (className) {
+          const hasImport = sf.getImportDeclarations().some(impt =>
+            impt.getNamedImports().some(n => n.getName() === className)
+          );
+          if (!hasImport) {
+            const declSF = project.getSourceFiles().find(sf2 =>
+              sf2.getClass(className!)
+            );
+            if (!declSF) {
+              console.warn(`⚠️ Missing DTO class ${className} for ${sf.getBaseName()}:${prop.getName()}`);
+              continue;
+            }
+            let rel = path.relative(
+              path.dirname(sf.getFilePath()),
+              declSF.getFilePath()
+            ).replace(/\\/g, "/").replace(/\.ts$/, "");
+            if (!rel.startsWith(".")) rel = "./" + rel;
+            sf.addImportDeclaration({
+              namedImports: [className],
+              moduleSpecifier: rel,
+            });
+          }
         }
 
-        // now inject into the @ApiProperty / @ApiPropertyOptional decorator
+        // 4) inject into @ApiProperty / @ApiPropertyOptional
         for (const deco of prop.getDecorators()) {
           if (!/ApiProperty(Optional)?/.test(deco.getName())) continue;
           const [arg] = deco.getArguments();
           const obj = arg?.asKind(SyntaxKind.ObjectLiteralExpression);
           if (!obj || obj.getProperty("type")) continue;
 
-          // add `type: () => ClassDto`
+          // add `type: () => XxxDto` or `() => Number`
           obj.addPropertyAssignment({
             name: "type",
-            initializer: `() => ${className}`,
+            initializer: `() => ${swaggerTypeExpr}`,
           });
+
+          // if array, also `isArray: true`
           if (isArray) {
             obj.addPropertyAssignment({
               name: "isArray",
               initializer: "true",
             });
           }
+
           madeChange = true;
         }
       }
@@ -92,11 +111,11 @@ async function main() {
 
     if (madeChange) {
       await sf.save();
-      console.log(`✔︎ Patched ${sf.getBaseName()}`);
+      console.log(`✔︎ Updated ${sf.getBaseName()}`);
     }
   }
 
-  console.log("All done!");
+  console.log("✅ All done!");
 }
 
 main().catch(err => {
