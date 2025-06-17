@@ -4,6 +4,12 @@
 
 ---
 
+[![Build Status](https://github.com/Drogonov/brewly-backend/actions/workflows/deploy.yml/badge.svg)](https://github.com/Drogonov/brewly-backend/actions)
+[![Coverage Status](https://img.shields.io/codecov/c/github/Drogonov/brewly-backend)](https://codecov.io/gh/Drogonov/brewly-backend)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+---
+
 ## 🔗 Project Ecosystem
 
 This project is one part of the **Brewly** ecosystem:
@@ -55,6 +61,51 @@ brewly-backend
       |
       |-- GitHub Action --> brewly-swagger (Swagger JSON repo)
 ```
+
+---
+
+---
+
+## 🚀 Prerequisites
+
+- **Node.js** v16+
+- **Docker** & **Docker Compose** v2+
+- **Git**
+- (Optional) **PostgreSQL** if running locally outside Docker
+
+## 🔑 Environment Variables
+
+check out the example file to check all project variables
+```
+config/example.env
+```
+
+## 🔨 Getting Started
+
+1. Clone the repo:
+   ```bash
+   git clone git@github.com:Drogonov/brewly-backend.git
+   cd brewly-backend
+   ```
+2. Copy & edit environment variables:
+   ```bash
+   cp config/example.env config/development.env
+   nano config/development.env
+   ```
+3. Install dependencies (for local development):
+   ```bash
+   npm install
+   ```
+4. Start with Docker:
+   ```bash
+   npm run docker:compose-dev
+   ```
+5. Or start locally (requires a running Postgres instance):
+   ```bash
+   npm run start:dev
+   ```
+
+> For Docker-specific build & push instructions, see [README.Docker.md](README.Docker.md).
 
 ---
 
@@ -119,6 +170,23 @@ npm run docker:compose-dev  # includes app and DB
 > Check docker-compose-dev.yaml for `app` service — it may be commented out.
 
 ---
+
+## 🧪 Testing & Quality
+
+- **Unit tests:** `npm test`
+- **E2E tests:** `npm run test:e2e`
+- **Coverage report:** `npm run test:cov`
+- **Lint & format:** `npm run lint` / `npm run format`
+
+---
+
+## 📜 API Documentation
+
+Swagger UI is available once the server is running at:
+
+```
+http://localhost:${SERVER_PORT}/api
+```
 
 ## 🚀 Production Deployment
 
@@ -213,6 +281,12 @@ On every `master` push:
 - JSON is committed to [brewly-swagger](https://github.com/Drogonov/brewly-swagger)
 
 Use it with tools like Mockoon.
+
+---
+
+## 📝 Contributing
+
+Contributions, issues, and feature requests are welcome! Please open a GitHub issue or submit a pull request.
 
 ---
 
