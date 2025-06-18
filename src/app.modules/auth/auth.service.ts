@@ -32,7 +32,7 @@ export class AuthService {
     private configService: ConfigurationService,
     private errorHandlingService: ErrorHandlingService,
     private readonly logger: PinoLogger,
-  ) { 
+  ) {
     this.logger.setContext(AuthService.name);
   }
 
@@ -312,9 +312,10 @@ export class AuthService {
    * Sends the OTP email. In dev, skip the actual mail‐send.
    */
   private async sendOtp(email: string, otp: string): Promise<void> {
-    if (this.configService.getEnv() !== 'development') {
-      await this.mailService.sendOtpEmail(email, otp);
-    }
+    // if (this.configService.getEnv() !== 'development') {
+    //   await this.mailService.sendOtpEmail(email, otp);
+    // }
+    await this.mailService.sendOtpEmail(email, otp);
   }
 
   /**
@@ -322,11 +323,12 @@ export class AuthService {
    */
   private async generateOtp(): Promise<{ otp: string; hashedOtp: string }> {
     let otp: string;
-    if (this.configService.getEnv() === 'development') {
-      otp = this.configService.getOtpDevCode();
-    } else {
-      otp = Math.floor(100000 + Math.random() * 900000).toString();
-    }
+    // if (this.configService.getEnv() === 'development') {
+    //   otp = this.configService.getOtpDevCode();
+    // } else {
+    //   otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // }
+    otp = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedOtp = await argon.hash(otp);
     return { otp, hashedOtp };
   }

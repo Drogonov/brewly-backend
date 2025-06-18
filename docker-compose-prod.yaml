@@ -25,6 +25,8 @@ services:
   db-prod:
     image: postgres:13
     container_name: db-prod
+    ports:
+      - "${POSTGRES_DB_PORT}:${SERVER_DB_PORT}"
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
