@@ -1,109 +1,63 @@
 ---
-
-- name: Installing Nginx server 
-  hosts: all
-  gather_facts: true
-  gather_subset: [all, virtual]
-  no_log: false
-  vars:
-    server: "{{ inventory_hostname }}"
-    email: "root@rooted.onion"
-    certificate_path: "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
-
+- name: Install & configure Nginx + SSL
+  hosts: backend_servers
+  become: true
   vars_files:
     - vars/common.yml
 
-  tasks:
-
-    - name: Installing nginx and certbot
-      ansible.builtin.apt:
-        pkg:
-        - nginx
-        - certbot
-        state: present
+  pre_tasks:
+    - name: Update apt cache
+      apt:
         update_cache: true
 
-    - name: Check if there are any certificates at all
-      ansible.builtin.stat:
-        path: "{{ certificate_path }}"
-      register: cert_state
+  tasks:
+    - name: Ensure nginx & certbot packages are installed
+      apt:
+        name:
+          - nginx
+          - certbot
+          - python3-certbot-nginx
+        state: latest
 
-    - name: Establishing the fact of absence or presence of certificates
-      ansible.builtin.set_fact:
-        is_ssl: "{{ cert_state.stat.exists }}"
-
-    - name: Base nginx config
-      ansible.builtin.template:
+    - name: Render main nginx.conf
+      template:
         src: "{{ base_conf }}"
-        dest: /etc/nginx/
+        dest: /etc/nginx/nginx.conf
+      notify: Reload nginx
 
-    - name: Installing nginx configs
-      ansible.builtin.template:
-        # src: files/{{ server }}/nginx/sites-available/sitename.conf
+    - name: Render site conf into sites-available
+      template:
         src: "{{ source }}"
-        dest: /etc/nginx/conf.d/default.conf
-        mode: '644'
+        dest: /etc/nginx/sites-available/{{ domain }}.conf
         owner: root
         group: root
-      vars:
-        is_ssl: "{{ is_ssl != '' }}"
+        mode: '0644'
+      notify: Reload nginx
 
-    - name: Forced restart of nginx
-      ansible.builtin.service:
-        name: nginx
-        state: restarted
+    - name: Enable site by symlinking to sites-enabled
+      file:
+        src: /etc/nginx/sites-available/{{ domain }}.conf
+        dest: /etc/nginx/sites-enabled/{{ domain }}.conf
+        state: link
+      notify: Reload nginx
 
-    - name: Creator
-      ansible.builtin.shell:
-        cmd: 'certbot certonly --email {{ email }} --agree-tos --non-interactive -d {{ domain }}'
-      register: certbot_output
-      notify:
-        - restart nginx
-      tags: molecule-notest
-      when: certificate_path
+    - name: Check for existing certificate
+      stat:
+        path: "{{ certificate_path }}"
+      register: cert
 
-    - name: certbot's output
-      ansible.builtin.debug:
-        var: certbot_output.results
-      tags: molecule-notest
-
-    - name: Redefine the variable is_ssl
-      ansible.builtin.set_fact:
-        is_ssl: true
-
-    - name: Redirect and 443 port
-      ansible.builtin.template:
-        src: "{{ source }}"
-        dest: /etc/nginx/sites-available/sitename.conf
-        mode: '644'
-        owner: root
-        group: root
-
-    - name: copying systemd daemons of certbot
-      ansible.builtin.copy:
-        src: daemons/certbot/
-        dest: /etc/systemd/system/
-        mode: '644'
-        owner: root
-        group: root
-        force: true
-
-    - name: launch its daemons
-      ansible.builtin.service:
-        name: certbot-semi-automatic
-        enabled: true
-        state: started
-
-    - name: launch certbot's timer
-      ansible.builtin.service:
-        name: certbot-semi-automatic.timer
-        enabled: true
-        state: started
-
-    - name: Restart nginx for the apllying configuration
-      ansible.builtin.service:
-        name: nginx
-        state: restarted
+    - name: Obtain Let's Encrypt certificate
+      command: >
+        certbot --nginx
+        --non-interactive
+        --agree-tos
+        --email {{ email }}
+        -d {{ domain }}
+      when: not cert.stat.exists
+      notify: Reload nginx
 
   handlers:
-    - import_tasks: handlers/main.yml
+    - name: Reload nginx
+      service:
+        name: nginx
+        state: reloaded
