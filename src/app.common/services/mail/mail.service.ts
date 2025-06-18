@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
 import * as Brevo from '@getbrevo/brevo';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { BusinessErrorKeys } from 'src/app.common/localization/generated';
@@ -20,19 +21,26 @@ export class MailService {
   constructor(
     private readonly config: ConfigurationService,
     private readonly errorHandlingService: ErrorHandlingService,
+    private readonly logger: PinoLogger,
   ) {
-    // Initialize Brevo transactional emails API
+    // Tag every log line with "MailService" as the context
+    this.logger.setContext(MailService.name);
+
     this.transactionalEmailsApi = new Brevo.TransactionalEmailsApi();
-    // Set API key for authentication
+
+    // Log (masked) API key at debug level
+    const apiKey = this.config.getEmailAPI();
+    this.logger.debug(
+      { apiKey: apiKey ? apiKey.replace(/.(?=.{4})/g, '*') : '<<missing>>' },
+      'Using Brevo API key'
+    );
+
     this.transactionalEmailsApi.setApiKey(
       Brevo.TransactionalEmailsApiApiKeys.apiKey,
-      this.config.getEmailAPI(),
+      apiKey,
     );
   }
 
-  /**
-   * Sends an OTP verification email upon account registration.
-   */
   async sendOtpEmail(email: string, otp: string): Promise<void> {
     const payload = this.makeOtpPayload(
       email,
@@ -42,18 +50,21 @@ export class MailService {
       otp,
     );
 
+    // Log full payload
+    this.logger.debug({ payload }, 'sendOtpEmail payload');
+
     try {
-      await this.transactionalEmailsApi.sendTransacEmail(payload);
+      const response = await this.transactionalEmailsApi.sendTransacEmail(payload);
+      this.logger.info({ response, to: email }, 'sendOtpEmail succeeded');
     } catch (error) {
+      // Log raw error for inspection
+      this.logger.error({ err: error, to: email }, 'sendOtpEmail failed');
       throw await this.errorHandlingService.getBusinessError(
         BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL,
       );
     }
   }
 
-  /**
-   * Sends an OTP email for updating the email address.
-   */
   async sendOtpToUpdateEmail(
     currentEmail: string,
     newEmail: string,
@@ -70,20 +81,25 @@ export class MailService {
       additionalInfo,
     );
 
+    this.logger.debug({ payload }, 'sendOtpToUpdateEmail payload');
+
     try {
-      await this.transactionalEmailsApi.sendTransacEmail(payload);
+      const response = await this.transactionalEmailsApi.sendTransacEmail(payload);
+      this.logger.info(
+        { response, from: currentEmail, newEmail },
+        'sendOtpToUpdateEmail succeeded'
+      );
     } catch (error) {
+      this.logger.error(
+        { err: error, from: currentEmail, newEmail },
+        'sendOtpToUpdateEmail failed'
+      );
       throw await this.errorHandlingService.getBusinessError(
         BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL,
       );
     }
   }
 
-  // MARK: - Helpers
-
-  /**
-   * DRY helper to construct a Brevo SendTransacEmail payload.
-   */
   private makeOtpPayload(
     recipientEmail: string,
     subject: string,
@@ -93,8 +109,16 @@ export class MailService {
     additionalInfo: string = '',
   ): Brevo.SendSmtpEmail {
     const htmlContent = this.buildHtmlTemplate({ header, message, otp, additionalInfo });
-    const textContent = `${header}\n\n${message}\n${additionalInfo ? additionalInfo + '\n' : ''
-      }Your Verification Code: ${otp}\nGitHub: ${MailServiceConst.followUsLink}`;
+    const textContent = [
+      header,
+      '',
+      message,
+      additionalInfo,
+      `Your Verification Code: ${otp}`,
+      `GitHub: ${MailServiceConst.followUsLink}`
+    ]
+      .filter(Boolean)
+      .join('\n');
 
     return {
       sender: MailServiceConst.fromEmail,
@@ -105,9 +129,6 @@ export class MailService {
     };
   }
 
-  /**
-   * Builds the HTML template for OTP emails.
-   */
   private buildHtmlTemplate({
     header,
     message,
