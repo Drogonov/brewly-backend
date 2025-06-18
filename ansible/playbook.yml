@@ -1,0 +1,109 @@
+---
+
+- name: Installing Nginx server 
+  hosts: all
+  gather_facts: true
+  gather_subset: [all, virtual]
+  no_log: false
+  vars:
+    server: "{{ inventory_hostname }}"
+    email: "root@rooted.onion"
+    certificate_path: "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
+
+  vars_files:
+    - vars/common.yml
+
+  tasks:
+
+    - name: Installing nginx and certbot
+      ansible.builtin.apt:
+        pkg:
+        - nginx
+        - certbot
+        state: present
+        update_cache: true
+
+    - name: Check if there are any certificates at all
+      ansible.builtin.stat:
+        path: "{{ certificate_path }}"
+      register: cert_state
+
+    - name: Establishing the fact of absence or presence of certificates
+      ansible.builtin.set_fact:
+        is_ssl: "{{ cert_state.stat.exists }}"
+
+    - name: Base nginx config
+      ansible.builtin.template:
+        src: "{{ base_conf }}"
+        dest: /etc/nginx/
+
+    - name: Installing nginx configs
+      ansible.builtin.template:
+        # src: files/{{ server }}/nginx/sites-available/sitename.conf
+        src: "{{ source }}"
+        dest: /etc/nginx/conf.d/default.conf
+        mode: '644'
+        owner: root
+        group: root
+      vars:
+        is_ssl: "{{ is_ssl != '' }}"
+
+    - name: Forced restart of nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+
+    - name: Creator
+      ansible.builtin.shell:
+        cmd: 'certbot certonly --email {{ email }} --agree-tos --non-interactive -d {{ domain }}'
+      register: certbot_output
+      notify:
+        - restart nginx
+      tags: molecule-notest
+      when: certificate_path
+
+    - name: certbot's output
+      ansible.builtin.debug:
+        var: certbot_output.results
+      tags: molecule-notest
+
+    - name: Redefine the variable is_ssl
+      ansible.builtin.set_fact:
+        is_ssl: true
+
+    - name: Redirect and 443 port
+      ansible.builtin.template:
+        src: "{{ source }}"
+        dest: /etc/nginx/sites-available/sitename.conf
+        mode: '644'
+        owner: root
+        group: root
+
+    - name: copying systemd daemons of certbot
+      ansible.builtin.copy:
+        src: daemons/certbot/
+        dest: /etc/systemd/system/
+        mode: '644'
+        owner: root
+        group: root
+        force: true
+
+    - name: launch its daemons
+      ansible.builtin.service:
+        name: certbot-semi-automatic
+        enabled: true
+        state: started
+
+    - name: launch certbot's timer
+      ansible.builtin.service:
+        name: certbot-semi-automatic.timer
+        enabled: true
+        state: started
+
+    - name: Restart nginx for the apllying configuration
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+
+  handlers:
+    - import_tasks: handlers/main.yml
