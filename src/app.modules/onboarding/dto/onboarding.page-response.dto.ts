@@ -16,6 +16,9 @@ export class OnboardingPageResponseDto implements IOnboardingPageResponse {
   @ApiProperty({ example: 'Subtitle for the text' })
   subtitle: string;
 
-  @ApiProperty({ example: 'Text options' })
+  @ApiProperty({ example: 'Text options',
+      type: () => String,
+      isArray: true
+})
   text: string[];
 }

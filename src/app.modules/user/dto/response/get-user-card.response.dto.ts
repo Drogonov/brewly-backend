@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IUserInfoResponse, UserRole } from 'src/app.common/dto';
-import { IGetUserAction } from '../nested/get-user-action.response.dto';
+import { IUserInfoResponse, UserInfoResponseDto, UserRole } from 'src/app.common/dto';
+import { GetUserActionDto, IGetUserAction } from '../nested/get-user-action.response.dto';
+import { Type } from 'class-transformer';
 
 // MARK: - Project implementation
 
@@ -13,12 +14,21 @@ export interface IGetUserCardResponse {
 // MARK: - Swagger class
 
 export class GetUserCardResponseDto implements IGetUserCardResponse {
-    @ApiProperty({ description: "Information about user" })
+    @ApiProperty({
+        description: 'Information about user',
+        type: () => UserInfoResponseDto,
+    })
+    @Type(() => UserInfoResponseDto)
     userInfo: IUserInfoResponse;
 
-    @ApiProperty({ example: 'Friend, teammate' })
+    @ApiProperty({ example: 'Friend, teammate', type: String })
     status: string;
 
-    @ApiProperty({ description: "user interaction actions" })
-    actions: IGetUserAction[]
+    @ApiProperty({
+        description: 'User interaction actions',
+        type: () => GetUserActionDto,
+        isArray: true,
+    })
+    @Type(() => GetUserActionDto)
+    actions: IGetUserAction[];
 }

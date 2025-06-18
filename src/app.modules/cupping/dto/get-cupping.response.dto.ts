@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CuppingStatus } from './types/cupping-status.enum';
 import { IOptionListResponse } from '.';
 import { IGetCuppingSampleTest } from './nested/get-cupping-sample-text.response.dto';
-import { IGetCuppingSampleResponse } from './nested/get-cupping-sample.response.dto';
+import { GetCuppingSampleResponseDto, IGetCuppingSampleResponse } from './nested/get-cupping-sample.response.dto';
 
 // MARK: - Project implementation
 
@@ -20,7 +20,11 @@ export interface IGetCuppingResponse {
 
 export class GetCuppingResponseDto implements IGetCuppingResponse {
 
-    @ApiProperty({ description: 'Status of the cupping, type is important for frontend' })
+    @ApiProperty({
+        description: 'Status of the cupping, type is important for frontend',
+        enum: CuppingStatus,
+        example: CuppingStatus.planned,
+    })
     status: CuppingStatus;
 
     @ApiProperty({ description: 'Name of the cupping' })
@@ -38,6 +42,10 @@ export class GetCuppingResponseDto implements IGetCuppingResponse {
     @ApiProperty({ description: 'Flag for chiefs of owners' })
     canUserEndCupiing: boolean;
 
-    @ApiProperty({ description: 'Array with samples Data' })
+    @ApiProperty({
+        description: 'Array with samples Data',
+        type: () => GetCuppingSampleResponseDto,
+        isArray: true,
+    })
     samples: IGetCuppingSampleResponse[];
 }

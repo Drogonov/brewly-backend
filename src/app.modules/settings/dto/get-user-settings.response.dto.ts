@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IIconTextNumberInfoBlockResponse } from './nested/icon-text-number-info-block.response.dto';
-import { ICompanyInfoResponse, IUserInfoResponse } from 'src/app.common/dto';
+import { IconTextNumberInfoBlockResponseDto, IIconTextNumberInfoBlockResponse } from './nested/icon-text-number-info-block.response.dto';
+import { CompanyInfoResponseDto, ICompanyInfoResponse, IUserInfoResponse, UserInfoResponseDto } from 'src/app.common/dto';
+import { Type } from 'class-transformer';
 
 // MARK: - Project implementation
 
@@ -17,24 +18,52 @@ export interface IGetUserSettingsResponse {
 // MARK: - Swagger class
 
 export class GetUserSettingsResponseDto implements IGetUserSettingsResponse {
-    @ApiProperty({ description: 'User Information' })
-    userInfo: IUserInfoResponse;
+    @ApiProperty({
+        description: 'User Information',
+        type: () => UserInfoResponseDto,
+    })
+    @Type(() => UserInfoResponseDto)
+    userInfo: UserInfoResponseDto;
 
-    @ApiProperty({ description: 'Company Information' })
-    companyInfo: ICompanyInfoResponse;
+    @ApiProperty({
+        description: 'Company Information',
+        type: () => CompanyInfoResponseDto,
+    })
+    @Type(() => CompanyInfoResponseDto)
+    companyInfo: CompanyInfoResponseDto;
 
-    @ApiPropertyOptional({ description: 'Friends Info' })
-    friendsBlock?: IIconTextNumberInfoBlockResponse;
+    @ApiPropertyOptional({
+        description: 'Friends Info',
+        type: () => IconTextNumberInfoBlockResponseDto,
+    })
+    @Type(() => IconTextNumberInfoBlockResponseDto)
+    friendsBlock?: IconTextNumberInfoBlockResponseDto;
 
-    @ApiPropertyOptional({ description: 'Teammates Info' })
-    teamMatesBlock?: IIconTextNumberInfoBlockResponse;
+    @ApiPropertyOptional({
+        description: 'Teammates Info',
+        type: () => IconTextNumberInfoBlockResponseDto,
+    })
+    @Type(() => IconTextNumberInfoBlockResponseDto)
+    teamMatesBlock?: IconTextNumberInfoBlockResponseDto;
 
-    @ApiPropertyOptional({ description: 'Sended requests' })
-    requestsBlock?: IIconTextNumberInfoBlockResponse;
+    @ApiPropertyOptional({
+        description: 'Sent requests',
+        type: () => IconTextNumberInfoBlockResponseDto,
+    })
+    @Type(() => IconTextNumberInfoBlockResponseDto)
+    requestsBlock?: IconTextNumberInfoBlockResponseDto;
 
-    @ApiPropertyOptional({ description: 'Onboarding Info' })
-    onboardingBlock?: IIconTextNumberInfoBlockResponse;
+    @ApiPropertyOptional({
+        description: 'Onboarding Info',
+        type: () => IconTextNumberInfoBlockResponseDto,
+    })
+    @Type(() => IconTextNumberInfoBlockResponseDto)
+    onboardingBlock?: IconTextNumberInfoBlockResponseDto;
 
-    @ApiPropertyOptional({ description: 'True if user have new notifications' })
+    @ApiProperty({
+        description: 'True if user have new notifications',
+        example: true,
+        type: Boolean,
+    })
     isUserHaveNewNotifications: boolean;
 }

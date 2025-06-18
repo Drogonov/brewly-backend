@@ -9,7 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "generate:localization": "node src/scripts/generate-localization-enums.js",
-    "generate": "npm run generate:localization",
+    "generate": "npm run generate:localization && npx ts-node src/scripts/inject-api-property-types.ts",
     "start:dev": "NODE_ENV=development nest start --watch",
     "restart:db": "npm run docker:compose-dev && npm run prisma:generate-dev && npm run prisma:db-push-dev && npm run prisma:studio-dev",
     "prisma:db-pull-dev": "dotenv -e ./config/development.env -- npx prisma db pull",
@@ -58,7 +58,8 @@
     "pino-pretty": "^13.0.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
-    "save": "^2.9.0"
+    "save": "^2.9.0",
+    "ts-morph": "^26.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.7",

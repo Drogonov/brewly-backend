@@ -1,3 +1,5 @@
+import { ApiProperty } from "@nestjs/swagger";
+
 export interface LocalizationOptionsList {
   type: LocalizationOptionListType;
   currentOption?: LocalizedOption;
@@ -6,6 +8,14 @@ export interface LocalizationOptionsList {
 
 export interface LocalizedOption {
   code: number;
+  value: string;
+}
+
+export class LocalizedOptionDto implements LocalizedOption {
+  @ApiProperty({ example: 0, description: 'Code of the option' })
+  code: number;
+
+  @ApiProperty({ example: 'Mono', description: 'Value of option for current language' })
   value: string;
 }
 

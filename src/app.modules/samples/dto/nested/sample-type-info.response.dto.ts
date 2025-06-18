@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IOptionListResponse } from 'src/app.common/dto/option-list.response.dto';
-import { ICoffeePackInfoResponse } from './coffee-pack-info.response.dto';
+import { IOptionListResponse, OptionListResponseDto } from 'src/app.common/dto/option-list.response.dto';
+import { CoffeePackInfoResponseDto, ICoffeePackInfoResponse } from './coffee-pack-info.response.dto';
+import { Type } from 'class-transformer';
 
 // MARK: - Project implementation
 
@@ -30,27 +31,44 @@ export class SampleTypeInfoResponseDto implements ISampleTypeInfoResponse {
   @ApiProperty({ example: 'Irgachiff 4' })
   sampleName: string;
 
-  @ApiPropertyOptional({ example: 'Blend' })
-  beanOrigin?: IOptionListResponse;
+  @ApiPropertyOptional({
+    description: 'Bean origin as an option list',
+    type: () => OptionListResponseDto,
+  })
+  @Type(() => OptionListResponseDto)
+  beanOrigin?: OptionListResponseDto;
 
-  @ApiPropertyOptional({ example: 'Washed' })
-  procecingMethod?: IOptionListResponse;
+  @ApiPropertyOptional({
+    description: 'Processing method as an option list',
+    type: () => OptionListResponseDto,
+  })
+  @Type(() => OptionListResponseDto)
+  procecingMethod?: OptionListResponseDto;
 
-  @ApiPropertyOptional({ example: 9 })
-  grindType?: number;
-
-  @ApiPropertyOptional({ example: ['Decaf', 'Microlot'] })
-  labels?: string[];
-
-  @ApiPropertyOptional({ description: "range from 1 to 5 of roast value", example: 1 })
+  @ApiPropertyOptional({ example: 9, type: Number })
   roastType?: number;
 
-  @ApiPropertyOptional({ description: "description about connected packs", example: "1 pack 250g" })
+  @ApiPropertyOptional({ example: 7, type: Number })
+  grindType?: number;
+
+  @ApiPropertyOptional({
+    example: ['Decaf', 'Microlot'],
+    type: () => String,
+    isArray: true
+  })
+  labels?: string[];
+
+  @ApiPropertyOptional({ description: 'Description of packs in warehouse', example: '1 pack 250g', type: String })
   packsInWarehouseDescription?: string;
 
-  @ApiPropertyOptional({ description: "array of connected pack ids", example: [1, 2, 666] })
-  connectedPacksInfo?: ICoffeePackInfoResponse[];
+  @ApiPropertyOptional({
+    description: 'Array of connected coffee pack info',
+    type: () => CoffeePackInfoResponseDto,
+    isArray: true,
+  })
+  @Type(() => CoffeePackInfoResponseDto)
+  connectedPacksInfo?: CoffeePackInfoResponseDto[];
 
-  @ApiProperty({ example: false })
+  @ApiProperty({ example: false, type: Boolean })
   isArchived: boolean;
 }

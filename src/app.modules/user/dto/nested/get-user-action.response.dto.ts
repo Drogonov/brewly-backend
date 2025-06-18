@@ -13,15 +13,19 @@ export interface IGetUserAction {
 // MARK: - Swagger class
 
 export class GetUserActionDto implements IGetUserAction {
-    @ApiProperty({ example: 'addToFriends' })
+    @ApiProperty({
+        description: 'Type of the user action',
+        enum: UserActionType,
+        example: UserActionType.acceptFriendRequest,
+    })
     type: UserActionType;
 
-    @ApiProperty({ example: 'Add to Friends' })
+    @ApiProperty({ example: 'Add to Friends', type: String })
     title: string;
 
-    @ApiProperty({ example: true })
+    @ApiProperty({ example: true, type: Boolean })
     isEnabled: boolean;
 
-    @ApiPropertyOptional({ example: false })
+    @ApiPropertyOptional({ example: false, type: Boolean })
     switchIsOn?: boolean;
 }

@@ -13,6 +13,10 @@ export interface IGetCuppingStatusResponse {
 // MARK: - Swagger class
 
 export class GetCuppingStatusResponseDto implements IGetCuppingStatusResponse {
-    @ApiProperty({ description: 'Status of the cupping, type is important for frontend' })
+    @ApiProperty({
+        description: 'Status of the cupping, type is important for frontend',
+        enum: CuppingStatus,
+        example: CuppingStatus.inProgress,
+    })
     status: CuppingStatus;
 }

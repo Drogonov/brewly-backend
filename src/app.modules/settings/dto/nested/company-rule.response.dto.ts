@@ -12,13 +12,25 @@ export interface ICompanyRuleResponse {
 // MARK: - Swagger class
 
 export class CompanyRuleResponseDto implements ICompanyRuleResponse {
-    @ApiProperty({ description: 'Rule id in the system', example: 123456789})
+    @ApiProperty({
+        description: 'Rule id in the system',
+        example: 123456789,
+        type: Number,
+    })
     @Type(() => Number)
     id: number;
 
-    @ApiProperty({ description: 'Name of the rule', example: "Can Chief make Chief" })
+    @ApiProperty({
+        description: 'Name of the rule',
+        example: 'Can Chief make Chief',
+        type: String,
+    })
     name: string;
 
-    @ApiProperty({ description: 'Value of the rule', example: true })
+    @ApiProperty({
+        description: 'Value of the rule',
+        example: true,
+        type: Boolean,
+    })
     value: boolean;
 }

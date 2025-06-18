@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IOptionListResponse } from 'src/app.common/dto/option-list.response.dto';
-import { IGetCuppingSampleTest } from './get-cupping-sample-text.response.dto';
+import { IOptionListResponse, OptionListResponseDto } from 'src/app.common/dto/option-list.response.dto';
+import { GetCuppingSampleTestDto, IGetCuppingSampleTest } from './get-cupping-sample-text.response.dto';
+import { Type } from 'class-transformer';
 
 // MARK: - Project implementation
 
@@ -41,10 +42,17 @@ export class GetCuppingSampleResponseDto implements IGetCuppingSampleResponse {
     @ApiProperty({ description: 'Name for the sample' })
     sampleName: string;
 
-    @ApiProperty({ description: 'Bean origin' })
+    @ApiPropertyOptional({
+        description: 'Bean origin as an option list',
+        type: () => OptionListResponseDto,
+    })
+    @Type(() => OptionListResponseDto)
     beanOrigin?: IOptionListResponse;
 
-    @ApiProperty({ description: 'Procecing method for coffee' })
+    @ApiPropertyOptional({
+        description: 'Procecing method for coffee',
+        type: () => OptionListResponseDto,
+    })
     procecingMethod?: IOptionListResponse;
 
     @ApiProperty({ description: 'Roast type value' })
@@ -71,6 +79,10 @@ export class GetCuppingSampleResponseDto implements IGetCuppingSampleResponse {
     @ApiProperty({ description: 'Average score of the pack' })
     averageScore?: number;
 
-    @ApiProperty({ description: 'Test result of the pack' })
+    @ApiPropertyOptional({
+        description: 'Test result entries for this pack',
+        type: () => GetCuppingSampleTestDto,
+        isArray: true,
+    })
     test?: IGetCuppingSampleTest[];
 }

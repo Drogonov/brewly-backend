@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsArray, ValidateNested, ArrayMinSize, IsOptional, IsIn, IsInt, Min, Max, IsString, MinLength, MaxLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { TestType } from 'src/app.modules/cupping/dto/types/test-type.enum';
 import { ValidationErrorKeys } from 'src/app.common/localization/generated';
@@ -11,7 +11,7 @@ class PropertyDto {
   @IsIn(Object.values(TestType), {
     context: { validationErrorKey: ValidationErrorKeys.TEST_PROPERTY_TYPE_INVALID },
   })
-  @ApiProperty({ enum: TestType })
+  @ApiProperty({ enum: TestType, description: 'Which property is being rated' })
   testPropertyType: TestType;
 
   @IsNotEmpty({
@@ -26,7 +26,7 @@ class PropertyDto {
   @Max(5, {
     context: { validationErrorKey: ValidationErrorKeys.INTENSITY_OUT_OF_RANGE },
   })
-  @ApiProperty({ example: 5 })
+  @ApiProperty({ example: 5, description: 'Intensity rating' })
   @Type(() => Number)
   intensity: number;
 
@@ -42,7 +42,7 @@ class PropertyDto {
   @Max(5, {
     context: { validationErrorKey: ValidationErrorKeys.QUALITY_OUT_OF_RANGE },
   })
-  @ApiProperty({ example: 4 })
+  @ApiProperty({ example: 5, description: 'Quality rating' })
   @Type(() => Number)
   quality: number;
 
@@ -56,7 +56,10 @@ class PropertyDto {
   @MaxLength(250, {
     context: { validationErrorKey: ValidationErrorKeys.COMMENT_TOO_LONG },
   })
-  @ApiProperty({ example: 'Nice aromas' })
+  @ApiPropertyOptional({
+    example: 'Nice aromas',
+    description: 'Optional comment by user',
+  })
   comment?: string;
 }
 
@@ -95,7 +98,10 @@ export class SetCuppingTestRequestDto {
   })
   @ValidateNested({ each: true })
   @Type(() => PropertyDto)
-  @ApiProperty({ type: [PropertyDto] })
+  @ApiProperty({
+    type: () => PropertyDto,
+    isArray: true
+  })
   properties: PropertyDto[];
 }
 
@@ -108,6 +114,10 @@ export class SetCuppingTestsRequestDto {
   })
   @ValidateNested({ each: true })
   @Type(() => SetCuppingTestRequestDto)
-  @ApiProperty({ type: [SetCuppingTestRequestDto] })
+  @ApiProperty({
+    type: () => SetCuppingTestRequestDto,
+    isArray: true,
+    description: 'One or more individual cupping test entries',
+  })
   tests: SetCuppingTestRequestDto[];
 }

@@ -10,6 +10,10 @@ export interface IOnboardingResponse {
 // MARK: - Swagger class
 
 export class OnboardingResponseDto implements IOnboardingResponse {
-  @ApiProperty({ description: 'Страницы из которых состоит Онбоардинг', type: [OnboardingPageResponseDto] })
+  @ApiProperty({ 
+    description: 'Страницы из которых состоит Онбоардинг', 
+    type: OnboardingPageResponseDto,
+    isArray: true
+   })
   pages: OnboardingPageResponseDto[];
 }

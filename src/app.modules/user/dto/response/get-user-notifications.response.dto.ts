@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IGetUserNotificationResponse } from '../nested/get-user-notification.response.dto';
+import { GetUserNotificationResponseDto, IGetUserNotificationResponse } from '../nested/get-user-notification.response.dto';
+import { Type } from 'class-transformer';
 
 // MARK: - Project implementation
 
@@ -10,6 +11,11 @@ export interface IGetUserNotificationsResponse {
 // MARK: - Swagger class
 
 export class GetUserNotificationsResponseDto implements IGetUserNotificationsResponse {
-    @ApiProperty({ description: "Array of requests" })
+    @ApiProperty({
+        description: 'Array of notifications',
+        type: () => GetUserNotificationResponseDto,
+        isArray: true,
+    })
+    @Type(() => GetUserNotificationResponseDto)
     notifications: IGetUserNotificationResponse[];
 }
