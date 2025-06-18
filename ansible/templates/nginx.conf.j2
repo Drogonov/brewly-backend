@@ -1,4 +1,4 @@
-user nginx;
+user {{ nginx_user }} {{ nginx_group }};
 worker_processes auto;
 pid /run/nginx.pid;
 include /etc/nginx/modules-enabled/*.conf;

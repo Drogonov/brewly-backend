@@ -3,8 +3,6 @@
   hosts: backend_servers
   become: true
 
-  # If you’re using group_vars/all.yml, no need for vars_files
-
   pre_tasks:
     - name: Update apt cache
       apt:
@@ -18,6 +16,12 @@
           - certbot
           - python3-certbot-nginx
         state: latest
+
+    - name: Disable the default nginx site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload nginx
 
     - name: Render main nginx.conf
       template:
@@ -41,14 +45,23 @@
         state: link
       notify: Reload nginx
 
+    - name: Ensure webroot directory for ACME challenges exists
+      file:
+        path: /var/www/html/.well-known/acme-challenge
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
     - name: Check for existing Let's Encrypt certificate
       stat:
         path: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
       register: cert
 
-    - name: Obtain Let's Encrypt certificate
+    - name: Obtain Let's Encrypt certificate via webroot
       command: >
-        certbot --nginx
+        certbot certonly
+        --webroot -w /var/www/html
         --non-interactive
         --agree-tos
         --email {{ email }}

@@ -9,3 +9,5 @@ domain: brewly.space
 app_port: 8080
 email: support@brewly.ru
 is_ssl: false
+nginx_user: www-data
+nginx_group: www-data
