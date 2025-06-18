@@ -23,13 +23,13 @@
 
     - name: Render main nginx.conf
       template:
-        src: "{{ base_conf }}"
+        src: "{{ playbook_dir }}/template/nginx.conf.j2"
         dest: /etc/nginx/nginx.conf
       notify: Reload nginx
 
     - name: Render site conf into sites-available
       template:
-        src: "{{ source }}"
+        src: "{{ playbook_dir }}/template/default.conf.j2"
         dest: /etc/nginx/sites-available/{{ domain }}.conf
         owner: root
         group: root
