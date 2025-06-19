@@ -315,7 +315,6 @@ export class AuthService {
     if (this.configService.getEnv() !== 'development') {
       await this.mailService.sendOtpEmail(email, otp);
     }
-    await this.mailService.sendOtpEmail(email, otp);
   }
 
   /**
