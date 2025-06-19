@@ -9,7 +9,7 @@ import { ConfigurationService } from 'src/app.common/services/config/configurati
 const MailServiceConst = {
   fromEmail: {
     name: 'Brewly Team',
-    email: 'noreply@brewly.ru'
+    email: 'noreply@brewly.ru',
   } as const,
   followUsLink: 'https://github.com/Drogonov/brewly-backend',
 };
@@ -23,17 +23,8 @@ export class MailService {
     private readonly errorHandlingService: ErrorHandlingService,
     private readonly logger: PinoLogger,
   ) {
-    // Tag every log line with "MailService" as the context
-    this.logger.setContext(MailService.name);
-
     this.transactionalEmailsApi = new Brevo.TransactionalEmailsApi();
-
-    // Log (masked) API key at debug level
     const apiKey = this.config.getEmailAPI();
-    this.logger.debug(
-      { apiKey: apiKey ? apiKey.replace(/.(?=.{4})/g, '*') : '<<missing>>' },
-      'Using Brevo API key'
-    );
 
     this.transactionalEmailsApi.setApiKey(
       Brevo.TransactionalEmailsApiApiKeys.apiKey,
@@ -41,58 +32,76 @@ export class MailService {
     );
   }
 
+  /**
+   * Send an OTP email to the given address
+   */
   async sendOtpEmail(email: string, otp: string): Promise<void> {
+    const subject = '🌟 Verify Your Account with Brewly!';
+    const header = 'Welcome to Brewly!';
+    const message = 'Thank you for signing up. Your journey to best cupping experience starts here.';
+    const additionalInfo = `
+      <p style="font-size: 16px; color: #555;">Enter this verification code on our app form to get started.</p>
+      <p style="font-size: 16px; color: #555;">If you didn’t request this email, please ignore it or let us know.</p>
+    `;
+
     const payload = this.makeOtpPayload(
       email,
-      '🌟 Verify Your Account with Brewly!',
-      'Welcome to Brewly!',
-      'Thank you for signing up. Your journey to best cupping experience starts here.',
+      subject,
+      header,
+      message,
       otp,
+      additionalInfo.trim(),
     );
-
-    // Log full payload
-    this.logger.debug({ payload }, 'sendOtpEmail payload');
 
     try {
       const response = await this.transactionalEmailsApi.sendTransacEmail(payload);
-      this.logger.info({ response, to: email }, 'sendOtpEmail succeeded');
-    } catch (error) {
-      // Log raw error for inspection
-      this.logger.error({ err: error, to: email }, 'sendOtpEmail failed');
+    } catch (err: any) {
+      const status = err.status || err.statusCode;
+      const body = err?.response?.body || err?.message || JSON.stringify(err);
+      this.logger.error(
+        { status, body, to: email },
+        'sendOtpEmail failed',
+      );
       throw await this.errorHandlingService.getBusinessError(
         BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL,
       );
     }
   }
 
+  /**
+   * Send an OTP to update email address
+   */
   async sendOtpToUpdateEmail(
     currentEmail: string,
     newEmail: string,
     otp: string,
   ): Promise<void> {
-    const additionalInfo = `If you initiated this request, please use the OTP below to verify the change. New email: ${newEmail}`;
     const subject = '🔄 Verify Your Email Update Request';
+    const header = 'Email Update Verification';
+    const message = 'We received a request to update your email address.';
+    const additionalInfo = `
+      <p style="font-size: 16px; color: #555;">If you initiated this request, use the OTP below to verify the change.</p>
+      <p style="font-size: 16px; color: #555;">New email: ${newEmail}</p>
+      <p style="font-size: 16px; color: #555;">If you didn’t request this email, please ignore it or let us know.</p>
+    `;
+
     const payload = this.makeOtpPayload(
       currentEmail,
       subject,
-      'Email Update Verification',
-      'We received a request to update your email address.',
+      header,
+      message,
       otp,
-      additionalInfo,
+      additionalInfo.trim(),
     );
-
-    this.logger.debug({ payload }, 'sendOtpToUpdateEmail payload');
 
     try {
       const response = await this.transactionalEmailsApi.sendTransacEmail(payload);
-      this.logger.info(
-        { response, from: currentEmail, newEmail },
-        'sendOtpToUpdateEmail succeeded'
-      );
-    } catch (error) {
+    } catch (err: any) {
+      const status = err.status || err.statusCode;
+      const body = err?.response?.body || err?.message || JSON.stringify(err);
       this.logger.error(
-        { err: error, from: currentEmail, newEmail },
-        'sendOtpToUpdateEmail failed'
+        { status, body, from: currentEmail, newEmail },
+        'sendOtpToUpdateEmail failed',
       );
       throw await this.errorHandlingService.getBusinessError(
         BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL,
@@ -100,6 +109,9 @@ export class MailService {
     }
   }
 
+  /**
+   * Build the payload for Brevo transactional email
+   */
   private makeOtpPayload(
     recipientEmail: string,
     subject: string,
@@ -113,9 +125,13 @@ export class MailService {
       header,
       '',
       message,
-      additionalInfo,
+      additionalInfo
+        .replace(/<[^>]*>/g, '')
+        .split(/\r?\n/)
+        .filter(Boolean)
+        .join('\n'),
       `Your Verification Code: ${otp}`,
-      `GitHub: ${MailServiceConst.followUsLink}`
+      `GitHub: ${MailServiceConst.followUsLink}`,
     ]
       .filter(Boolean)
       .join('\n');
@@ -129,6 +145,9 @@ export class MailService {
     };
   }
 
+  /**
+   * Build the HTML template for OTP emails
+   */
   private buildHtmlTemplate({
     header,
     message,
@@ -144,7 +163,7 @@ export class MailService {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin:auto; padding: 20px; text-align: center; border: 1px solid #e1e1e1; border-radius: 10px;">
         <h1 style="color: #0047AB;">${header}</h1>
         <p style="font-size: 18px; color: #333;">${message}</p>
-        ${additionalInfo ? `<p style="font-size: 16px; color: #555;">${additionalInfo}</p>` : ''}
+        ${additionalInfo}
         <p style="font-size: 20px; font-weight: bold; color: #0047AB;">Your Verification Code:</p>
         <p style="font-size: 24px; font-weight: bold; color: #F05032;">${otp}</p>
         <p style="font-size: 14px; color: #777;">

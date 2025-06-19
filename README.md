@@ -252,17 +252,15 @@ ssh-copy-id -i ~/.ssh/brewly_deploy.pub user@vps_ip
 cat ~/.ssh/brewly_deploy  # add this to GitHub secrets
 ```
 
-### 🌐 NGINX Configuration (Coming Soon)
+### 🌐 NGINX Configuration
 
-> ⚙️ This section will cover setting up NGINX as a reverse proxy for your Brewly backend, including HTTPS via Certbot.
+> ⚙️ I tried to add automation for renew certbot but my VPS add it as option (and brokes my automated certs) so it is in developing for now
 
-Planned contents:
-
-- Dockerized NGINX config
-- Certbot integration
-- Ansible automation commands
-
-Stay tuned...
+Pray your God before launch it and maybe it will works
+```
+cd brewly-backend/ansible
+ansible-playbook  playbook.yml
+```
 
 ---
 
