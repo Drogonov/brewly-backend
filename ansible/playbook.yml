@@ -58,16 +58,43 @@
         path: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
       register: cert
 
-    - name: Obtain Let's Encrypt certificate via webroot
-      command: >
-        certbot certonly
-        --webroot -w /var/www/html
-        --non-interactive
-        --agree-tos
-        --email {{ email }}
-        -d {{ domain }}
-      when: not cert.stat.exists
-      notify: Reload nginx
+    - name: Redefine the variable is_ssl
+      ansible.builtin.set_fact:
+        is_ssl: true
+
+    - name: Redirect and 443 port
+      ansible.builtin.template:
+        src: "{{ source }}"
+        dest: /etc/nginx/conf.d/default.conf
+        mode: '644'
+        owner: root
+        group: root
+
+    - name: Copying systemd daemons of certbot
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/daemons/"
+        dest: /etc/systemd/system/
+        mode: '644'
+        owner: root
+        group: root
+        force: true
+
+    - name: launch its daemons
+      ansible.builtin.service:
+        name: certbot-semi-automatic
+        enabled: true
+        state: started
+
+    - name: launch certbot's timer
+      ansible.builtin.service:
+        name: certbot-semi-automatic.timer
+        enabled: true
+        state: started
+
+    - name: Restart nginx for the apllying configuration
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
 
   handlers:
     - name: Reload nginx
