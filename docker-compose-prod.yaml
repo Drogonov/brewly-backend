@@ -5,7 +5,7 @@ services:
   app:
     container_name: app
     ports:
-      - "${APP_PORT}:${SERVER_PORT}"
+      - "127.0.0.1:${APP_PORT}:${SERVER_PORT}"
     build:
       context: .
       dockerfile: Dockerfile-prod
