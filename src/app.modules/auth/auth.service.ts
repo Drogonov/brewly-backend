@@ -315,7 +315,7 @@ export class AuthService {
     if (this.configService.getEnv() !== 'development') {
       await this.mailService.sendOtpEmail(email, otp);
     }
-    // await this.mailService.sendOtpEmail(email, otp);
+    await this.mailService.sendOtpEmail(email, otp);
   }
 
   /**
@@ -328,7 +328,6 @@ export class AuthService {
     } else {
       otp = Math.floor(100000 + Math.random() * 900000).toString();
     }
-    // otp = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedOtp = await argon.hash(otp);
     return { otp, hashedOtp };
   }
