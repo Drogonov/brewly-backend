@@ -14,7 +14,6 @@ server {
     # redirect everything else to https
     {% if is_ssl %}return 301 https://$host$request_uri;{% endif %}
     }
-}
 
 # HTTPS with real certs
 {% if is_ssl %}server {

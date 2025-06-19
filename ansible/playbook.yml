@@ -79,9 +79,9 @@
         owner: root
         group: root
 
-    - name: copying systemd daemons of certbot
+    - name: Copying systemd daemons of certbot
       ansible.builtin.copy:
-        src: daemons/certbot/
+        src: "{{ playbook_dir }}/daemons/"
         dest: /etc/systemd/system/
         mode: '644'
         owner: root
