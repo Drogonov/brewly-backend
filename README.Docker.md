@@ -86,6 +86,7 @@ npm run docker:compose-prod
   3. Run `docker compose -f docker-compose-prod.yaml --env-file $ENV_FILE_PATH up --build -d`
 
 * `.github/workflows/publish-swagger.yml` generates and pushes `swagger.json` to the `brewly-swagger` repo on each `master` push.
+* `docker compose -f docker-compose-prod.yaml --env-file ./config/production.env up --build -d`
 
 ---
 

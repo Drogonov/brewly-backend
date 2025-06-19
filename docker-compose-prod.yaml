@@ -25,6 +25,8 @@ services:
   db-prod:
     image: postgres:13
     container_name: db-prod
+    expose:
+      - "${POSTGRES_DB_PORT}"
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -37,7 +39,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
-      - "${SERVER_PGADMIN_PORT}:${PGADMIN_PORT}"
+      - "127.0.0.1:${SERVER_PGADMIN_PORT}:${PGADMIN_PORT}"
     depends_on:
       - db-prod
 
@@ -67,7 +69,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - grafana-data:/var/lib/grafana
     restart: unless-stopped

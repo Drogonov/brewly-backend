@@ -1,85 +1,134 @@
 import { Injectable } from '@nestjs/common';
-import sgMail from '@sendgrid/mail';
+import { PinoLogger } from 'nestjs-pino';
+import * as Brevo from '@getbrevo/brevo';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { BusinessErrorKeys } from 'src/app.common/localization/generated';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 
+// Centralized constants
+const MailServiceConst = {
+  fromEmail: {
+    name: 'Brewly Team',
+    email: 'noreply@brewly.ru'
+  } as const,
+  followUsLink: 'https://github.com/Drogonov/brewly-backend',
+};
+
 @Injectable()
 export class MailService {
+  private readonly transactionalEmailsApi: Brevo.TransactionalEmailsApi;
+
   constructor(
     private readonly config: ConfigurationService,
     private readonly errorHandlingService: ErrorHandlingService,
+    private readonly logger: PinoLogger,
   ) {
-    sgMail.setApiKey(this.config.getEmailAPI());
+    // Tag every log line with "MailService" as the context
+    this.logger.setContext(MailService.name);
+
+    this.transactionalEmailsApi = new Brevo.TransactionalEmailsApi();
+
+    // Log (masked) API key at debug level
+    const apiKey = this.config.getEmailAPI();
+    this.logger.debug(
+      { apiKey: apiKey ? apiKey.replace(/.(?=.{4})/g, '*') : '<<missing>>' },
+      'Using Brevo API key'
+    );
+
+    this.transactionalEmailsApi.setApiKey(
+      Brevo.TransactionalEmailsApiApiKeys.apiKey,
+      apiKey,
+    );
   }
 
-  /**
-   * Sends an OTP verification email upon account registration.
-   * @param email - The recipient email.
-   * @param otp - The verification code.
-   */
-  async sendOtpEmail(email: string, otp: string) {
-    const header = 'Welcome to Brewly!';
-    const message = 'Thank you for signing up. Your journey to best cupping experience starts here.';
-    const subject = '🌟 Verify Your Account with Brewly!';
-    const htmlContent = this.buildHtmlTemplate({ header, message, otp });
-    const textContent = `Welcome to Brewly!\n\nThank you for signing up.\nYour Verification Code: ${otp}\nGitHub: ${MailServiceConst.followUsLink}`;
+  async sendOtpEmail(email: string, otp: string): Promise<void> {
+    const payload = this.makeOtpPayload(
+      email,
+      '🌟 Verify Your Account with Brewly!',
+      'Welcome to Brewly!',
+      'Thank you for signing up. Your journey to best cupping experience starts here.',
+      otp,
+    );
 
-    const msg = {
-      to: email,
-      from: MailServiceConst.fromEmail,
-      subject: subject,
-      html: htmlContent,
-      text: textContent,
-    };
+    // Log full payload
+    this.logger.debug({ payload }, 'sendOtpEmail payload');
 
     try {
-      await sgMail.send(msg);
+      const response = await this.transactionalEmailsApi.sendTransacEmail(payload);
+      this.logger.info({ response, to: email }, 'sendOtpEmail succeeded');
     } catch (error) {
-      throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL);
+      // Log raw error for inspection
+      this.logger.error({ err: error, to: email }, 'sendOtpEmail failed');
+      throw await this.errorHandlingService.getBusinessError(
+        BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL,
+      );
     }
   }
 
-  /**
-   * Sends an OTP email for updating the email address.
-   * The email is sent to the current email address, including the new email for reference.
-   * @param currentEmail - The user's current email address.
-   * @param newEmail - The new email address the user wants to update to.
-   * @param otp - The verification code.
-   */
-  async sendOtpToUpdateEmail(currentEmail: string, newEmail: string, otp: string) {
-    const header = 'Email Update Verification';
-    const message = 'We received a request to update your email address.';
+  async sendOtpToUpdateEmail(
+    currentEmail: string,
+    newEmail: string,
+    otp: string,
+  ): Promise<void> {
     const additionalInfo = `If you initiated this request, please use the OTP below to verify the change. New email: ${newEmail}`;
     const subject = '🔄 Verify Your Email Update Request';
-    const htmlContent = this.buildHtmlTemplate({ header, message, otp, additionalInfo });
-    const textContent = `Email Update Verification\n\nWe received a request to update your email address.\nIf you initiated this request, please verify using the OTP: ${otp}\nNew email: ${newEmail}\nGitHub: ${MailServiceConst.followUsLink}`;
+    const payload = this.makeOtpPayload(
+      currentEmail,
+      subject,
+      'Email Update Verification',
+      'We received a request to update your email address.',
+      otp,
+      additionalInfo,
+    );
 
-    const msg = {
-      to: currentEmail,
-      from: MailServiceConst.fromEmail,
-      subject: subject,
-      html: htmlContent,
-      text: textContent,
-    };
+    this.logger.debug({ payload }, 'sendOtpToUpdateEmail payload');
 
     try {
-      await sgMail.send(msg);
+      const response = await this.transactionalEmailsApi.sendTransacEmail(payload);
+      this.logger.info(
+        { response, from: currentEmail, newEmail },
+        'sendOtpToUpdateEmail succeeded'
+      );
     } catch (error) {
-      throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL);
+      this.logger.error(
+        { err: error, from: currentEmail, newEmail },
+        'sendOtpToUpdateEmail failed'
+      );
+      throw await this.errorHandlingService.getBusinessError(
+        BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL,
+      );
     }
   }
 
-  // MARK: - Private Methods
+  private makeOtpPayload(
+    recipientEmail: string,
+    subject: string,
+    header: string,
+    message: string,
+    otp: string,
+    additionalInfo: string = '',
+  ): Brevo.SendSmtpEmail {
+    const htmlContent = this.buildHtmlTemplate({ header, message, otp, additionalInfo });
+    const textContent = [
+      header,
+      '',
+      message,
+      additionalInfo,
+      `Your Verification Code: ${otp}`,
+      `GitHub: ${MailServiceConst.followUsLink}`
+    ]
+      .filter(Boolean)
+      .join('\n');
 
-  /**
- * Helper to build the HTML content for emails.
- * @param header - The main header of the email.
- * @param message - The main message body.
- * @param otp - The verification OTP.
- * @param additionalInfo - Any additional information (optional).
- * @returns The full HTML message.
- */
+    return {
+      sender: MailServiceConst.fromEmail,
+      to: [{ email: recipientEmail }],
+      subject,
+      htmlContent,
+      textContent,
+    };
+  }
+
   private buildHtmlTemplate({
     header,
     message,
@@ -92,25 +141,17 @@ export class MailService {
     additionalInfo?: string;
   }): string {
     return `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin:auto; padding: 20px; text-align: center; border: 1px solid #e1e1e1; border-radius: 10px;">
-          <h1 style="color: #0047AB;">${header}</h1>
-          <p style="font-size: 18px; color: #333;">${message}</p>
-          ${additionalInfo ? `<p style="font-size: 16px; color: #555;">${additionalInfo}</p>` : ''}
-          <p style="font-size: 20px; font-weight: bold; color: #0047AB;">Your Verification Code:</p>
-          <p style="font-size: 24px; font-weight: bold; color: #F05032;">${otp}</p>
-          <p style="font-size: 14px; color: #777;">
-            Follow us on <a href="${MailServiceConst.followUsLink}" target="_blank" style="color: #F05032; text-decoration: none;">GitHub</a>
-          </p>
-          <p style="font-size: 12px; color: #999;">&copy; ${new Date().getFullYear()} Brewly. All rights reserved.</p>
-        </div>
-      `;
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin:auto; padding: 20px; text-align: center; border: 1px solid #e1e1e1; border-radius: 10px;">
+        <h1 style="color: #0047AB;">${header}</h1>
+        <p style="font-size: 18px; color: #333;">${message}</p>
+        ${additionalInfo ? `<p style="font-size: 16px; color: #555;">${additionalInfo}</p>` : ''}
+        <p style="font-size: 20px; font-weight: bold; color: #0047AB;">Your Verification Code:</p>
+        <p style="font-size: 24px; font-weight: bold; color: #F05032;">${otp}</p>
+        <p style="font-size: 14px; color: #777;">
+          Follow us on <a href="${MailServiceConst.followUsLink}" target="_blank" style="color: #F05032; text-decoration: none;">GitHub</a>
+        </p>
+        <p style="font-size: 12px; color: #999;">&copy; ${new Date().getFullYear()} Brewly. All rights reserved.</p>
+      </div>
+    `;
   }
 }
-
-const MailServiceConst = {
-  followUsLink: 'https://github.com/Drogonov/brewly-backend',
-  fromEmail: {
-    name: 'Brewly Team',
-    email: 'dump@vlezko.com',
-  }
-} as const;
