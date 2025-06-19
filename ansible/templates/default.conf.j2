@@ -1,19 +1,30 @@
-# HTTP → HTTPS redirect + ACME challenge
 server {
     listen      80;
     listen      [::]:80;
-    server_name {{ domain }};
+    server_name brewly.space;
 
     # serve .well-known/acme-challenge from our webroot
     location ^~ /.well-known/acme-challenge/ {
-        root /var/www/certbot;
+        root /var/www/html;
         try_files $uri =404;
         default_type text/plain;
     }
 
-    # redirect everything else to https
-    {% if is_ssl %}return 301 https://$host$request_uri;{% endif %}
+    # redirect everything else to https, ONLY if it wasn't already https
+    if ($http_x_forwarded_proto != 'https') {
+        return 301 https://$host$request_uri;
     }
+
+    # If the request already came via HTTPS, pass it to the backend
+    # This handles the case where the proxy sends HTTP to us.
+    location / {
+        proxy_pass         http://127.0.0.1:8080;
+        proxy_set_header   Host            $host;
+        proxy_set_header   X-Real-IP       $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+}
 
 # HTTPS with real certs
 {% if is_ssl %}server {
