@@ -579,33 +579,35 @@ export class UserService {
       currentCompanyId,
     ) || (userRole == Role.OWNER && isTeammate);
 
+    const isNotCurrentUser = currentUserId != targetUserId
+
     actions.push({
       type: UserActionType.addToFriends,
       title: await this.localizationStringsService.getUserText(
         UserKeys.ADD_TO_FRIENDS,
       ),
-      isEnabled: !isFriend && !isIncomingFriendRequest,
+      isEnabled: !isFriend && !isIncomingFriendRequest && isNotCurrentUser,
     });
     actions.push({
       type: UserActionType.removeFromFriends,
       title: await this.localizationStringsService.getUserText(
         UserKeys.REMOVE_FROM_FRIENDS,
       ),
-      isEnabled: isFriend,
+      isEnabled: isFriend && isNotCurrentUser,
     });
     actions.push({
       type: UserActionType.addToTeam,
       title: await this.localizationStringsService.getUserText(
         UserKeys.ADD_TO_TEAM,
       ),
-      isEnabled: !isTeammate && !isIncomingTeamRequest && !isCompanyPersonal,
+      isEnabled: !isTeammate && !isIncomingTeamRequest && !isCompanyPersonal && isNotCurrentUser,
     });
     actions.push({
       type: UserActionType.removeFromTeam,
       title: await this.localizationStringsService.getUserText(
         UserKeys.REMOVE_FROM_TEAM,
       ),
-      isEnabled: isTeammate && !isCompanyPersonal,
+      isEnabled: isTeammate && !isCompanyPersonal && isNotCurrentUser,
     });
     if (showMakeChief && !isCompanyPersonal) {
       actions.push({
