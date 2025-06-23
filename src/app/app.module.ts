@@ -80,10 +80,10 @@ import { ServeStaticModule } from '@nestjs/serve-static';
           }),
       },
     }),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public-pages'),
-      exclude: ['/api*'], // чтобы не мешало Swagger и остальному API
-    }),
+    // ServeStaticModule.forRoot({
+    //   rootPath: join(__dirname, '..', 'public-pages'),
+    //   exclude: ['/api*'], // чтобы не мешало Swagger и остальному API
+    // }),
     // core modules
     ConfigurationModule,
     LocalizationModule,

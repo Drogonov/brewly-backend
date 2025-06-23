@@ -29,9 +29,9 @@ async function bootstrap() {
     app.useGlobalInterceptors(app.get(LoggingInterceptor));
   }
 
-  app.use((req, res) => {
-    res.status(404).sendFile(join(__dirname, '..', 'public-pages', '404.html'));
-  });
+  // app.use((req, res) => {
+  //   res.status(404).sendFile(join(__dirname, '..', 'public-pages', '404.html'));
+  // });
 
   if (configService.getAppPort() !== 'production') {
     const config = new DocumentBuilder()
