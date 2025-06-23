@@ -28,14 +28,15 @@ import {
   ApiTags
 } from '@nestjs/swagger';
 import {
+  ApiController,
   GetCurrentUserCompanyId,
   GetCurrentUserId,
 } from 'src/app.common/decorators';
 import { IStatusResponse, StatusResponseDto } from '../auth/dto';
 
-@ApiTags('cupping')
+@ApiTags('api/cupping')
 @ApiBearerAuth('access-token')
-@Controller('cupping')
+@ApiController('cupping')
 export class CuppingController {
   constructor(private cuppingService: CuppingService) { }
 

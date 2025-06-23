@@ -11,7 +11,8 @@ import {
   Public,
   GetCurrentUserId,
   GetCurrentUser,
-  GetCurrentUserLanguage
+  GetCurrentUserLanguage,
+  ApiController
 } from 'src/app.common/decorators';
 import { RtGuard } from 'src/app.common/guards';
 import { AuthService } from './auth.service';
@@ -32,8 +33,8 @@ import {
   ApiUnprocessableEntityResponse
 } from '@nestjs/swagger';
 
-@ApiTags('auth')
-@Controller('auth')
+@ApiTags('api/auth')
+@ApiController('auth')
 export class AuthController {
   constructor(private authService: AuthService) { }
 

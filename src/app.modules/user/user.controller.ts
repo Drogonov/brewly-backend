@@ -31,13 +31,13 @@ import {
   ErrorResponseDto,
   OTPRequestDto
 } from './dto';
-import { GetCurrentUserCompanyId, GetCurrentUserId, Public } from 'src/app.common/decorators';
+import { ApiController, GetCurrentUserCompanyId, GetCurrentUserId, Public } from 'src/app.common/decorators';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags, ApiUnprocessableEntityResponse } from '@nestjs/swagger';
 import { ResendNewEmailOTPRequest } from './dto/request/resend-new-email-otp.request.dto';
 
-@ApiTags('user')
+@ApiTags('api/user')
 @ApiBearerAuth('access-token')
-@Controller('user')
+@ApiController('user')
 export class UserController {
   constructor(private userService: UserService) { }
 

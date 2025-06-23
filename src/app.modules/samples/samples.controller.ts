@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 
 import { SamplesService } from './samples.service';
-import { GetCurrentUserCompanyId, GetCurrentUserId } from 'src/app.common/decorators';
+import { ApiController, GetCurrentUserCompanyId, GetCurrentUserId } from 'src/app.common/decorators';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   SampleRequestDto,
@@ -27,9 +27,9 @@ import {
 } from './dto';
 import { ArchiveSampleDto } from './dto/archive-sample.request.dto';
 
-@ApiTags('samples')
+@ApiTags('api/samples')
 @ApiBearerAuth('access-token')
-@Controller('samples')
+@ApiController('samples')
 export class SamplesController {
   constructor(private sampleService: SamplesService) { }
 

@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/app.common/decorators';
+import { ApiController, Public } from 'src/app.common/decorators';
 import { OnboardingResponseDto } from './dto';
 import { OnboardingService } from './onboarding.service';
 
-@ApiTags('onboarding')
-@Controller('onboarding')
+@ApiTags('api/onboarding')
+@ApiController('onboarding')
 export class OnboardingController {
   constructor(private readonly onboardingService: OnboardingService) {}
 

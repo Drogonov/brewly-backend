@@ -12,7 +12,6 @@ import { join } from 'path';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
-
   const configService = app.get(ConfigurationService);
   const errorHandlingService = app.get(ErrorHandlingService);
 
@@ -28,10 +27,6 @@ async function bootstrap() {
 
     app.useGlobalInterceptors(app.get(LoggingInterceptor));
   }
-
-  // app.use((req, res) => {
-  //   res.status(404).sendFile(join(__dirname, '..', 'public-pages', '404.html'));
-  // });
 
   if (configService.getAppPort() !== 'production') {
     const config = new DocumentBuilder()

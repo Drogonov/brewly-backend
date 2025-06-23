@@ -26,6 +26,8 @@ import { APP_PIPE } from '@nestjs/core';
 import { CustomValidationPipe } from 'src/app.common/error-handling/custom-validation-pipe';
 import { LanguageUserBodyResolver } from 'src/app.common/localization/language-user-body.resolver';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { PublicPagesController } from './public-pages.controller';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -80,10 +82,15 @@ import { ServeStaticModule } from '@nestjs/serve-static';
           }),
       },
     }),
-    // ServeStaticModule.forRoot({
-    //   rootPath: join(__dirname, '..', 'public-pages'),
-    //   exclude: ['/api*'], // чтобы не мешало Swagger и остальному API
-    // }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public-pages'),
+      serveRoot: '/',
+      exclude: ['/api*'],
+      serveStaticOptions: {
+        extensions: ['html'],
+        index: false,
+      },
+    }),
     // core modules
     ConfigurationModule,
     LocalizationModule,
@@ -101,7 +108,10 @@ import { ServeStaticModule } from '@nestjs/serve-static';
     SettingsModule,
     UserModule,
   ],
-  controllers: [],
+  controllers: [
+    // AppController,
+    PublicPagesController
+  ],
   providers: [
     LanguageUserBodyResolver,
     { provide: APP_GUARD, useClass: AtGuard },
