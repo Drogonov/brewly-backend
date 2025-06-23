@@ -4,7 +4,6 @@ import { configuration } from 'src/app.common/services/config/configuration';
 import { validationSchema } from 'src/app.common/services/config/validationSchema';
 import { ConfigurationModule } from 'src/app.common/services/config/configuration.module';
 import { PrismaModule } from 'src/app.common/services/prisma/prisma.module';
-import { AuthModule } from '../app.modules/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AtGuard } from 'src/app.common/guards';
 import { JWTSessionModule } from 'src/app.common/services/jwt-session/jwt-session.module';
@@ -26,9 +25,10 @@ import { APP_PIPE } from '@nestjs/core';
 import { CustomValidationPipe } from 'src/app.common/error-handling/custom-validation-pipe';
 import { LanguageUserBodyResolver } from 'src/app.common/localization/language-user-body.resolver';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { PublicPagesController } from './public-pages.controller';
-import { AppController } from './app.controller';
 import { TemplateModule } from 'src/app.common/services/template/template.module';
+import { NotFoundModule } from './not-found/not-found.module';
+import { PublicPagesModule } from './public-pages/public-pages.module';
+import { AuthModule } from 'src/app.modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -109,11 +109,12 @@ import { TemplateModule } from 'src/app.common/services/template/template.module
     SamplesModule,
     SettingsModule,
     UserModule,
+
+    // static modules
+    PublicPagesModule,
+    NotFoundModule,
   ],
-  controllers: [
-    // AppController,
-    PublicPagesController
-  ],
+  controllers: [],
   providers: [
     LanguageUserBodyResolver,
     { provide: APP_GUARD, useClass: AtGuard },

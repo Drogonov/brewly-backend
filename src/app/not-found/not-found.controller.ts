@@ -4,15 +4,19 @@ import type { Request, Response } from 'express';
 import { Public } from 'src/app.common/decorators';
 
 @Controller()
-export class AppController {
+export class NotFoundController {
   @All('*')
-  @Public() 
+  @Public()
   handle404(@Req() req: Request, @Res() res: Response) {
     const url = req.originalUrl;
-
     if (url.startsWith('/api') || /\.[a-zA-Z0-9]+$/.test(url)) {
+      // any /api/* or file-extension URL → real 404
       return res.sendStatus(404);
+    } else {
+      // otherwise serve client app’s 404 page
+      return res
+        .status(404)
+        .sendFile(join(__dirname, '..', 'public-pages', '404.html'));
     }
-    return res.status(404).sendFile(join(__dirname, '..', 'public-pages', '404.html'));
   }
 }

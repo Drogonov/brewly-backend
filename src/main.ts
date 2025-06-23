@@ -1,19 +1,15 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app/app.module';
+import { AppModule } from './app/public-pages/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
-import { CustomValidationPipe } from 'src/app.common/error-handling/custom-validation-pipe';
-import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { LoggingInterceptor } from './interceptor';
 import * as bodyParser from 'body-parser';
 import { Logger } from 'nestjs-pino';
-import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
   const configService = app.get(ConfigurationService);
-  const errorHandlingService = app.get(ErrorHandlingService);
 
   // Only use your req/res interceptor in development
   if (configService.getEnv() === 'development') {

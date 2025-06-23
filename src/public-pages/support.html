@@ -6,10 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Support • Brewly</title>
   <meta name="description" content="Questions or feedback? Reach out to the Brewly team at support@brewly.ru." />
-
   <!-- Blocky “Brewly” font -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap" />
-
   <style>
     :root {
       --brand-dark: #6E8B73;
@@ -27,11 +25,14 @@
       box-sizing: border-box;
     }
 
-    body,
-    html {
+    html,
+    body {
       margin: 0;
       padding: 0;
       width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
       background: var(--bg);
       color: var(--fg);
       font-family: var(--font-sans);
@@ -43,16 +44,16 @@
       text-decoration: none;
     }
 
-    /* Header with text logo */
+    /* Header */
     .site-header {
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
       padding: 1rem 2rem;
       background: linear-gradient(90deg, var(--brand-dark), var(--brand-light));
     }
 
-    .site-header .logo {
+    .logo {
       font-family: var(--font-display);
       color: #fff;
       font-size: 1.5rem;
@@ -60,12 +61,31 @@
       letter-spacing: 1px;
     }
 
+    .site-nav {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .site-nav a {
+      color: #fff;
+      font-family: var(--font-sans);
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .site-nav a:hover {
+      background: var(--accent);
+    }
+
     /* Main content */
     main {
-      max-width: 480px;
-      margin: 2rem auto;
+      flex: 1;
+      width: 90%;
+      max-width: 600px;
+      margin: 1.5rem auto;
       background: #fff;
-      padding: 2rem;
+      padding: 1.5rem;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
@@ -79,12 +99,11 @@
 
     .contact-line {
       font-size: 1rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
-    /* FAQ */
     .faq {
-      margin-top: 3rem;
+      margin-top: 2rem;
     }
 
     .faq h2 {
@@ -94,9 +113,9 @@
     }
 
     .faq details {
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
       border-bottom: 1px solid #ddd;
-      padding-bottom: .5rem;
+      padding-bottom: 0.5rem;
     }
 
     .faq summary {
@@ -105,32 +124,32 @@
     }
 
     .faq p {
-      margin: .5rem 0 0 1rem;
+      margin: 0.5rem 0 0 1rem;
     }
 
     /* Footer */
     footer {
+      margin-top: auto;
+      padding: 1.5rem 1rem;
       text-align: center;
-      padding: 2rem 1rem;
-      background: #fff;
-      font-size: .8rem;
+      font-size: 0.8rem;
       color: #666;
-      margin-top: 4rem;
+      background: none;
     }
 
     /* Responsive */
     @media (max-width: 600px) {
       .site-header {
-        padding: 1rem;
+        padding: 0.75rem 1rem;
       }
 
       main {
         margin: 1rem;
-        padding: 1.5rem;
+        padding: 1rem;
       }
     }
 
-    /* Dark‐mode */
+    /* Dark mode */
     @media (prefers-color-scheme: dark) {
       body {
         background: #121212;
@@ -143,7 +162,7 @@
       }
 
       footer {
-        background: #111;
+        background: none;
         color: #888;
       }
 
@@ -155,46 +174,39 @@
 </head>
 
 <body>
-
   <header class="site-header">
-    <a href="/" class="logo">Brewly</a>
+    <div class="logo">Brewly</div>
+    <nav class="site-nav">
+      <a href="/privacy-policy">Privacy Policy</a>
+      <a href="/support">Support</a>
+    </nav>
   </header>
-
   <main>
     <h1>Need Help?</h1>
     <p class="contact-line">
       For support, email us at
       <a href="mailto:support@brewly.ru">support@brewly.ru</a>
     </p>
-
     <section class="faq">
       <h2>Frequently Asked</h2>
-
       <details>
         <summary>How do I reset my password?</summary>
-        <p>For now we doesnt apply this functionality, so it is better to contact us via email</p>
+        <p>For now we don’t offer this functionality, so please contact us via email.</p>
       </details>
-
       <details>
         <summary>Can I import my previous cuppings?</summary>
-        <p>All info stored in our server so just login in and you will see all info</p>
+        <p>All info is stored on our server—just log in and you’ll see all your data.</p>
       </details>
-
       <details>
-        <summary>Can i load all my cupping to the csv?</summary>
-        <p>We will add it later so you will be able to load all info from our app and track the statistics. If you are
-          looking forward for that pls contacts us. Maybe we will make it sooner in that case</p>
+        <summary>Can I export all my cuppings to CSV?</summary>
+        <p>We’ll add export support soon. If you’d like early access or have feedback, let us know!</p>
       </details>
-
-      <!-- more FAQ items as you refine -->
     </section>
   </main>
-
   <footer>
     &copy;
     <script>document.write(new Date().getFullYear())</script> Brewly. All rights reserved.
   </footer>
-
 </body>
 
 </html>
