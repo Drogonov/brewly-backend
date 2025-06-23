@@ -1,10 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { User } from '@prisma/client';
 import { decode } from 'jsonwebtoken';
-import { AppModule } from '../../../../app/public-pages/app.module';
-import { PrismaService } from '../../../../prisma/prisma.service';
+import { PrismaService } from 'src/app.common/services/prisma/prisma.service';
+import { AppModule } from 'src/app/app.module';
 import { AuthService } from '../../auth.service';
-import { Tokens } from '../../types';
 
 const user = {
   email: 'test@gmail.com',

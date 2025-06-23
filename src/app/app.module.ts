@@ -29,6 +29,7 @@ import { TemplateModule } from 'src/app.common/services/template/template.module
 import { NotFoundModule } from './not-found/not-found.module';
 import { PublicPagesModule } from './public-pages/public-pages.module';
 import { AuthModule } from 'src/app.modules/auth/auth.module';
+import { StaticAssetsService } from 'src/app.common/services/static-assets.service';
 
 @Module({
   imports: [
@@ -83,14 +84,8 @@ import { AuthModule } from 'src/app.modules/auth/auth.module';
           }),
       },
     }),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public-pages'),
-      serveRoot: '/',
-      exclude: ['/api*'],
-      serveStaticOptions: {
-        extensions: ['html'],
-        index: false,
-      },
+    ServeStaticModule.forRootAsync({
+      useClass: StaticAssetsService,
     }),
     // core modules
     ConfigurationModule,

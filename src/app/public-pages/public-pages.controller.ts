@@ -5,21 +5,23 @@ import { Public } from 'src/app.common/decorators';
 
 @Controller()
 export class PublicPagesController {
+  private readonly staticDir = join(__dirname, 'static');
+
   @Get('privacy-policy')
   @Public()
   servePrivacy(@Res() res: Response) {
-    return res.sendFile(join(__dirname, '..', 'public-pages', 'privacy-policy.html'));
+    return res.sendFile(join(this.staticDir, 'privacy-policy.html'));
   }
 
   @Get('support')
   @Public()
   serveSupport(@Res() res: Response) {
-    return res.sendFile(join(__dirname, '..', 'public-pages', 'support.html'));
+    return res.sendFile(join(this.staticDir, 'support.html'));
   }
 
   @Get('')
   @Public()
   serveRoot(@Res() res: Response) {
-    return res.sendFile(join(__dirname, '..', 'public-pages', 'root.html'));
+    return res.sendFile(join(this.staticDir, 'index.html'));
   }
 }

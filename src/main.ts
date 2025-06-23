@@ -1,10 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app/public-pages/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 import { LoggingInterceptor } from './interceptor';
 import * as bodyParser from 'body-parser';
 import { Logger } from 'nestjs-pino';
+import { AppModule } from './app/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });

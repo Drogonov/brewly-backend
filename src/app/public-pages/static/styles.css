@@ -1,0 +1,172 @@
+/* styles.css */
+
+:root {
+  --brand-dark: #6e8b73;
+  --brand-light: #bca67a;
+  --accent: #f05032;
+  --bg: #f9fbfc;
+  --fg: #333;
+  --font-sans: Arial, sans-serif;
+  --font-display: 'Anton', sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%; /* or min-height: 100vh on pages needing full-height flex */
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: var(--brand-dark);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn:hover {
+  background: var(--brand-light);
+  transform: scale(1.03);
+}
+
+.btn-small {
+  display: inline-block;
+  padding: 0.5rem 0.75rem;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.btn-small:hover {
+  background: var(--brand-light);
+}
+
+/* Header & Navigation */
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: linear-gradient(90deg, var(--brand-dark), var(--brand-light));
+}
+
+.logo a {
+  font-family: var(--font-display);
+  color: #fff;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-decoration: none;
+}
+
+.site-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.site-nav a {
+  color: #fff;
+  font-size: 1rem;
+  font-family: var(--font-sans);
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.site-nav a:hover {
+  background: var(--accent);
+}
+
+/* Main Content */
+main {
+  max-width: 600px;
+  margin: 3rem auto;
+  padding: 0 1rem;
+  text-align: center;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+p.lead {
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+}
+
+.subactions {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #666;
+  padding: 2rem 1rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .site-header {
+    padding: 0.75rem 1rem;
+  }
+
+  main {
+    margin: 2rem 1rem;
+    padding: 1.5rem;
+  }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #121212;
+    color: #ddd;
+  }
+
+  .btn {
+    background: #3b5545;
+  }
+
+  .btn-small {
+    background: #3b5545;
+  }
+
+  .site-nav a:hover {
+    background: var(--brand-light);
+  }
+
+  footer {
+    color: #888;
+  }
+}

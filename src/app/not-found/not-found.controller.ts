@@ -5,6 +5,8 @@ import { Public } from 'src/app.common/decorators';
 
 @Controller()
 export class NotFoundController {
+  private readonly staticDir = join(__dirname, 'static');
+
   @All('*')
   @Public()
   handle404(@Req() req: Request, @Res() res: Response) {
@@ -16,7 +18,7 @@ export class NotFoundController {
       // otherwise serve client app’s 404 page
       return res
         .status(404)
-        .sendFile(join(__dirname, '..', 'public-pages', '404.html'));
+        .sendFile(join(this.staticDir, '404.html'));
     }
   }
 }
