@@ -12,7 +12,7 @@ const MailServiceConst = {
     name: 'Brewly Team',
     email: 'noreply@brewly.ru',
   } as const,
-  followUsLink: 'https://github.com/Drogonov/brewly-backend',
+  followUsLink: 'https://github.com/Drogonov',
 };
 
 @Injectable()
@@ -112,25 +112,8 @@ export class MailService {
   }
 
   /**
-   * Build the HTML template for OTP emails
-   */
-  private buildHtmlTemplate(context: {
-    subject: string,
-    header: string,
-    message: string,
-    otp: string,
-    additionalInfo?: string,
-  }): string {
-    return this.templateService.render('otp-mail', {
-      ...context,
-      appStoreLink: this.config.getAppStoreURL(),
-      year: new Date().getFullYear(),
-    });
-  }
-
-  /**
- * Build the payload for Brevo transactional email
- */
+  * Build the payload for Brevo transactional email
+  */
   private makeOtpPayload(
     recipientEmail: string,
     subject: string,
@@ -139,7 +122,14 @@ export class MailService {
     otp: string,
     additionalInfo: string = '',
   ): Brevo.SendSmtpEmail {
-    const htmlContent = this.buildHtmlTemplate({ subject, header, message, otp, additionalInfo });
+    const htmlContent = this.buildHtmlTemplate({
+      subject,
+      header,
+      message,
+      otp,
+      additionalInfo
+    });
+
     const textContent = [
       header,
       '',
@@ -156,5 +146,22 @@ export class MailService {
       htmlContent,
       textContent,
     };
+  }
+
+  /**
+  * Build the HTML template for OTP emails
+  */
+  private buildHtmlTemplate(context: {
+    subject: string,
+    header: string,
+    message: string,
+    otp: string,
+    additionalInfo?: string,
+  }): string {
+    return this.templateService.render('otp-mail', {
+      ...context,
+      appStoreLink: this.config.getAppStoreURL(),
+      year: new Date().getFullYear(),
+    });
   }
 }
