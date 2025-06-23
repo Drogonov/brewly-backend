@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{subject}}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body,html { margin:0; padding:0; width:100%; }
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f7; color:#51545E; }
+    a { color:#3869D4; text-decoration:none; }
+    .email-wrapper { width:100%; padding:20px; background-color:#f4f4f7; }
+    .email-content { max-width:600px; margin:0 auto; background:#FFFFFF; border-radius:8px; overflow:hidden; }
+    .email-masthead { padding:25px; text-align:center; background-color:#0047AB; color:#FFFFFF; }
+    .email-masthead h1 { margin:0; font-size:24px; }
+    .email-body { padding:35px; }
+    .email-body p { margin:0 0 15px; line-height:1.5; }
+    .button { display:block; width:200px; margin:20px auto; padding:12px; background-color:#F05032; color:#ffffff; text-align:center; border-radius:6px; font-size:18px; font-weight:bold; }
+    .email-footer { text-align:center; padding:20px; font-size:12px; color:#A8AAAF; }
+    .email-footer a { color:#3869D4; }
+    @media only screen and (max-width: 600px) {
+      .email-body { padding:20px; }
+      .button { width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-content">
+      <div class="email-masthead">
+        <h1>{{header}}</h1>
+      </div>
+      <div class="email-body">
+        <p>{{message}}</p>
+        {{#if additionalInfo}}
+          {{{additionalInfo}}}
+        {{/if}}
+        <!-- OTP Code Button -->
+        <a class="button" href="#">{{otp}}</a>
+        <!-- App Store Link Placeholder -->
+        <p style="text-align:center; margin-top:20px;">
+          <a href="{{appStoreLink}}" target="_blank">Download on the App Store</a>
+        </p>
+        <p>If you didn’t request this, please ignore or <a href="https://brewly.ru/support" target="_blank">get help & support</a>.</p>
+      </div>
+      <div class="email-footer">
+        <p>Follow us on <a href="https://github.com/Drogonov/brewly-backend" target="_blank">GitHub</a> | <a href="https://github.com/your-username" target="_blank">My Portfolio</a></p>
+        <p>&copy; {{year}} Brewly. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
