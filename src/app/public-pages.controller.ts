@@ -16,4 +16,10 @@ export class PublicPagesController {
   serveSupport(@Res() res: Response) {
     return res.sendFile(join(__dirname, '..', 'public-pages', 'support.html'));
   }
+
+  @Get('')
+  @Public()
+  serveRoot(@Res() res: Response) {
+    return res.sendFile(join(__dirname, '..', 'public-pages', 'root.html'));
+  }
 }
