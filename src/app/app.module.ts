@@ -28,6 +28,7 @@ import { LanguageUserBodyResolver } from 'src/app.common/localization/language-u
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { PublicPagesController } from './public-pages.controller';
 import { AppController } from './app.controller';
+import { TemplateModule } from 'src/app.common/services/template/template.module';
 
 @Module({
   imports: [
@@ -96,6 +97,7 @@ import { AppController } from './app.controller';
     LocalizationModule,
     ErrorHandlingModule,
     JWTSessionModule,
+    TemplateModule,
     MailModule,
     PrismaModule,
 

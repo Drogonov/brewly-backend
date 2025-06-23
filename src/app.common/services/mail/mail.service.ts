@@ -4,6 +4,7 @@ import * as Brevo from '@getbrevo/brevo';
 import { ErrorHandlingService } from 'src/app.common/error-handling/error-handling.service';
 import { BusinessErrorKeys } from 'src/app.common/localization/generated';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
+import { TemplateService } from '../template/template.service';
 
 // Centralized constants
 const MailServiceConst = {
@@ -22,6 +23,7 @@ export class MailService {
     private readonly config: ConfigurationService,
     private readonly errorHandlingService: ErrorHandlingService,
     private readonly logger: PinoLogger,
+    private readonly templateService: TemplateService
   ) {
     this.transactionalEmailsApi = new Brevo.TransactionalEmailsApi();
     const apiKey = this.config.getEmailAPI();
@@ -110,8 +112,25 @@ export class MailService {
   }
 
   /**
-   * Build the payload for Brevo transactional email
+   * Build the HTML template for OTP emails
    */
+  private buildHtmlTemplate(context: {
+    subject: string,
+    header: string,
+    message: string,
+    otp: string,
+    additionalInfo?: string,
+  }): string {
+    return this.templateService.render('otp-mail', {
+      ...context,
+      appStoreLink: this.config.getAppStoreURL(),
+      year: new Date().getFullYear(),
+    });
+  }
+
+  /**
+ * Build the payload for Brevo transactional email
+ */
   private makeOtpPayload(
     recipientEmail: string,
     subject: string,
@@ -120,21 +139,15 @@ export class MailService {
     otp: string,
     additionalInfo: string = '',
   ): Brevo.SendSmtpEmail {
-    const htmlContent = this.buildHtmlTemplate({ header, message, otp, additionalInfo });
+    const htmlContent = this.buildHtmlTemplate({ subject, header, message, otp, additionalInfo });
     const textContent = [
       header,
       '',
       message,
-      additionalInfo
-        .replace(/<[^>]*>/g, '')
-        .split(/\r?\n/)
-        .filter(Boolean)
-        .join('\n'),
+      additionalInfo.replace(/<[^>]*>/g, '').split(/\r?\n/).filter(Boolean).join('\n'),
       `Your Verification Code: ${otp}`,
       `GitHub: ${MailServiceConst.followUsLink}`,
-    ]
-      .filter(Boolean)
-      .join('\n');
+    ].join('\n');
 
     return {
       sender: MailServiceConst.fromEmail,
@@ -143,34 +156,5 @@ export class MailService {
       htmlContent,
       textContent,
     };
-  }
-
-  /**
-   * Build the HTML template for OTP emails
-   */
-  private buildHtmlTemplate({
-    header,
-    message,
-    otp,
-    additionalInfo = '',
-  }: {
-    header: string;
-    message: string;
-    otp: string;
-    additionalInfo?: string;
-  }): string {
-    return `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin:auto; padding: 20px; text-align: center; border: 1px solid #e1e1e1; border-radius: 10px;">
-        <h1 style="color: #0047AB;">${header}</h1>
-        <p style="font-size: 18px; color: #333;">${message}</p>
-        ${additionalInfo}
-        <p style="font-size: 20px; font-weight: bold; color: #0047AB;">Your Verification Code:</p>
-        <p style="font-size: 24px; font-weight: bold; color: #F05032;">${otp}</p>
-        <p style="font-size: 14px; color: #777;">
-          Follow us on <a href="${MailServiceConst.followUsLink}" target="_blank" style="color: #F05032; text-decoration: none;">GitHub</a>
-        </p>
-        <p style="font-size: 12px; color: #999;">&copy; ${new Date().getFullYear()} Brewly. All rights reserved.</p>
-      </div>
-    `;
   }
 }

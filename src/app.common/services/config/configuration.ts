@@ -13,5 +13,8 @@ export const configuration = () => ({
     },
     otp: {
         dev: process.env.OTP_DEV || "666666",
-      },
+    },
+    assets: {
+        appStoreURL: process.env.APP_STORE_URL
+    }
 });

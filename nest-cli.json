@@ -5,7 +5,8 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "assets": [
-      "public-pages/**/*"
+      "public-pages/**/*",
+      "app.common/services/**/*.html"
     ],
     "watchAssets": true
   }

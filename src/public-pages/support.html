@@ -1,6 +1,47 @@
-<!-- support.html -->
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Support</title></head>
-<body><h1>Support</h1><p>Email us at support@brewly.ru</p></body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Support • Brewly</title>
+  <style>
+    body, html { margin:0; padding:0; font-family: Arial, sans-serif; background:#f9fbfc; color:#333; }
+    header { background:#0047AB; color:#fff; padding:20px 0; text-align:center; }
+    main { max-width:480px; margin:40px auto; background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+    h1 { margin-top:0; }
+    p { line-height:1.6; }
+    form { display:flex; flex-direction:column; }
+    label { margin-bottom:5px; font-weight:bold; }
+    input, textarea { margin-bottom:15px; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:16px; }
+    button { padding:12px; background:#F05032; color:#fff; border:none; border-radius:4px; font-size:16px; cursor:pointer; }
+    button:hover { opacity:0.9; }
+    footer { text-align:center; font-size:12px; color:#777; margin-top:40px; }
+    @media(max-width:600px) {
+      main { margin:20px; padding:20px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Need Help?</h1>
+  </header>
+  <main>
+    <p>If you have any questions, feedback, or issues, drop us a line and we'll get back to you ASAP.</p>
+    <form action="mailto:support@brewly.ru" method="post" enctype="text/plain">
+      <label for="name">Your Name</label>
+      <input type="text" id="name" name="Name" placeholder="Jane Doe" required/>
+      
+      <label for="email">Your Email</label>
+      <input type="email" id="email" name="Email" placeholder="jane@example.com" required/>
+      
+      <label for="message">Message</label>
+      <textarea id="message" name="Message" rows="5" placeholder="How can we help?" required></textarea>
+      
+      <button type="submit">Send</button>
+    </form>
+  </main>
+  <footer>
+    &copy; {{new Date().getFullYear()}} Brewly. All rights reserved.
+  </footer>
+</body>
 </html>

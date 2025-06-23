@@ -32,4 +32,8 @@ export class ConfigurationService {
     getOtpDevCode(): string {
         return this.configService.get('otp.dev') || "666666";
     }
+
+    getAppStoreURL(): string {
+        return this.configService.get('assets.appStoreURL')
+    }
 }
