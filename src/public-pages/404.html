@@ -1,118 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>404 Not Found • Brewly</title>
-  <meta name="description" content="Oops! The page you’re looking for doesn’t exist. Get back on track with Brewly." />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>404 Not Found • Brewly</title>
+    <meta name="description"
+        content="Oops! The page you’re looking for doesn’t exist. Get back on track with Brewly." />
 
-  <!-- Brewly block font -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap" />
+    <!-- Brewly block font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap" />
 
-  <style>
-    :root {
-      --brand-dark: #6E8B73;
-      --brand-light: #BCA67A;
-      --accent: #F05032;
-      --bg: #f9fbfc;
-      --fg: #333;
-      --font-sans: Arial, sans-serif;
-      --font-display: 'Anton', sans-serif;
-    }
-    *, *::before, *::after { box-sizing: border-box; }
-    html, body {
-      margin: 0; padding: 0;
-      width: 100%; height: 100%;
-      background: var(--bg); color: var(--fg);
-      font-family: var(--font-sans); line-height: 1.5;
-    }
-    a { color: var(--accent); text-decoration: none; }
+    <style>
+        :root {
+            --brand-dark: #6E8B73;
+            --brand-light: #BCA67A;
+            --accent: #F05032;
+            --bg: #f9fbfc;
+            --fg: #333;
+            --font-sans: Arial, sans-serif;
+            --font-display: 'Anton', sans-serif;
+        }
 
-    /* Header */
-    .site-header {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem 2rem;
-      background: linear-gradient(90deg, var(--brand-dark), var(--brand-light));
-    }
-    .site-header .logo {
-      font-family: var(--font-display);
-      color: #fff;
-      font-size: 1.5rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
 
-    /* Main panel */
-    main {
-      max-width: 400px;
-      margin: 4rem auto;
-      background: #fff;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    main h1 {
-      font-family: var(--font-display);
-      font-size: 2rem;
-      margin: 0 0 1rem;
-      text-transform: uppercase;
-    }
-    main p {
-      margin: 0.75rem 0;
-      font-size: 1rem;
-    }
-    main p.actions a {
-      margin: 0 0.5rem;
-      font-weight: bold;
-    }
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: var(--font-sans);
+            line-height: 1.5;
+        }
 
-    /* Footer */
-    footer {
-      text-align: center;
-      font-size: 0.8rem;
-      color: #666;
-      padding: 2rem 1rem 1rem;
-    }
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
 
-    /* Responsive */
-    @media (max-width: 500px) {
-      main { margin: 2rem 1rem; padding: 1.5rem; }
-      .site-header { padding: 1rem; }
-    }
+        /* Header */
+        .site-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: linear-gradient(90deg, var(--brand-dark), var(--brand-light));
+        }
 
-    /* Dark mode */
-    @media (prefers-color-scheme: dark) {
-      body { background: #121212; color: #ddd; }
-      main {
-        background: #1e1e1e;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-      }
-      footer { color: #888; }
-    }
-  </style>
+        .site-header .logo {
+            font-family: var(--font-display);
+            color: #fff;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Main panel */
+        main {
+            max-width: 400px;
+            margin: 4rem auto;
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        main h1 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            margin: 0 0 1rem;
+            text-transform: uppercase;
+        }
+
+        main p {
+            margin: 0.75rem 0;
+            font-size: 1rem;
+        }
+
+        main p.actions a {
+            margin: 0 0.5rem;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #666;
+            padding: 2rem 1rem 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            main {
+                margin: 2rem 1rem;
+                padding: 1.5rem;
+            }
+
+            .site-header {
+                padding: 1rem;
+            }
+        }
+
+        /* Dark mode */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #121212;
+                color: #ddd;
+            }
+
+            main {
+                background: #1e1e1e;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            }
+
+            footer {
+                color: #888;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-  <header class="site-header">
-    <div class="logo">Brewly</div>
-  </header>
+    <header class="site-header">
+        <div class="logo">Brewly</div>
+    </header>
 
-  <main>
-    <h1>404 — Not Found</h1>
-    <p>Looks like you’re lost.</p>
-    <p class="actions">
-      <a href="/">Go back home</a>
-      |
-      <a href="mailto:support@brewly.ru">Contact support</a>
-    </p>
-  </main>
+    <main>
+        <h1>404 — Not Found</h1>
+        <p>Looks like you’re lost.</p>
+        <p class="actions">
+            <a href="/">Go back home</a>
+            |
+            <a href="mailto:support@brewly.ru">Contact support</a>
+        </p>
+    </main>
 
-  <footer>
-    &copy; <script>document.write(new Date().getFullYear())</script> Brewly. All rights reserved.
-  </footer>
+    <footer>
+        &copy;
+        <script>document.write(new Date().getFullYear())</script> Brewly. All rights reserved.
+    </footer>
 
 </body>
+
 </html>

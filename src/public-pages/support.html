@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -19,20 +20,38 @@
       --font-sans: Arial, sans-serif;
       --font-display: 'Anton', sans-serif;
     }
-    *, *::before, *::after { box-sizing: border-box; }
-    body, html {
-      margin: 0; padding: 0; width: 100%;
-      background: var(--bg); color: var(--fg);
-      font-family: var(--font-sans); line-height: 1.5;
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
     }
-    a { color: var(--accent); text-decoration: none; }
+
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
 
     /* Header with text logo */
     .site-header {
-      display: flex; justify-content: center; align-items: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       padding: 1rem 2rem;
       background: linear-gradient(90deg, var(--brand-dark), var(--brand-light));
     }
+
     .site-header .logo {
       font-family: var(--font-display);
       color: #fff;
@@ -43,56 +62,98 @@
 
     /* Main content */
     main {
-      max-width: 480px; margin: 2rem auto;
-      background: #fff; padding: 2rem;
-      border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 480px;
+      margin: 2rem auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
+
     h1 {
       margin-top: 0;
       font-family: var(--font-display);
-      text-transform: uppercase; font-size: 1.8rem;
+      text-transform: uppercase;
+      font-size: 1.8rem;
     }
+
     .contact-line {
-      font-size: 1rem; margin-bottom: 2rem;
+      font-size: 1rem;
+      margin-bottom: 2rem;
     }
 
     /* FAQ */
-    .faq { margin-top: 3rem; }
+    .faq {
+      margin-top: 3rem;
+    }
+
     .faq h2 {
       font-family: var(--font-display);
-      text-transform: uppercase; margin-bottom: 1rem;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
     }
+
     .faq details {
-      margin-bottom: 1rem; border-bottom: 1px solid #ddd;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #ddd;
       padding-bottom: .5rem;
     }
+
     .faq summary {
-      font-weight: bold; cursor: pointer;
+      font-weight: bold;
+      cursor: pointer;
     }
-    .faq p { margin: .5rem 0 0 1rem; }
+
+    .faq p {
+      margin: .5rem 0 0 1rem;
+    }
 
     /* Footer */
     footer {
-      text-align: center; padding: 2rem 1rem;
-      background: #fff; font-size: .8rem; color: #666;
+      text-align: center;
+      padding: 2rem 1rem;
+      background: #fff;
+      font-size: .8rem;
+      color: #666;
       margin-top: 4rem;
     }
 
     /* Responsive */
     @media (max-width: 600px) {
-      .site-header { padding: 1rem; }
-      main { margin: 1rem; padding: 1.5rem; }
+      .site-header {
+        padding: 1rem;
+      }
+
+      main {
+        margin: 1rem;
+        padding: 1.5rem;
+      }
     }
 
     /* Dark‐mode */
     @media (prefers-color-scheme: dark) {
-      body { background: #121212; color: #ddd; }
-      main { background: #1e1e1e; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
-      footer { background: #111; color: #888; }
-      .faq details { border-color: #444; }
+      body {
+        background: #121212;
+        color: #ddd;
+      }
+
+      main {
+        background: #1e1e1e;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      }
+
+      footer {
+        background: #111;
+        color: #888;
+      }
+
+      .faq details {
+        border-color: #444;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <header class="site-header">
@@ -121,7 +182,8 @@
 
       <details>
         <summary>Can i load all my cupping to the csv?</summary>
-        <p>We will add it later so you will be able to load all info from our app and track the statistics. If you are looking forward for that pls contacts us. Maybe we will make it sooner in that case</p>
+        <p>We will add it later so you will be able to load all info from our app and track the statistics. If you are
+          looking forward for that pls contacts us. Maybe we will make it sooner in that case</p>
       </details>
 
       <!-- more FAQ items as you refine -->
@@ -129,8 +191,10 @@
   </main>
 
   <footer>
-    &copy; <script>document.write(new Date().getFullYear())</script> Brewly. All rights reserved.
+    &copy;
+    <script>document.write(new Date().getFullYear())</script> Brewly. All rights reserved.
   </footer>
 
 </body>
+
 </html>
