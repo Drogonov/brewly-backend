@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
-import { LoggingInterceptor } from './interceptor';
+import { ConfigurationService } from 'src/app/common/services/config/configuration.service';
+import { LoggingInterceptor } from './app/common/interceptor';
 import * as bodyParser from 'body-parser';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app/app.module';

@@ -5,9 +5,8 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "assets": [
-      "app/not-found/static/**/*",
-      "app/public-pages/static/**/*",
-      "app.common/services/**/*.html"
+      "client//**/*",
+      "app/common/services/**/*.html"
     ],
     "watchAssets": true
   }

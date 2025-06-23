@@ -1,35 +1,34 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { configuration } from 'src/app.common/services/config/configuration';
-import { validationSchema } from 'src/app.common/services/config/validationSchema';
-import { ConfigurationModule } from 'src/app.common/services/config/configuration.module';
-import { PrismaModule } from 'src/app.common/services/prisma/prisma.module';
+import { configuration } from 'src/app/common/services/config/configuration';
+import { validationSchema } from 'src/app/common/services/config/validationSchema';
+import { ConfigurationModule } from 'src/app/common/services/config/configuration.module';
+import { PrismaModule } from 'src/app/common/services/prisma/prisma.module';
 import { APP_GUARD } from '@nestjs/core';
-import { AtGuard } from 'src/app.common/guards';
-import { JWTSessionModule } from 'src/app.common/services/jwt-session/jwt-session.module';
-import { MailModule } from 'src/app.common/services/mail/mail.module';
-import { OnboardingModule } from 'src/app.modules/onboarding/onboarding.module';
-import { SettingsModule } from 'src/app.modules/settings/settings.module';
-import { SamplesModule } from 'src/app.modules/samples/samples.module';
-import { UserModule } from 'src/app.modules/user/user.module';
-import { CompanyModule } from 'src/app.modules/company/company.module';
-import { CuppingModule } from 'src/app.modules/cupping/cupping.module';
+import { AtGuard } from 'src/app/common/guards';
+import { JWTSessionModule } from 'src/app/common/services/jwt-session/jwt-session.module';
+import { MailModule } from 'src/app/common/services/mail/mail.module';
+import { OnboardingModule } from 'src/app/modules/onboarding/onboarding.module';
+import { SettingsModule } from 'src/app/modules/settings/settings.module';
+import { SamplesModule } from 'src/app/modules/samples/samples.module';
+import { UserModule } from 'src/app/modules/user/user.module';
+import { CompanyModule } from 'src/app/modules/company/company.module';
+import { CuppingModule } from 'src/app/modules/cupping/cupping.module';
 import { AcceptLanguageResolver, I18nJsonLoader, I18nModule, QueryResolver } from 'nestjs-i18n';
-import { ErrorHandlingModule } from 'src/app.common/error-handling/error-handling.module';
+import { ErrorHandlingModule } from 'src/app/common/error-handling/error-handling.module';
 import { LoggerModule, PinoLogger } from 'nestjs-pino';
-import { LoggingInterceptor } from 'src/interceptor';
+import { LoggingInterceptor } from 'src/app/common/interceptor';
 import { createWriteStream, existsSync, mkdirSync } from 'fs';
 import path, { join } from 'path';
-import { LocalizationModule } from 'src/app.common/localization/localization-strings.module';
+import { LocalizationModule } from 'src/app/common/localization/localization-strings.module';
 import { APP_PIPE } from '@nestjs/core';
-import { CustomValidationPipe } from 'src/app.common/error-handling/custom-validation-pipe';
-import { LanguageUserBodyResolver } from 'src/app.common/localization/language-user-body.resolver';
+import { CustomValidationPipe } from 'src/app/common/error-handling/custom-validation-pipe';
+import { LanguageUserBodyResolver } from 'src/app/common/localization/language-user-body.resolver';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { TemplateModule } from 'src/app.common/services/template/template.module';
-import { NotFoundModule } from './not-found/not-found.module';
-import { PublicPagesModule } from './public-pages/public-pages.module';
-import { AuthModule } from 'src/app.modules/auth/auth.module';
-import { StaticAssetsService } from 'src/app.common/services/static-assets.service';
+import { TemplateModule } from 'src/app/common/services/template/template.module';
+import { NotFoundModule } from './web/not-found/not-found.module';
+import { PublicPagesModule } from './web/public-pages/public-pages.module';
+import { AuthModule } from 'src/app/modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -84,8 +83,8 @@ import { StaticAssetsService } from 'src/app.common/services/static-assets.servi
           }),
       },
     }),
-    ServeStaticModule.forRootAsync({
-      useClass: StaticAssetsService,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'client')
     }),
     // core modules
     ConfigurationModule,

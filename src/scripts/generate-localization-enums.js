@@ -6,7 +6,7 @@ const inputDir = path.join(__dirname, '..', 'i18n', 'en');
 // Base i18n directory to look for languages (e.g. "en", "ru", etc.)
 const i18nDir = path.join(__dirname, '..', 'i18n');
 // Output directory for the generated enums
-const outputDir = path.join(__dirname, '..', 'app.common', 'localization', 'generated');
+const outputDir = path.join(__dirname, '..', 'app/common', 'localization', 'generated');
 
 // Ensure the output directory exists
 if (!fs.existsSync(outputDir)) {
