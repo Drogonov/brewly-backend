@@ -7,11 +7,12 @@ import { ErrorHandlingService } from 'src/app.common/error-handling/error-handli
 import { LoggingInterceptor } from './interceptor';
 import * as bodyParser from 'body-parser';
 import { Logger } from 'nestjs-pino';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
-  
+
   const configService = app.get(ConfigurationService);
   const errorHandlingService = app.get(ErrorHandlingService);
 
@@ -24,9 +25,13 @@ async function bootstrap() {
         },
       })
     );
-    
+
     app.useGlobalInterceptors(app.get(LoggingInterceptor));
   }
+
+  app.use((req, res) => {
+    res.status(404).sendFile(join(__dirname, '..', 'public-pages', '404.html'));
+  });
 
   if (configService.getAppPort() !== 'production') {
     const config = new DocumentBuilder()

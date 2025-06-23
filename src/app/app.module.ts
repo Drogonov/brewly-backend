@@ -25,6 +25,7 @@ import { LocalizationModule } from 'src/app.common/localization/localization-str
 import { APP_PIPE } from '@nestjs/core';
 import { CustomValidationPipe } from 'src/app.common/error-handling/custom-validation-pipe';
 import { LanguageUserBodyResolver } from 'src/app.common/localization/language-user-body.resolver';
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 @Module({
   imports: [
@@ -78,6 +79,10 @@ import { LanguageUserBodyResolver } from 'src/app.common/localization/language-u
             },
           }),
       },
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public-pages'),
+      exclude: ['/api*'], // чтобы не мешало Swagger и остальному API
     }),
     // core modules
     ConfigurationModule,
