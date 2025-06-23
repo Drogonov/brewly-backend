@@ -1,141 +1,62 @@
+<!-- src/app/mail/templates/otp-mail.html -->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <title>{{subject}}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* System font stack for fast, “light” rendering */
-    body,
-    html {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      background: #f4f4f4;
+    body, html {
+      margin: 0; padding: 0; width: 100%; background: #f4f4f4;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: #333;
-      -webkit-text-size-adjust: none;
+      color: #333; -webkit-text-size-adjust: none;
     }
-
-    a {
-      color: #6E8B73;
-      text-decoration: none;
-    }
-
-    .email-wrapper {
-      width: 100%;
-      padding: 20px;
-    }
-
+    a { color: #6E8B73; text-decoration: none; }
+    .email-wrapper { width: 100%; padding: 20px; }
     .email-content {
-      max-width: 600px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      max-width: 600px; margin: 0 auto; background: #fff;
+      border-radius: 8px; overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-
     .email-masthead {
-      padding: 25px;
-      text-align: center;
+      padding: 25px; text-align: center;
       background: linear-gradient(180deg, #6E8B73 0%, #BCA67A 100%);
       color: #fff;
     }
-
-    .email-masthead h1 {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-
-    .email-body {
-      padding: 35px;
-    }
-
-    .email-body p {
-      margin: 0 0 15px;
-      line-height: 1.6;
-      font-size: 16px;
-    }
-
+    .email-masthead h1 { margin: 0; font-size: 28px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
+    .email-body { padding: 35px; }
+    .email-body p { margin: 0 0 15px; line-height: 1.6; font-size: 16px; }
+    .email-body .info { /* moved from inline */ }
     .otp-button {
-      display: block;
-      width: 200px;
-      margin: 30px auto;
-      padding: 14px;
-      background-color: #6E8B73;
-      color: #fff;
-      text-align: center;
-      border-radius: 6px;
-      font-size: 24px;
-      font-weight: 700;
-      user-select: all;
-      -webkit-user-select: all;
-      cursor: text;
+      display: block; width: 200px; margin: 30px auto;
+      padding: 14px; background-color: #6E8B73;
+      color: #fff; text-align: center; border-radius: 6px;
+      font-size: 24px; font-weight: 700;
+      user-select: all; cursor: text;
     }
-
-    .email-footer {
-      text-align: center;
-      padding: 20px;
-      font-size: 12px;
-      color: #A8AAAF;
-    }
-
-    @media only screen and (max-width: 600px) {
-      .email-body {
-        padding: 20px;
-      }
-
-      .otp-button {
-        width: 100%;
-      }
-    }
+    .email-footer { text-align: center; padding: 20px; font-size: 12px; color: #A8AAAF; }
   </style>
 </head>
-
 <body>
   <div class="email-wrapper">
     <div class="email-content">
-
-      <!-- Masthead -->
-      <div class="email-masthead">
-        <h1>{{header}}</h1>
-      </div>
-
-      <!-- Body -->
+      <div class="email-masthead"><h1>{{header}}</h1></div>
       <div class="email-body">
         <p>{{message}}</p>
-        {{#if additionalInfo}}
-        {{{additionalInfo}}}
-        {{/if}}
-
-        <!-- OTP Code as styled, copyable text -->
+        {{#each additionalInfoLines}}
+          <p class="info">{{this}}</p>
+        {{/each}}
         <span class="otp-button">{{otp}}</span>
-
-        <!-- App Store Link -->
         {{#if appStoreLink}}
-        <p style="text-align:center; margin-top:30px;">
-          <a href="{{appStoreLink}}" target="_blank">Download on the App Store</a>
-        </p>
+        <p style="text-align:center; margin-top:30px;"><a href="{{appStoreLink}}" target="_blank">Download on the App Store</a></p>
         {{/if}}
-
-        <!-- Support -->
-        <p>If you didn’t request this, please ignore or <a href="https://brewly.ru/support" target="_blank">get help &amp; support</a>.</p>
+        <p>If you didn’t request this, please ignore or <a href="{{supportLink}}" target="_blank">get help &amp; support</a>.</p>
       </div>
-
-      <!-- Footer -->
       <div class="email-footer">
-        <p>Follow us on <a href="https://github.com/Drogonov/brewly-backend" target="_blank">GitHub</a> | <a
-            href="https://github.com/your-username" target="_blank">My Portfolio</a></p>
+        <p>Follow us on <a href="{{followUsLink}}" target="_blank">GitHub</a>
         <p>&copy; {{year}} Brewly. All rights reserved.</p>
       </div>
-
     </div>
   </div>
 </body>
-
 </html>

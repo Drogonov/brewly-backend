@@ -6,13 +6,15 @@ import { BusinessErrorKeys } from 'src/app.common/localization/generated';
 import { ConfigurationService } from 'src/app.common/services/config/configuration.service';
 import { TemplateService } from '../template/template.service';
 
-// Centralized constants
+// Centralized constants & copy
 const MailServiceConst = {
   fromEmail: {
     name: 'Brewly Team',
     email: 'noreply@brewly.ru',
   } as const,
   followUsLink: 'https://github.com/Drogonov',
+  portfolioLink: 'https://vlezko.com',
+  supportLink: 'https://brewly.ru/support',
 };
 
 @Injectable()
@@ -26,11 +28,9 @@ export class MailService {
     private readonly templateService: TemplateService
   ) {
     this.transactionalEmailsApi = new Brevo.TransactionalEmailsApi();
-    const apiKey = this.config.getEmailAPI();
-
     this.transactionalEmailsApi.setApiKey(
       Brevo.TransactionalEmailsApiApiKeys.apiKey,
-      apiKey,
+      this.config.getEmailAPI(),
     );
   }
 
@@ -41,10 +41,10 @@ export class MailService {
     const subject = '🌟 Verify Your Account with Brewly!';
     const header = 'Welcome to Brewly!';
     const message = 'Thank you for signing up. Your journey to best cupping experience starts here.';
-    const additionalInfo = `
-      <p style="font-size: 16px; color: #555;">Enter this verification code on our app form to get started.</p>
-      <p style="font-size: 16px; color: #555;">If you didn’t request this email, please ignore it or let us know.</p>
-    `;
+    const additionalInfoLines = [
+      'Enter this verification code on our app form to get started.',
+      'If you didn’t request this email, please ignore it or let us know.',
+    ];
 
     const payload = this.makeOtpPayload(
       email,
@@ -52,18 +52,15 @@ export class MailService {
       header,
       message,
       otp,
-      additionalInfo.trim(),
+      additionalInfoLines,
     );
 
     try {
-      const response = await this.transactionalEmailsApi.sendTransacEmail(payload);
+      await this.transactionalEmailsApi.sendTransacEmail(payload);
     } catch (err: any) {
       const status = err.status || err.statusCode;
       const body = err?.response?.body || err?.message || JSON.stringify(err);
-      this.logger.error(
-        { status, body, to: email },
-        'sendOtpEmail failed',
-      );
+      this.logger.error({ status, body, to: email }, 'sendOtpEmail failed');
       throw await this.errorHandlingService.getBusinessError(
         BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL,
       );
@@ -81,11 +78,11 @@ export class MailService {
     const subject = '🔄 Verify Your Email Update Request';
     const header = 'Email Update Verification';
     const message = 'We received a request to update your email address.';
-    const additionalInfo = `
-      <p style="font-size: 16px; color: #555;">If you initiated this request, use the OTP below to verify the change.</p>
-      <p style="font-size: 16px; color: #555;">New email: ${newEmail}</p>
-      <p style="font-size: 16px; color: #555;">If you didn’t request this email, please ignore it or let us know.</p>
-    `;
+    const additionalInfoLines = [
+      'If you initiated this request, use the OTP below to verify the change.',
+      `New email: ${newEmail}`,
+      'If you didn’t request this email, please ignore it or let us know.',
+    ];
 
     const payload = this.makeOtpPayload(
       currentEmail,
@@ -93,11 +90,11 @@ export class MailService {
       header,
       message,
       otp,
-      additionalInfo.trim(),
+      additionalInfoLines,
     );
 
     try {
-      const response = await this.transactionalEmailsApi.sendTransacEmail(payload);
+      await this.transactionalEmailsApi.sendTransacEmail(payload);
     } catch (err: any) {
       const status = err.status || err.statusCode;
       const body = err?.response?.body || err?.message || JSON.stringify(err);
@@ -112,29 +109,34 @@ export class MailService {
   }
 
   /**
-  * Build the payload for Brevo transactional email
-  */
+   * Build the payload for Brevo transactional email
+   */
   private makeOtpPayload(
     recipientEmail: string,
     subject: string,
     header: string,
     message: string,
     otp: string,
-    additionalInfo: string = '',
+    additionalInfoLines: string[],
   ): Brevo.SendSmtpEmail {
     const htmlContent = this.buildHtmlTemplate({
       subject,
       header,
       message,
       otp,
-      additionalInfo
+      additionalInfoLines,
+      followUsLink: MailServiceConst.followUsLink,
+      // portfolioLink: MailServiceConst.portfolioLink,
+      supportLink: MailServiceConst.supportLink,
+      appStoreLink: this.config.getAppStoreURL(),
+      year: new Date().getFullYear(),
     });
 
     const textContent = [
       header,
       '',
       message,
-      additionalInfo.replace(/<[^>]*>/g, '').split(/\r?\n/).filter(Boolean).join('\n'),
+      ...additionalInfoLines,
       `Your Verification Code: ${otp}`,
       `GitHub: ${MailServiceConst.followUsLink}`,
     ].join('\n');
@@ -149,19 +151,9 @@ export class MailService {
   }
 
   /**
-  * Build the HTML template for OTP emails
-  */
-  private buildHtmlTemplate(context: {
-    subject: string,
-    header: string,
-    message: string,
-    otp: string,
-    additionalInfo?: string,
-  }): string {
-    return this.templateService.render('otp-mail', {
-      ...context,
-      appStoreLink: this.config.getAppStoreURL(),
-      year: new Date().getFullYear(),
-    });
+   * Build the HTML template for OTP emails
+   */
+  private buildHtmlTemplate(context: Record<string, any>): string {
+    return this.templateService.render('otp-mail', context);
   }
 }
