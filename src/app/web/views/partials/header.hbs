@@ -1,4 +1,3 @@
-<!-- views/partials/header.hbs -->
 <header class="site-header">
     <div class="logo">
         <a href="/" aria-label="Go to home">{{headerLogo}}</a>
@@ -6,5 +5,13 @@
     <nav class="site-nav">
         <a href="/privacy-policy">{{navPrivacy}}</a>
         <a href="/support">{{navSupport}}</a>
+
+        <select onchange="
+      document.cookie = 'lang=' + this.value + '; path=/; max-age=' + 60*60*24*365;
+      window.location.reload();
+    ">
+            <option value="en" {{#if (eq lang 'en' )}}selected{{/if}}>English</option>
+            <option value="ru" {{#if (eq lang 'ru' )}}selected{{/if}}>Русский</option>
+        </select>
     </nav>
 </header>

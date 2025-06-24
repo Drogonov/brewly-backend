@@ -8,7 +8,8 @@ import { Logger } from 'nestjs-pino';
 import { AppModule } from './app/app.module';
 import { join } from 'path';
 import { engine } from 'express-handlebars';
-
+import cookieParser from 'cookie-parser';
+import * as Handlebars from 'handlebars';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -31,6 +32,14 @@ async function bootstrap() {
   );
   app.setViewEngine('hbs');
 
+  app.use(cookieParser());
+  app.use((req, res, next) => {
+    if (req.query.lang) {
+      res.cookie('lang', req.query.lang, { path: '/', maxAge: 365 * 24 * 60 * 60 * 1000 });
+    }
+    next();
+  });
+  Handlebars.registerHelper('eq', (a, b) => a === b);
 
   // Only use your req/res interceptor in development
   if (configService.getEnv() === 'development') {

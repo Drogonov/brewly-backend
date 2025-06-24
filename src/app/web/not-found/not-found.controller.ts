@@ -5,6 +5,7 @@ import type { Request, Response } from 'express';
 import { Public } from 'src/app/common/decorators';
 import { ErrorsKeys, LocalizationKey, WebKeys } from 'src/app/common/localization/generated';
 import { LocalizationStringsService } from 'src/app/common/localization/localization-strings.service';
+import { I18nContext } from 'nestjs-i18n';
 
 @Controller()      // ← no ‘path’ here
 export class NotFoundController {
@@ -53,6 +54,8 @@ export class NotFoundController {
         headerLogo: await t(WebKeys.HEADER_LOGO),
         navPrivacy: await t(WebKeys.NAV_PRIVACY),
         navSupport: await t(WebKeys.NAV_SUPPORT),
+        lang: I18nContext.current()?.lang ?? 'en',
+
 
         notFoundTitle: await t(WebKeys.NOT_FOUND_TITLE),
         notFoundMessage: await t(WebKeys.NOT_FOUND_MESSAGE),

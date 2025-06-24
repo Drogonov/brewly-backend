@@ -4,6 +4,7 @@ import type { Response } from 'express';
 import { Public } from 'src/app/common/decorators';
 import { WebKeys } from 'src/app/common/localization/generated';
 import { LocalizationStringsService } from 'src/app/common/localization/localization-strings.service';
+import { I18nContext } from 'nestjs-i18n';
 
 @Controller()
 export class PublicPagesController {
@@ -30,6 +31,7 @@ export class PublicPagesController {
       headerLogo: await t(WebKeys.HEADER_LOGO),
       navPrivacy: await t(WebKeys.NAV_PRIVACY),
       navSupport: await t(WebKeys.NAV_SUPPORT),
+      lang: I18nContext.current()?.lang ?? 'en',
 
       welcomeTitle: await t(WebKeys.WELCOME_TITLE),
       leadText: await t(WebKeys.LEAD_TEXT),
@@ -54,7 +56,7 @@ export class PublicPagesController {
   @Render('public-pages/support')
   async serveSupport() {
     const t = (key: WebKeys) => this.localization.getWebText(key);
-    
+
     return {
       siteTitle: await t(WebKeys.SITE_TITLE),
       metaDescription: await t(WebKeys.META_DESCRIPTION),
@@ -64,6 +66,8 @@ export class PublicPagesController {
       headerLogo: await t(WebKeys.HEADER_LOGO),
       navPrivacy: await t(WebKeys.NAV_PRIVACY),
       navSupport: await t(WebKeys.NAV_SUPPORT),
+      lang: I18nContext.current()?.lang ?? 'en',
+
 
       supportTitle: await t(WebKeys.SUPPORT_TITLE),
       supportContactText: await t(WebKeys.SUPPORT_CONTACT_TEXT),

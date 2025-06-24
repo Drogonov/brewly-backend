@@ -14,7 +14,7 @@ import { SamplesModule } from 'src/app/modules/samples/samples.module';
 import { UserModule } from 'src/app/modules/user/user.module';
 import { CompanyModule } from 'src/app/modules/company/company.module';
 import { CuppingModule } from 'src/app/modules/cupping/cupping.module';
-import { AcceptLanguageResolver, I18nJsonLoader, I18nModule, QueryResolver } from 'nestjs-i18n';
+import { AcceptLanguageResolver, CookieResolver, I18nJsonLoader, I18nModule, QueryResolver } from 'nestjs-i18n';
 import { ErrorHandlingModule } from 'src/app/common/error-handling/error-handling.module';
 import { LoggerModule, PinoLogger } from 'nestjs-pino';
 import { LoggingInterceptor } from 'src/app/common/interceptor';
@@ -50,6 +50,7 @@ import { AuthModule } from 'src/app/modules/auth/auth.module';
         watch: false,
       },
       resolvers: [
+        CookieResolver,
         LanguageUserBodyResolver,
         { use: QueryResolver, options: ['lang'] },
         AcceptLanguageResolver,
