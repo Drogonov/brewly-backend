@@ -17,6 +17,5 @@ export class SaveEditUserRequest {
   @ApiProperty({ example: "Some Info" })
   @IsString({ context: { validationErrorKey: ValidationErrorKeys.INVALID_CHARS } })
   @IsOptional()
-  @MinLength(1, { context: { validationErrorKey: ValidationErrorKeys.VALUE_REQUIRED } })
   about?: string;
 }
