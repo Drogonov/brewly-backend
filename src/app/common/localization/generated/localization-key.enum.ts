@@ -10,5 +10,6 @@ export enum LocalizationKey {
   samples = 'samples',
   settings = 'settings',
   user = 'user',
-  validationError = 'validation-error'
+  validationError = 'validation-error',
+  web = 'web'
 }

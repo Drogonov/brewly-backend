@@ -1,15 +1,36 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigurationService } from 'src/app/common/services/config/configuration.service';
 import { LoggingInterceptor } from './app/common/interceptor';
 import * as bodyParser from 'body-parser';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app/app.module';
+import { join } from 'path';
+import { engine } from 'express-handlebars';
+
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
-  app.useLogger(app.get(Logger));
+  const app = await NestFactory.create<NestExpressApplication>(
+    AppModule,
+    { bufferLogs: true },
+  );
   const configService = app.get(ConfigurationService);
+
+  app.useLogger(app.get(Logger));
+
+  app.setBaseViewsDir(join(__dirname, 'app', 'web', 'views'));
+  app.engine(
+    'hbs',
+    engine({
+      extname: '.hbs',
+      layoutsDir: join(__dirname, 'app', 'web', 'views', 'layouts'),
+      partialsDir: join(__dirname, 'app', 'web', 'views', 'partials'),
+      defaultLayout: 'main',
+    }),
+  );
+  app.setViewEngine('hbs');
+
 
   // Only use your req/res interceptor in development
   if (configService.getEnv() === 'development') {

@@ -84,7 +84,7 @@ import { AuthModule } from 'src/app/modules/auth/auth.module';
       },
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'client')
+      rootPath: join(__dirname, '..', 'public')
     }),
     // core modules
     ConfigurationModule,

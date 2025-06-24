@@ -1,15 +1,45 @@
-// src/app/web/public-pages/public-pages.controller.ts
-import { Controller, Get, Res } from '@nestjs/common';
+import { Controller, Get, Render, Res } from '@nestjs/common';
 import { join } from 'path';
 import type { Response } from 'express';
 import { Public } from 'src/app/common/decorators';
+import { WebKeys } from 'src/app/common/localization/generated';
+import { LocalizationStringsService } from 'src/app/common/localization/localization-strings.service';
 
 @Controller()
 export class PublicPagesController {
-  // in dev we want src/client, in prod dist/client
   private readonly staticDir = process.env.NODE_ENV === 'production'
-    ? join(process.cwd(), 'dist', 'client')
-    : join(process.cwd(), 'src', 'client');
+    ? join(process.cwd(), 'dist', 'public')
+    : join(process.cwd(), 'src', 'public');
+
+  constructor(
+    private readonly localization: LocalizationStringsService,
+  ) { }
+
+  @Get()
+  @Public()
+  @Render('public-pages/index')
+  async serveIndex() {
+    const t = (key: WebKeys) => this.localization.getWebText(key);
+
+    return {
+      siteTitle:        await t(WebKeys.SITE_TITLE),
+      metaDescription:  await t(WebKeys.META_DESCRIPTION),
+      ogTitle:          await t(WebKeys.OG_TITLE),
+      ogDescription:    await t(WebKeys.OG_DESCRIPTION),
+      ogImage:          await t(WebKeys.OG_IMAGE),
+      headerLogo:       await t(WebKeys.HEADER_LOGO),
+      navPrivacy:       await t(WebKeys.NAV_PRIVACY),
+      navSupport:       await t(WebKeys.NAV_SUPPORT),
+      welcomeTitle:     await t(WebKeys.WELCOME_TITLE),
+      leadText:         await t(WebKeys.LEAD_TEXT),
+      downloadAppText:  await t(WebKeys.DOWNLOAD_APP_TEXT),
+      githubIosText:    await t(WebKeys.GITHUB_IOS_TEXT),
+      githubSwaggerText:await t(WebKeys.GITHUB_SWAGGER_TEXT),
+      githubBackendText:await t(WebKeys.GITHUB_BACKEND_TEXT),
+      currentYear:      new Date().getFullYear(),
+      reservedText:     await t(WebKeys.RESERVED_TEXT),
+    };
+  }
 
   @Get('privacy-policy')
   @Public()
@@ -19,13 +49,12 @@ export class PublicPagesController {
 
   @Get('support')
   @Public()
-  serveSupport(@Res() res: Response) {
-    return res.sendFile(join(this.staticDir, 'support.html'));
-  }
-
-  @Get()
-  @Public()
-  serveRoot(@Res() res: Response) {
-    return res.sendFile(join(this.staticDir, 'index.html'));
+  @Render('public-pages/support')
+  async serveSupport() {
+    return {
+      test: await this.localization.getWebText(
+        WebKeys.RESERVED_TEXT,
+      )
+    };
   }
 }

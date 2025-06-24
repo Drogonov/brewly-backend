@@ -6,14 +6,14 @@ import {
   CompanyKeys,
   CuppingKeys,
   ErrorsKeys,
-  Languages,
   LocalizationKey,
   OnboardingKeys,
   OptionListsKeys,
   SamplesKeys,
   SettingsKeys,
   UserKeys,
-  ValidationErrorKeys
+  ValidationErrorKeys,
+  WebKeys
 } from './generated';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
@@ -30,6 +30,13 @@ export class LocalizationStringsService {
 
   private get currentLang(): string {
     return I18nContext.current()?.lang ?? 'en';
+  }
+
+  async getWebText(key: WebKeys, args?: Record<string, any>): Promise<string> {
+    return this.i18n.translate(`${LocalizationKey.web}.${key}`, {
+      lang: this.currentLang,
+      args
+    });
   }
 
   async getAuthText(key: AuthKeys, args?: Record<string, any>): Promise<string> {

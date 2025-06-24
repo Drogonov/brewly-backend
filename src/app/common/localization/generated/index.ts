@@ -9,5 +9,6 @@ export * from './samples.enum';
 export * from './settings.enum';
 export * from './user.enum';
 export * from './validation-error.enum';
+export * from './web.enum';
 export * from './localization-key.enum';
 export * from './languages.enum';
