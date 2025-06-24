@@ -10,15 +10,19 @@
   --font-display: 'Anton', sans-serif;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%; /* or min-height: 100vh on pages needing full-height flex */
+  height: 100%;
+  /* or min-height: 100vh on pages needing full-height flex */
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
@@ -168,5 +172,39 @@ footer {
 
   footer {
     color: #888;
+  }
+
+  /* Language Switcher */
+  .lang-switcher {
+    position: relative;
+    display: inline-block;
+  }
+
+  .lang-select {
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+    background: var(--brand-light);
+    color: #fff;
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .lang-select:hover {
+    background: var(--brand-dark);
+    transform: scale(1.03);
+  }
+
+  .lang-arrow {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #fff;
   }
 }

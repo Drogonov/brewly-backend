@@ -2,16 +2,20 @@
     <div class="logo">
         <a href="/" aria-label="Go to home">{{headerLogo}}</a>
     </div>
+
     <nav class="site-nav">
         <a href="/privacy-policy">{{navPrivacy}}</a>
         <a href="/support">{{navSupport}}</a>
 
-        <select onchange="
-      document.cookie = 'lang=' + this.value + '; path=/; max-age=' + 60*60*24*365;
-      window.location.reload();
-    ">
-            <option value="en" {{#if (eq lang 'en' )}}selected{{/if}}>English</option>
-            <option value="ru" {{#if (eq lang 'ru' )}}selected{{/if}}>Русский</option>
-        </select>
+        <div class="lang-switcher">
+            <select class="lang-select"
+                onchange="document.cookie = 'lang=' + this.value + '; path=/; max-age=' + 60*60*24*365; window.location.reload();">
+                <option value="en" {{#if (eq lang 'en' )}}selected{{/if}}>🇺🇸 English</option>
+                <option value="ru" {{#if (eq lang 'ru' )}}selected{{/if}}>🇷🇺 Русский</option>
+            </select>
+            <svg class="lang-arrow" width="12" height="8" viewBox="0 0 12 8" aria-hidden="true">
+                <path d="M1 1l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" />
+            </svg>
+        </div>
     </nav>
 </header>
