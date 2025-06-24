@@ -37,12 +37,18 @@
 
     {{> footer}}
 
-    <!-- Mobile nav toggle -->
+    <!-- ONE nav‐toggle script, after header/footer are in the DOM -->
     <script>
+        // 1) First, sanity-check that we actually found the elements:
         const btn = document.querySelector('.nav-toggle');
         const nav = document.querySelector('.site-nav');
+
+        // 2) If they’re there, hook up a click listener with its own alert/log:
         if (btn && nav) {
-            btn.addEventListener('click', () => nav.classList.toggle('open'));
+            btn.addEventListener('click', () => {
+                const isOpen = nav.classList.toggle('open');
+                btn.setAttribute('aria-expanded', isOpen);
+            });
         }
     </script>
 
