@@ -5,7 +5,7 @@ all:
       hosts:
         brewlyspace:
           ansible_connection: ssh
-          ansible_host: 'brewly.space'
+          ansible_host: 'brewly.ru'
           ansible_port: 22
 
   vars:

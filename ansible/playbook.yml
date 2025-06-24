@@ -1,42 +1,45 @@
 ---
-- name: Installing Nginx server and configuring SSL, Grafana, pgAdmin
+- name: Installing Nginx server 
   hosts: all
   gather_facts: true
   gather_subset: [all, virtual]
   no_log: false
+
   vars:
     server: "{{ inventory_hostname }}"
     email: "{{ email }}"
     certificate_path: "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
+    grafana_domain: "grafana.{{ domain }}"
+    pgadmin_domain: "pgadmin.{{ domain }}"
 
   vars_files:
     - vars/common.yml
 
   tasks:
 
-    - name: Install nginx and certbot
+    - name: Installing nginx and certbot
       ansible.builtin.apt:
         pkg:
-          - nginx
-          - certbot
+        - nginx
+        - certbot
         state: present
         update_cache: true
 
-    - name: Check for existing certificate
+    - name: Check if there are any certificates at all
       ansible.builtin.stat:
         path: "{{ certificate_path }}"
       register: cert_state
 
-    - name: Set SSL fact
+    - name: Establishing the fact of absence or presence of certificates
       ansible.builtin.set_fact:
         is_ssl: "{{ cert_state.stat.exists }}"
 
-    - name: Deploy base nginx config
+    - name: Base nginx config
       ansible.builtin.template:
         src: "{{ base_conf }}"
         dest: /etc/nginx/
 
-    - name: Deploy default nginx site config
+    - name: Installing nginx configs
       ansible.builtin.template:
         src: "{{ source }}"
         dest: /etc/nginx/conf.d/default.conf
@@ -46,19 +49,19 @@
       vars:
         is_ssl: "{{ is_ssl != '' }}"
 
-    - name: Deploy Grafana nginx config
+    - name: Deploy Grafana nginx proxy
       ansible.builtin.template:
         src: templates/nginx-grafana.conf.j2
         dest: /etc/nginx/conf.d/grafana.conf
-        mode: '0644'
+        mode: '644'
 
-    - name: Deploy pgAdmin nginx config
+    - name: Deploy pgAdmin nginx proxy
       ansible.builtin.template:
         src: templates/nginx-pgadmin.conf.j2
         dest: /etc/nginx/conf.d/pgadmin.conf
-        mode: '0644'
+        mode: '644'
 
-    - name: Create webroot directory for certbot
+    - name: Create webroot dir for certbot
       ansible.builtin.file:
         path: /var/www/html/
         state: directory
@@ -69,22 +72,26 @@
         name: nginx
         state: restarted
 
-    - name: Obtain or renew SSL certificates for all domains
+    - name: Creator
       ansible.builtin.shell:
         cmd: >-
-          certbot certonly --webroot -w /var/www/html/
-          {% for d in certbot_domains %}-d {{ d }} {% endfor %}
-          --email {{ email }} --agree-tos --non-interactive
+          certbot certonly
+            --webroot -w /var/www/html/
+            --email {{ email }}
+            --agree-tos --non-interactive
+            -d {{ domain }}
+            -d {{ grafana_domain }}
+            -d {{ pgadmin_domain }}
       register: certbot_output
       notify:
         - restart nginx
       when: not cert_state.stat.exists
 
-    - name: Debug certbot output
+    - name: certbot's output
       ansible.builtin.debug:
         var: certbot_output.stdout_lines
 
-    - name: Ensure is_ssl is set to true
+    - name: Redefine the variable is_ssl
       ansible.builtin.set_fact:
         is_ssl: true
 
@@ -96,7 +103,7 @@
         owner: root
         group: root
 
-    - name: Copy systemd daemons for certbot
+    - name: Copying systemd daemons of certbot
       ansible.builtin.copy:
         src: "{{ playbook_dir }}/daemons/"
         dest: /etc/systemd/system/
@@ -105,19 +112,19 @@
         group: root
         force: true
 
-    - name: Enable and start certbot daemons
+    - name: launch its daemons
       ansible.builtin.service:
         name: certbot-semi-automatic
         enabled: true
         state: started
 
-    - name: Enable and start certbot timer
+    - name: launch certbot's timer
       ansible.builtin.service:
         name: certbot-semi-automatic.timer
         enabled: true
         state: started
 
-    - name: Final reload of nginx
+    - name: Restart nginx for the applying configuration
       ansible.builtin.service:
         name: nginx
         state: restarted

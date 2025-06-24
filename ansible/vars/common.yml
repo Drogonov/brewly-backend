@@ -6,12 +6,10 @@ ssl: ssl
 source: "{{ playbook_dir }}/templates/default.conf.j2"
 base_conf: "{{ playbook_dir }}/templates/nginx.conf.j2"
 domain: brewly.ru
-grafana_domain: grafana.brewly.ru
-pgadmin_domain: pgadmin.brewly.ru
+grafana_domain: grafana.{{ domain }}
+pgadmin_domain: pgadmin.{{ domain }}
 app_port: 8080
+grafana_port: 3000
+pgadmin_port: 5050
 email: support@brewly.ru
 is_ssl: false
-certbot_domains:
-  - "{{ domain }}"
-  - "{{ grafana_domain }}"
-  - "{{ pgadmin_domain }}"
