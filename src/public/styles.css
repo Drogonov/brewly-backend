@@ -207,4 +207,113 @@ footer {
     pointer-events: none;
     color: #fff;
   }
+
+  /* Support page: contact line under title */
+  p.contact-line {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  /* — FAQ Styles — */
+  .faq {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    text-align: left;
+  }
+
+  .faq>h2 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    color: var(--bg);
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .faq details {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    background: #fff;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .faq details:hover {
+    border-color: var(--accent);
+  }
+
+  .faq summary {
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    user-select: none;
+  }
+
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq .arrow {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-right: 2px solid var(--fg);
+    border-bottom: 2px solid var(--fg);
+    transform: rotate(45deg);
+    transition: transform 0.3s ease;
+    margin-left: 0.5rem;
+  }
+
+  .faq details[open] .arrow {
+    transform: rotate(-135deg);
+  }
+
+  .faq .content {
+    padding: 0 1rem 1rem;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .faq .content p {
+    margin: 0.5rem 0 0;
+    line-height: 1.6;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Dark mode tweaks for support page */
+  @media (prefers-color-scheme: dark) {
+    p.contact-line {
+      color: #ddd;
+    }
+
+    .faq details {
+      background: #1e1e1e;
+      border-color: #333;
+    }
+
+    .faq summary,
+    .faq .arrow {
+      color: #ddd;
+      border-color: #ddd;
+    }
+
+    .faq details:hover {
+      border-color: var(--brand-light);
+    }
+  }
 }
