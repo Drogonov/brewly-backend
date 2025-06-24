@@ -40,20 +40,29 @@ export class NotFoundController {
       return res.sendStatus(404);
     }
 
-    const title = await this.localization.getWebText(
-      WebKeys.NOT_FOUND_TITLE, // например: «Page not found»
-    );
-    const message = await this.localization.getWebText(
-      WebKeys.NOT_FOUND_MESSAGE, // предполагается ключ NOT_FOUND
-    );
+    const t = (key: WebKeys) => this.localization.getWebText(key);
 
     return res
       .status(HttpStatus.NOT_FOUND)
       .render('not-found/404', {
-        title,
-        message,
+        siteTitle: await t(WebKeys.SITE_TITLE),
+        metaDescription: await t(WebKeys.META_DESCRIPTION),
+        ogTitle: await t(WebKeys.OG_TITLE),
+        ogDescription: await t(WebKeys.OG_DESCRIPTION),
+        ogImage: await t(WebKeys.OG_IMAGE),
+        headerLogo: await t(WebKeys.HEADER_LOGO),
+        navPrivacy: await t(WebKeys.NAV_PRIVACY),
+        navSupport: await t(WebKeys.NAV_SUPPORT),
+
+        notFoundTitle: await t(WebKeys.NOT_FOUND_TITLE),
+        notFoundMessage: await t(WebKeys.NOT_FOUND_MESSAGE),
+        backHomeText: await t(WebKeys.BACK_HOME_TEXT),
+        contactSupportText: await t(WebKeys.CONTACT_SUPPORT_TEXT),
+        supportEmail: "support@brewly.ru",
         homeUrl: '/',
-        supportEmail: process.env.SUPPORT_EMAIL,
+
+        currentYear: new Date().getFullYear(),
+        reservedText: await t(WebKeys.RESERVED_TEXT),
       });
   }
 }
