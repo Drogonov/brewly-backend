@@ -1,10 +1,8 @@
-const CACHE_NAME = 'brewly-cache-v1';
+const CACHE_NAME = 'brewly-static-v2';
 const PRECACHE_URLS = [
-    '/',                          // HTML shell
-    '/styles.css',                // CSS
-    '/manifest.json',             // PWA manifest
-    '/offline',                   // HBS‐rendered offline page
-    // icons
+    '/',
+    '/manifest.json',
+    '/offline',
     '/icons/favicon-16x16.png',
     '/icons/favicon-32x32.png',
     '/icons/apple-touch-icon.png',
@@ -12,51 +10,60 @@ const PRECACHE_URLS = [
     '/icons/android-chrome-512x512.png'
 ];
 
-// Install: cache the application shell
-self.addEventListener('install', event => {
-    event.waitUntil(
+self.addEventListener('install', e => {
+    e.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => cache.addAll(PRECACHE_URLS))
             .then(() => self.skipWaiting())
     );
 });
 
-// Activate: clean up old caches
-self.addEventListener('activate', event => {
-    event.waitUntil(
+self.addEventListener('activate', e => {
+    e.waitUntil(
         caches.keys().then(keys =>
             Promise.all(
-                keys
-                    .filter(key => key !== CACHE_NAME)
-                    .map(key => caches.delete(key))
+                keys.filter(k => k !== CACHE_NAME)
+                    .map(k => caches.delete(k))
             )
         ).then(() => self.clients.claim())
     );
 });
 
-// Fetch: serve from cache → network → offline HBS route
-self.addEventListener('fetch', event => {
-    const { request } = event;
+self.addEventListener('fetch', e => {
+    const req = e.request;
 
-    if (request.mode === 'navigate') {
-        event.respondWith(
-            fetch(request)
-                .then(resp => {
-                    const copy = resp.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-                    return resp;
+    // Navigation: try network first, fallback to cache/offline
+    if (req.mode === 'navigate') {
+        e.respondWith(
+            fetch(req)
+                .then(res => {
+                    const copy = res.clone();
+                    caches.open(CACHE_NAME).then(c => c.put(req, copy));
+                    return res;
                 })
                 .catch(() =>
-                    caches.match(request)
-                        .then(cached => cached || fetch('/offline'))
+                    caches.match(req).then(match => match || caches.match('/offline'))
                 )
         );
         return;
     }
 
-    event.respondWith(
-        caches.match(request).then(cached =>
-            cached || fetch(request).then(resp => resp)
-        )
+    // CSS: network-first so updates get pulled
+    if (req.destination === 'style') {
+        e.respondWith(
+            fetch(req)
+                .then(res => {
+                    const copy = res.clone();
+                    caches.open(CACHE_NAME).then(c => c.put(req, copy));
+                    return res;
+                })
+                .catch(() => caches.match(req))
+        );
+        return;
+    }
+
+    // Everything else: cache-first
+    e.respondWith(
+        caches.match(req).then(match => match || fetch(req))
     );
 });

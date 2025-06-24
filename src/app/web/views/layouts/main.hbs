@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8" />
-    <!-- Mobile viewport & notch support -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#f9fbfc" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -11,20 +10,16 @@
 
     <title>{{siteTitle}}</title>
     <meta name="description" content="{{metaDescription}}" />
-
-    <!-- Open Graph / Social preview -->
     <meta property="og:title" content="{{ogTitle}}" />
     <meta property="og:description" content="{{ogDescription}}" />
     <meta property="og:image" content="{{ogImage}}" />
 
-    <!-- Icons & PWA manifest (only one!) -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
-    <link rel="manifest" href="/manifest.json" />
+    <!-- preconnect for faster font load -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet" />
 
-    <!-- Fonts & Styles -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap" />
+    <!-- main stylesheet -->
     <link rel="stylesheet" href="/styles.css" />
 </head>
 
@@ -37,27 +32,47 @@
 
     {{> footer}}
 
-    <!-- ONE nav‐toggle script, after header/footer are in the DOM -->
     <script>
-        // 1) First, sanity-check that we actually found the elements:
-        const btn = document.querySelector('.nav-toggle');
-        const nav = document.querySelector('.site-nav');
+        (function () {
+            const btn = document.querySelector('.nav-toggle');
+            const nav = document.querySelector('.site-nav');
+            const backdrop = document.querySelector('.nav-backdrop');
 
-        // 2) If they’re there, hook up a click listener with its own alert/log:
-        if (btn && nav) {
-            btn.addEventListener('click', () => {
-                const isOpen = nav.classList.toggle('open');
-                btn.setAttribute('aria-expanded', isOpen);
-            });
-        }
+            function openNav() {
+                nav.classList.add('open');
+                btn.setAttribute('aria-expanded', 'true');
+            }
+            function closeNav() {
+                nav.classList.remove('open');
+                btn.setAttribute('aria-expanded', 'false');
+            }
+
+            if (btn && nav && backdrop) {
+                btn.addEventListener('click', () => {
+                    nav.classList.toggle('open')
+                        ? openNav()
+                        : closeNav();
+                });
+
+                backdrop.addEventListener('click', closeNav);
+
+                document.addEventListener('keyup', e => {
+                    if (e.key === 'Escape' && nav.classList.contains('open')) {
+                        closeNav();
+                    }
+                });
+            }
+        })();
     </script>
 
-    <!-- Register Service Worker -->
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
+            navigator.serviceWorker
+                .register('/service-worker.js')
                 .then(() => console.log('Service Worker registered'))
-                .catch(err => console.error('SW registration failed:', err));
+                .catch(err =>
+                    console.error('SW registration failed:', err)
+                );
         }
     </script>
 </body>

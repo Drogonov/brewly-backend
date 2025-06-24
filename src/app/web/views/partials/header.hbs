@@ -1,19 +1,21 @@
-<!-- views/partials/header.hbs -->
-<header class="site-header">
+<header class="site-header" role="banner">
     <div class="logo">
         <a href="/" aria-label="Go to home">{{headerLogo}}</a>
     </div>
 
-    <!-- note the `type="button"` and aria-expanded -->
-    <button type="button" class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+    <!-- hamburger -->
+    <button type="button" class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false"
+        aria-controls="primary-nav">
+        ☰
+    </button>
 
-    <nav class="site-nav">
+    <nav id="primary-nav" class="site-nav" role="navigation" aria-label="Primary">
         <a href="/privacy-policy">{{navPrivacy}}</a>
         <a href="/support">{{navSupport}}</a>
 
         <div class="lang-switcher">
-            <select class="lang-select"
-                onchange="document.cookie = 'lang=' + this.value + '; path=/; max-age=' + 60*60*24*365; window.location.reload();">
+            <select class="lang-select" onchange="document.cookie = 'lang=' + this.value + '; path=/; max-age=' + 60*60*24*365;
+                  window.location.reload();" aria-label="Select language">
                 <option value="en" {{#if (eq lang 'en' )}}selected{{/if}}>🇺🇸 English</option>
                 <option value="ru" {{#if (eq lang 'ru' )}}selected{{/if}}>🇷🇺 Русский</option>
             </select>
@@ -22,4 +24,7 @@
             </svg>
         </div>
     </nav>
+
+    <!-- backdrop inserted here -->
+    <div class="nav-backdrop" aria-hidden="true"></div>
 </header>
