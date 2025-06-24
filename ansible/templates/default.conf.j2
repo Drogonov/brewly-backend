@@ -1,7 +1,7 @@
 server {
     listen      80;
     listen      [::]:80;
-    server_name brewly.space;
+    server_name {{ domain }};
 
     # serve .well-known/acme-challenge from our webroot
     location ^~ /.well-known/acme-challenge/ {

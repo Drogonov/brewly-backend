@@ -1,13 +1,12 @@
 ---
-
-- name: Installing Nginx server 
+- name: Installing Nginx server and configuring SSL, Grafana, pgAdmin
   hosts: all
   gather_facts: true
   gather_subset: [all, virtual]
   no_log: false
   vars:
     server: "{{ inventory_hostname }}"
-    email: "root@rooted.onion"
+    email: "{{ email }}"
     certificate_path: "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
 
   vars_files:
@@ -15,31 +14,30 @@
 
   tasks:
 
-    - name: Installing nginx and certbot
+    - name: Install nginx and certbot
       ansible.builtin.apt:
         pkg:
-        - nginx
-        - certbot
+          - nginx
+          - certbot
         state: present
         update_cache: true
 
-    - name: Check if there are any certificates at all
+    - name: Check for existing certificate
       ansible.builtin.stat:
         path: "{{ certificate_path }}"
       register: cert_state
 
-    - name: Establishing the fact of absence or presence of certificates
+    - name: Set SSL fact
       ansible.builtin.set_fact:
         is_ssl: "{{ cert_state.stat.exists }}"
 
-    - name: Base nginx config
+    - name: Deploy base nginx config
       ansible.builtin.template:
         src: "{{ base_conf }}"
         dest: /etc/nginx/
 
-    - name: Installing nginx configs
+    - name: Deploy default nginx site config
       ansible.builtin.template:
-        # src: files/{{ server }}/nginx/sites-available/sitename.conf
         src: "{{ source }}"
         dest: /etc/nginx/conf.d/default.conf
         mode: '644'
@@ -48,7 +46,19 @@
       vars:
         is_ssl: "{{ is_ssl != '' }}"
 
-    - name: Create webroot dir for certbot
+    - name: Deploy Grafana nginx config
+      ansible.builtin.template:
+        src: templates/nginx-grafana.conf.j2
+        dest: /etc/nginx/conf.d/grafana.conf
+        mode: '0644'
+
+    - name: Deploy pgAdmin nginx config
+      ansible.builtin.template:
+        src: templates/nginx-pgadmin.conf.j2
+        dest: /etc/nginx/conf.d/pgadmin.conf
+        mode: '0644'
+
+    - name: Create webroot directory for certbot
       ansible.builtin.file:
         path: /var/www/html/
         state: directory
@@ -59,19 +69,22 @@
         name: nginx
         state: restarted
 
-    - name: Creator
+    - name: Obtain or renew SSL certificates for all domains
       ansible.builtin.shell:
-        cmd: 'certbot certonly --webroot -w /var/www/html/ --email {{ email }} --agree-tos --non-interactive -d {{ domain }}'
+        cmd: >-
+          certbot certonly --webroot -w /var/www/html/
+          {% for d in certbot_domains %}-d {{ d }} {% endfor %}
+          --email {{ email }} --agree-tos --non-interactive
       register: certbot_output
       notify:
         - restart nginx
-      when: certificate_path
+      when: not cert_state.stat.exists
 
-    - name: certbot's output
+    - name: Debug certbot output
       ansible.builtin.debug:
-        var: certbot_output.results
+        var: certbot_output.stdout_lines
 
-    - name: Redefine the variable is_ssl
+    - name: Ensure is_ssl is set to true
       ansible.builtin.set_fact:
         is_ssl: true
 
@@ -83,7 +96,7 @@
         owner: root
         group: root
 
-    - name: Copying systemd daemons of certbot
+    - name: Copy systemd daemons for certbot
       ansible.builtin.copy:
         src: "{{ playbook_dir }}/daemons/"
         dest: /etc/systemd/system/
@@ -92,19 +105,19 @@
         group: root
         force: true
 
-    - name: launch its daemons
+    - name: Enable and start certbot daemons
       ansible.builtin.service:
         name: certbot-semi-automatic
         enabled: true
         state: started
 
-    - name: launch certbot's timer
+    - name: Enable and start certbot timer
       ansible.builtin.service:
         name: certbot-semi-automatic.timer
         enabled: true
         state: started
 
-    - name: Restart nginx for the apllying configuration
+    - name: Final reload of nginx
       ansible.builtin.service:
         name: nginx
         state: restarted
