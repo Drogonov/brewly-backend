@@ -3,18 +3,28 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Mobile viewport & notch support -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f9fbfc" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
     <title>{{siteTitle}}</title>
     <meta name="description" content="{{metaDescription}}" />
 
-    <!-- Social preview -->
+    <!-- Open Graph / Social preview -->
     <meta property="og:title" content="{{ogTitle}}" />
     <meta property="og:description" content="{{ogDescription}}" />
     <meta property="og:image" content="{{ogImage}}" />
 
-    <!-- Blocky title font -->
+    <!-- Icons & PWA manifest (only one!) -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Fonts & Styles -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap" />
-    <!-- Shared styles -->
     <link rel="stylesheet" href="/styles.css" />
 </head>
 
@@ -26,6 +36,24 @@
     </main>
 
     {{> footer}}
+
+    <!-- Mobile nav toggle -->
+    <script>
+        const btn = document.querySelector('.nav-toggle');
+        const nav = document.querySelector('.site-nav');
+        if (btn && nav) {
+            btn.addEventListener('click', () => nav.classList.toggle('open'));
+        }
+    </script>
+
+    <!-- Register Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(() => console.log('Service Worker registered'))
+                .catch(err => console.error('SW registration failed:', err));
+        }
+    </script>
 </body>
 
 </html>

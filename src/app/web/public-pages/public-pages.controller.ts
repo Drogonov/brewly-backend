@@ -68,7 +68,6 @@ export class PublicPagesController {
       navSupport: await t(WebKeys.NAV_SUPPORT),
       lang: I18nContext.current()?.lang ?? 'en',
 
-
       supportTitle: await t(WebKeys.SUPPORT_TITLE),
       supportContactText: await t(WebKeys.SUPPORT_CONTACT_TEXT),
       supportEmail: await t(WebKeys.SUPPORT_EMAIL),
@@ -83,6 +82,29 @@ export class PublicPagesController {
 
       currentYear: new Date().getFullYear(),
       reservedText: await t(WebKeys.RESERVED_TEXT),
+    };
+  }
+
+  @Get('offline')
+  @Public()
+  @Render('public-pages/offline')
+  async serveOffline() {
+    const t = (key: WebKeys) => this.localization.getWebText(key);
+
+    return {
+      siteTitle: await t(WebKeys.SITE_TITLE),
+      metaDescription: await t(WebKeys.META_DESCRIPTION),
+      ogTitle: await t(WebKeys.OG_TITLE),
+      ogDescription: await t(WebKeys.OG_DESCRIPTION),
+      ogImage: await t(WebKeys.OG_IMAGE),
+      headerLogo: await t(WebKeys.HEADER_LOGO),
+      navPrivacy: await t(WebKeys.NAV_PRIVACY),
+      navSupport: await t(WebKeys.NAV_SUPPORT),
+      lang: I18nContext.current()?.lang ?? 'en',
+
+      offlineTitle: 'You’re Offline',
+      offlineMessage: 'Oops — it looks like you’re not connected to the internet.',
+      backHomeText: 'Go Home',
     };
   }
 }

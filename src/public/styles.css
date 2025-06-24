@@ -1,5 +1,3 @@
-/* styles.css */
-
 :root {
   --brand-dark: #6e8b73;
   --brand-light: #bca67a;
@@ -8,6 +6,12 @@
   --fg: #333;
   --font-sans: Arial, sans-serif;
   --font-display: 'Anton', sans-serif;
+
+  /* Safe-area insets for notches */
+  --safe-top: constant(safe-area-inset-top);
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: constant(safe-area-inset-bottom);
+  --safe-bottom: env(safe-area-inset-bottom);
 }
 
 *,
@@ -22,7 +26,6 @@ body {
   padding: 0;
   width: 100%;
   height: 100%;
-  /* or min-height: 100vh on pages needing full-height flex */
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
@@ -74,7 +77,7 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
+  padding: calc(1rem + var(--safe-top)) 2rem 1rem;
   background: linear-gradient(90deg, var(--brand-dark), var(--brand-light));
 }
 
@@ -87,6 +90,17 @@ a {
   text-decoration: none;
 }
 
+/* Hamburger toggle button (hidden on desktop) */
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Default nav */
 .site-nav {
   display: flex;
   gap: 1rem;
@@ -110,6 +124,7 @@ main {
   max-width: 600px;
   margin: 3rem auto;
   padding: 0 1rem;
+  padding-bottom: calc(1rem + var(--safe-bottom));
   text-align: center;
 }
 
@@ -139,15 +154,35 @@ footer {
   padding: 2rem 1rem;
 }
 
-/* Responsive */
+/* Responsive: mobile-specific */
 @media (max-width: 600px) {
   .site-header {
-    padding: 0.75rem 1rem;
+    padding: calc(0.75rem + var(--safe-top)) 1rem 0.75rem;
   }
 
   main {
     margin: 2rem 1rem;
-    padding: 1.5rem;
+    padding: 1.5rem 1rem calc(1rem + var(--safe-bottom));
+  }
+
+  /* Show hamburger, hide desktop nav */
+  .nav-toggle {
+    display: block;
+  }
+
+  .site-nav {
+    position: absolute;
+    top: calc(100% + var(--safe-top));
+    right: 0;
+    background: var(--brand-dark);
+    flex-direction: column;
+    display: none;
+    width: 200px;
+    z-index: 1000;
+  }
+
+  .site-nav.open {
+    display: flex;
   }
 }
 
@@ -208,14 +243,15 @@ footer {
     color: #fff;
   }
 
-  /* Support page: contact line under title */
+  /* Support page tweaks */
   p.contact-line {
     font-size: 1.125rem;
     margin-bottom: 2rem;
     text-align: center;
+    color: #ddd;
   }
 
-  /* — FAQ Styles — */
+  /* FAQ Styles */
   .faq {
     max-width: 600px;
     margin: 2rem auto;
@@ -232,16 +268,16 @@ footer {
   }
 
   .faq details {
-    border: 1px solid #ddd;
+    border: 1px solid #333;
     border-radius: 6px;
     margin-bottom: 1rem;
-    background: #fff;
+    background: #1e1e1e;
     overflow: hidden;
     transition: border-color 0.2s;
   }
 
   .faq details:hover {
-    border-color: var(--accent);
+    border-color: var(--brand-light);
   }
 
   .faq summary {
@@ -253,6 +289,7 @@ footer {
     cursor: pointer;
     font-weight: 600;
     user-select: none;
+    color: #ddd;
   }
 
   .faq summary::-webkit-details-marker {
@@ -292,28 +329,6 @@ footer {
     to {
       opacity: 1;
       transform: translateY(0);
-    }
-  }
-
-  /* Dark mode tweaks for support page */
-  @media (prefers-color-scheme: dark) {
-    p.contact-line {
-      color: #ddd;
-    }
-
-    .faq details {
-      background: #1e1e1e;
-      border-color: #333;
-    }
-
-    .faq summary,
-    .faq .arrow {
-      color: #ddd;
-      border-color: #ddd;
-    }
-
-    .faq details:hover {
-      border-color: var(--brand-light);
     }
   }
 }

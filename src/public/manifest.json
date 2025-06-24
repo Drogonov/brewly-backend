@@ -1,0 +1,20 @@
+{
+    "name": "Your Site Title",
+    "short_name": "Brewly",
+    "start_url": "/?utm_source=homescreen",
+    "display": "standalone",
+    "background_color": "#f9fbfc",
+    "theme_color": "#6e8b73",
+    "icons": [
+        {
+            "src": "/icons/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
