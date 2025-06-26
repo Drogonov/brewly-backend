@@ -32,5 +32,6 @@
     "FRIEND_REQUEST_TO": "Запрос дружбы пользователю {userName}",
     "FRIEND_REQUEST_FROM": "Запрос дружбы от {userName}",
     "TEAM_INVITATION_TO": "Приглашение в команду пользователю {userName}",
-    "TEAM_INVITATION_FROM": "Приглашение в команду от {userName}"
+    "TEAM_INVITATION_FROM": "Приглашение в команду от {userName}",
+    "DELETE_USER": "Пользователь {{email}} был успешно удален"
 }

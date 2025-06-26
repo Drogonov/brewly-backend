@@ -1,15 +1,8 @@
 ---
 
-ssl_certificate: "ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;"
-ssl_certificate_key: "ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;"
-ssl: ssl
-source: "{{ playbook_dir }}/templates/default.conf.j2"
-base_conf: "{{ playbook_dir }}/templates/nginx.conf.j2"
 domain: brewly.ru
-grafana_domain: grafana.{{ domain }}
-pgadmin_domain: pgadmin.{{ domain }}
+grafana_domain: grafana.ru.space
+pgadmin_domain: pgadmin.ru.space
 app_port: 8080
 grafana_port: 3000
 pgadmin_port: 5050
-email: support@brewly.ru
-is_ssl: false

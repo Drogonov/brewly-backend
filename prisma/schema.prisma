@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -20,6 +17,7 @@ model User {
   id                      Int                      @id @default(autoincrement())
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
+  deletedAt               DateTime?
   userName                String?
   userImageURL            String?
   email                   String                   @unique
@@ -29,7 +27,7 @@ model User {
   otpExpiresAt            DateTime?
   isVerificated           Boolean
   currentCompanyId        Int?
-  currentCompany          Company?                 @relation("CurrentUserCompany", fields: [currentCompanyId], references: [id])
+  currentCompany          Company?                 @relation("CurrentUserCompany", fields: [currentCompanyId], references: [id], onDelete: Cascade)
   sessions                Session[]
   cuppingInvitations      CuppingInvitation[]
   sampleTestings          SampleTesting[]
@@ -49,7 +47,7 @@ model Session {
   updatedAt DateTime    @updatedAt
   hashedRt  String?
   userId    Int
-  user      User        @relation(fields: [userId], references: [id])
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   type      SessionType
 }
 
@@ -69,14 +67,11 @@ model UserToCompanyRelation {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   userId    Int
   companyId Int
-
-  user    User    @relation("RelatedCompanies", fields: [userId], references: [id])
-  company Company @relation("RelatedUsers", fields: [companyId], references: [id])
-
-  role Role
+  user      User     @relation("RelatedCompanies", fields: [userId], references: [id], onDelete: Cascade)
+  company   Company  @relation("RelatedUsers", fields: [companyId], references: [id])
+  role      Role
 
   @@unique([userId, companyId])
 }
@@ -97,26 +92,26 @@ enum TeamInvitationType {
 
 model Friendship {
   id                  Int            @id @default(autoincrement())
-  sender              User           @relation("FriendshipSender", fields: [senderId], references: [id])
   senderId            Int
-  receiver            User           @relation("FriendshipReceiver", fields: [receiverId], references: [id])
   receiverId          Int
   type                FriendshipType
   createdAt           DateTime       @default(now())
   wasLoadedByReceiver Boolean        @default(false)
+  sender              User           @relation("FriendshipSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver            User           @relation("FriendshipReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
 }
 
 model TeamInvitation {
   id                  Int                @id @default(autoincrement())
   companyId           Int
-  company             Company            @relation("TeamInvitationCompany", fields: [companyId], references: [id])
-  sender              User               @relation("TeamInvitationSender", fields: [senderId], references: [id])
   senderId            Int
-  receiver            User               @relation("TeamInvitationReceiver", fields: [receiverId], references: [id])
   receiverId          Int
   type                TeamInvitationType
   createdAt           DateTime           @default(now())
   wasLoadedByReceiver Boolean            @default(false)
+  company             Company            @relation("TeamInvitationCompany", fields: [companyId], references: [id])
+  sender              User               @relation("TeamInvitationSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver            User               @relation("TeamInvitationReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
 }
 
 //
@@ -166,10 +161,10 @@ model CompanyRule {
   updatedAt       DateTime        @updatedAt
   name            String
   value           Boolean
-  company         Company         @relation("CompanyRuleRelation", fields: [companyId], references: [id])
   companyId       Int
   companyRuleType CompanyRuleType
   ruleForRole     Role
+  company         Company         @relation("CompanyRuleRelation", fields: [companyId], references: [id])
 }
 
 //
@@ -183,14 +178,14 @@ model Cupping {
   createdAt              DateTime                     @default(now())
   updatedAt              DateTime                     @updatedAt
   cuppingCreatorId       Int
-  cuppingCreator         User                         @relation("CreatedCuppingsByUser", fields: [cuppingCreatorId], references: [id])
+  cuppingCreator         User                         @relation("CreatedCuppingsByUser", fields: [cuppingCreatorId], references: [id], onDelete: Cascade)
   cuppingName            String
   cuppingType            CuppingType
   eventDate              DateTime?
   endDate                DateTime?
   companyId              Int
-  company                Company                      @relation(fields: [companyId], references: [id])
   settingsId             Int
+  company                Company                      @relation(fields: [companyId], references: [id])
   settings               CuppingSettings              @relation(fields: [settingsId], references: [id])
   invitations            CuppingInvitation[]
   coffeePacks            CoffeePack[]                 @relation("CuppingCoffeePacks")
@@ -217,11 +212,11 @@ enum CuppingType {
 model CuppingInvitation {
   id                  Int      @id @default(autoincrement())
   createdAt           DateTime @default(now())
-  cupping             Cupping  @relation(fields: [cuppingId], references: [id])
   cuppingId           Int
-  user                User     @relation(fields: [userId], references: [id])
   userId              Int
   wasLoadedByReceiver Boolean  @default(false)
+  cupping             Cupping  @relation(fields: [cuppingId], references: [id])
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model CuppingSampleTestingResult {
@@ -229,27 +224,28 @@ model CuppingSampleTestingResult {
   createdAt                          DateTime                             @default(now())
   updatedAt                          DateTime                             @updatedAt
   cuppingId                          Int
-  cupping                            Cupping                              @relation(fields: [cuppingId], references: [id])
   coffeePackId                       Int
-  coffeePack                         CoffeePack                           @relation(fields: [coffeePackId], references: [id])
   averageScore                       Int
   cuppingSampleTestingPropertyResult CuppingSampleTestingPropertyResult[]
+  cupping                            Cupping                              @relation(fields: [cuppingId], references: [id])
+  coffeePack                         CoffeePack                           @relation(fields: [coffeePackId], references: [id])
 
   @@unique([cuppingId, coffeePackId])
 }
 
 model CuppingSampleTestingPropertyResult {
-  id                           Int                        @id @default(autoincrement())
-  createdAt                    DateTime                   @default(now())
-  updatedAt                    DateTime                   @updatedAt
+  id                           Int          @id @default(autoincrement())
+  createdAt                    DateTime     @default(now())
+  updatedAt                    DateTime     @updatedAt
   sampleTestingResultId        Int
-  sampleTestingResult          CuppingSampleTestingResult @relation(fields: [sampleTestingResultId], references: [id])
   propertyType                 PropertyType
   averageIntensivityScore      Int
   averageQualityScore          Int
   averageChiefIntensivityScore Int
   averageChiefQualityScore     Int
   comments                     String[]
+
+  sampleTestingResult CuppingSampleTestingResult @relation(fields: [sampleTestingResultId], references: [id])
 }
 
 model CuppingSettings {
@@ -260,11 +256,11 @@ model CuppingSettings {
   openSampleNameCupping Boolean
   singleUserCupping     Boolean
   inviteAllTeammates    Boolean
-  cuppings              Cupping[]
   companyId             Int
-  company               Company   @relation(fields: [companyId], references: [id])
   userId                Int
-  user                  User      @relation(fields: [userId], references: [id])
+  cuppings              Cupping[]
+  company               Company   @relation(fields: [companyId], references: [id])
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model DefaultCuppingSettings {
@@ -277,9 +273,9 @@ model DefaultCuppingSettings {
   inviteAllTeammates    Boolean
   defaultCuppingName    String
   companyId             Int
-  company               Company  @relation(fields: [companyId], references: [id])
   userId                Int
-  user                  User     @relation(fields: [userId], references: [id])
+  company               Company  @relation(fields: [companyId], references: [id])
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, companyId])
 }
@@ -311,14 +307,14 @@ model CoffeePack {
   createdAt                  DateTime                     @default(now())
   updatedAt                  DateTime                     @updatedAt
   companyId                  Int
-  company                    Company                      @relation(fields: [companyId], references: [id])
   sampleTypeId               Int
-  sampleType                 SampleType                   @relation(fields: [sampleTypeId], references: [id])
   roastDate                  DateTime
   openDate                   DateTime?
   packIsOver                 Boolean                      @default(false)
   weight                     Int
   barCode                    String?
+  company                    Company                      @relation(fields: [companyId], references: [id])
+  sampleType                 SampleType                   @relation(fields: [sampleTypeId], references: [id])
   cuppings                   Cupping[]                    @relation("CuppingCoffeePacks")
   sampleTesting              SampleTesting[]
   cuppingHiddenPackName      CuppingHiddenPackName[]
@@ -336,12 +332,12 @@ model SampleTesting {
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
   userId               Int
-  user                 User             @relation(fields: [userId], references: [id])
   companyId            Int
-  company              Company          @relation(fields: [companyId], references: [id])
   cuppingId            Int
-  cupping              Cupping          @relation(fields: [cuppingId], references: [id])
   coffeePackId         Int
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company              Company          @relation(fields: [companyId], references: [id])
+  cupping              Cupping          @relation(fields: [cuppingId], references: [id])
   coffeePack           CoffeePack       @relation(fields: [coffeePackId], references: [id])
   userSampleProperties SampleProperty[]
 }
@@ -355,7 +351,7 @@ model SampleProperty {
   quality         Int
   comment         String?
   sampleTestingId Int
-  sampleTesting   SampleTesting @relation(fields: [sampleTestingId], references: [id])
+  sampleTesting   SampleTesting @relation(fields: [sampleTestingId], references: [id], onDelete: Cascade)
 }
 
 enum PropertyType {

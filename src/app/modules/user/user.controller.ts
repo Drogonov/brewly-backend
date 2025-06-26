@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -133,6 +134,15 @@ export class UserController {
     @Body() dto: SaveEditUserRequest
   ): Promise<IStatusResponse> {
     return this.userService.saveEditUser(userId, dto)
+  }
+
+  @Delete('delete')
+  @ApiOperation({ summary: 'Delete user info' })
+  @ApiOkResponse({ description: 'Returns DTO with status of delete operation', type: StatusResponseDto })
+  deleteUser(
+    @GetCurrentUserId() userId: number
+  ): Promise<IStatusResponse> {
+    return this.userService.deleteUser(userId)
   }
 
   @Post('verify-new-email')

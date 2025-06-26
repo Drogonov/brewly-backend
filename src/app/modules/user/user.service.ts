@@ -1,5 +1,4 @@
-import { Injectable, HttpException } from '@nestjs/common';
-import { PrismaService } from 'src/app/common/services/prisma/prisma.service';
+import { Injectable, HttpException, Inject } from '@nestjs/common';
 import {
   IStatusResponse,
   SearchUserType,
@@ -31,6 +30,7 @@ import {
   TeamInvitationType,
   CuppingInvitation,
   Cupping,
+  PrismaClient,
 } from '@prisma/client';
 import { MappingService } from 'src/app/common/services/mapping.service';
 import { CompanyRulesService } from 'src/app/common/services/company-rules.service';
@@ -44,11 +44,13 @@ import { IconsService } from 'src/app/common/services/icons/icons.service';
 import { IconKey } from 'src/app/common/services/icons/icon-keys.enum';
 import { BusinessErrorKeys, CuppingKeys } from 'src/app/common/localization/generated';
 import { UserRole } from 'src/app/common/dto';
+import { PrismaService } from 'src/app/common/services/prisma/prisma.service';
 
 @Injectable()
 export class UserService {
   constructor(
-    private prisma: PrismaService,
+    @Inject(PrismaClient) private readonly prisma: PrismaClient,
+    private prismaService: PrismaService,
     private mappingService: MappingService,
     private companyRulesService: CompanyRulesService,
     private errorHandlingService: ErrorHandlingService,
@@ -353,6 +355,25 @@ export class UserService {
           UserKeys.USER_INFO_UPDATED,
         ),
       };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deleteUser(
+    userId: number,
+  ): Promise<StatusResponseDto> {
+    try {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      await this.prismaService.deleteUser(user.id)
+
+      return {
+        status: StatusType.SUCCESS,
+        description: await this.localizationStringsService.getUserText(
+          UserKeys.DELETE_USER,
+         { email: user.email },
+        )
+      }
     } catch (error) {
       throw error;
     }
