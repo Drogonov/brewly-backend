@@ -3,7 +3,7 @@ all:
   children:
     backend_servers:
       hosts:
-        brewlyspace:
+        brewly:
           ansible_connection: ssh
           ansible_host: 'brewly.ru'
           ansible_port: 22
