@@ -1,8 +1,8 @@
 ---
 
 domain: brewly.ru
-grafana_domain: grafana.ru.space
-pgadmin_domain: pgadmin.ru.space
+grafana_domain: grafana.brewly.ru
+pgadmin_domain: pgadmin.brewly.ru
 app_port: 8080
 grafana_port: 3000
 pgadmin_port: 5050
