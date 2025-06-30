@@ -30,7 +30,6 @@ import {
   TeamInvitationType,
   CuppingInvitation,
   Cupping,
-  PrismaClient,
 } from '@prisma/client';
 import { MappingService } from 'src/app/common/services/mapping.service';
 import { CompanyRulesService } from 'src/app/common/services/company-rules.service';
@@ -49,9 +48,6 @@ import { PrismaService } from 'src/app/common/services/prisma/prisma.service';
 @Injectable()
 export class UserService {
   constructor(
-    // @Inject(PrismaClient) private readonly prisma: PrismaClient,
-    // private prismaService: PrismaService,
-
     private prisma: PrismaService,
     private mappingService: MappingService,
     private companyRulesService: CompanyRulesService,
@@ -362,26 +358,36 @@ export class UserService {
     }
   }
 
-  async deleteUser(
-    userId: number,
-  ): Promise<StatusResponseDto> {
-    try {
-      const user = await this.prisma.user.findUnique({ where: { id: userId } });
-      if (!user) {
-        throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_DOESNT_EXIST);
-      }
-      await this.prismaService.deleteUser(user.id);
+  async deleteUser(userId: number): Promise<StatusResponseDto> {
+    // 1) на всякий случай проверим, что пользователь есть
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
 
-      return {
-        status: StatusType.SUCCESS,
-        description: await this.localizationStringsService.getUserText(
-          UserKeys.DELETE_USER,
-          { email: user.email },
-        )
-      }
-    } catch (error) {
-      throw error;
-    }
+    if (!user) {
+      throw await this.errorHandlingService.getBusinessError(
+        BusinessErrorKeys.USER_DOESNT_EXIST,
+      );
+    };
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { deletedAt: new Date() },
+    });
+
+    // TODO: - Implement normal soft delete logic
+    await this.prisma.$executeRaw`
+      DELETE FROM "User"
+      WHERE id = ${userId}
+    `;
+
+    return {
+      status: StatusType.SUCCESS,
+      description: await this.localizationStringsService.getUserText(
+        UserKeys.DELETE_USER,
+        { email: user.email },
+      ),
+    };
   }
 
   async verifyNewEmail(

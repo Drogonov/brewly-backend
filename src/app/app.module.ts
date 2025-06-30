@@ -30,7 +30,8 @@ import { NotFoundModule } from './web/not-found/not-found.module';
 import { PublicPagesModule } from './web/public-pages/public-pages.module';
 import { AuthModule } from 'src/app/modules/auth/auth.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { CleanupService } from './common/services/cleanup-service';
+import { CleanupService } from './common/services/cleanup/cleanup.service';
+import { CleanupModule } from './common/services/cleanup/cleanup.module';
 
 @Module({
   imports: [
@@ -98,6 +99,7 @@ import { CleanupService } from './common/services/cleanup-service';
     TemplateModule,
     MailModule,
     PrismaModule,
+    CleanupModule,
 
     // feature modules
     AuthModule,
@@ -114,7 +116,6 @@ import { CleanupService } from './common/services/cleanup-service';
   ],
   controllers: [],
   providers: [
-    CleanupService,
     LanguageUserBodyResolver,
     { provide: APP_GUARD, useClass: AtGuard },
     { provide: APP_PIPE, useClass: CustomValidationPipe },

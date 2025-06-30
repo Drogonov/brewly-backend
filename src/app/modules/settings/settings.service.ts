@@ -16,7 +16,6 @@ import {
   Company,
   Friendship,
   FriendshipType,
-  PrismaClient,
   Role,
   TeamInvitation,
   TeamInvitationType,
@@ -36,7 +35,7 @@ import {
 @Injectable()
 export class SettingsService {
   constructor(
-    @Inject(PrismaClient) private readonly prisma: PrismaClient,
+    private prisma: PrismaService,
     private mappingService: MappingService,
     private errorHandlingService: ErrorHandlingService,
     private iconsService: IconsService,

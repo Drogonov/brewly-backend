@@ -6,7 +6,7 @@ import { ACCESS_TOKEN_EXPIRATION, REFRESH_TOKEN_EXPIRATION } from 'src/app/commo
 import { ConfigurationService } from 'src/app/common/services/config/configuration.service';
 import { ITokensResponse } from 'src/app/common/dto';
 import * as argon from 'argon2';
-import { User, Session, SessionType, PrismaClient } from '@prisma/client';
+import { User, Session, SessionType } from '@prisma/client';
 import ms from 'ms';
 import { ErrorHandlingService } from 'src/app/common/error-handling/error-handling.service';
 import { ErrorsKeys } from 'src/app/common/localization/generated';
@@ -14,7 +14,7 @@ import { ErrorsKeys } from 'src/app/common/localization/generated';
 @Injectable()
 export class JWTSessionService {
   constructor(
-    @Inject(PrismaClient) private readonly prisma: PrismaClient,
+    private prisma: PrismaService,
     private jwtService: JwtService,
     private config: ConfigurationService,
     private errorHandlingService: ErrorHandlingService

@@ -33,5 +33,5 @@
   "FRIEND_REQUEST_FROM": "Friend request from {userName}",
   "TEAM_INVITATION_TO": "Team invitation to {userName}",
   "TEAM_INVITATION_FROM": "Team invitation from {userName}",
-  "DELETE_USER": "User {{email}} was successfully deleted"
+  "DELETE_USER": "User {email} was successfully deleted"
 }

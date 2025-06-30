@@ -4,6 +4,6 @@ import { TemplateService } from './template.service';
 @Global()
 @Module({
   providers: [TemplateService],
-  exports:   [TemplateService],
+  exports: [TemplateService],
 })
-export class TemplateModule {}
+export class TemplateModule { }

@@ -18,12 +18,12 @@ import { LocalizationOptionsListService } from 'src/app/common/localization/loca
 import { LocalizationOptionListConst } from 'src/app/common/localization/localization-options-list/localization-options-list.model';
 import { BusinessErrorKeys, SamplesKeys } from 'src/app/common/localization/generated';
 import { ArchiveSampleDto } from './dto/archive-sample.request.dto';
-import { PrismaClient, SampleType } from '@prisma/client';
+import { SampleType } from '@prisma/client';
 
 @Injectable()
 export class SamplesService {
     constructor(
-        @Inject(PrismaClient) private readonly prisma: PrismaClient,
+        private prisma: PrismaService,
         private mappingService: MappingService,
         private errorHandlingService: ErrorHandlingService,
         private localizationStringsService: LocalizationStringsService,

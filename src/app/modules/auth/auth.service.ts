@@ -1,6 +1,6 @@
 // src/app.modules/auth/auth.service.ts
 import { Injectable, ForbiddenException, Inject } from '@nestjs/common';
-import { Prisma, PrismaClient, Role, User } from '@prisma/client';
+import { Prisma, Role, User } from '@prisma/client';
 import * as argon from 'argon2';
 import { PrismaService } from 'src/app/common/services/prisma/prisma.service';
 import {
@@ -26,7 +26,7 @@ import { PinoLogger } from 'nestjs-pino';
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(PrismaClient) private readonly prisma: PrismaClient,
+    private prisma: PrismaService,
     private jwtSessionService: JWTSessionService,
     private mailService: MailService,
     private configService: ConfigurationService,

@@ -17,7 +17,6 @@ import { PrismaService } from 'src/app/common/services/prisma/prisma.service';
 import {
     Cupping,
     CuppingType,
-    PrismaClient,
     PropertyType,
     Role,
     SampleProperty,
@@ -30,7 +29,7 @@ import { BusinessErrorKeys, CuppingKeys } from 'src/app/common/localization/gene
 @Injectable()
 export class CuppingService {
     constructor(
-        @Inject(PrismaClient) private readonly prisma: PrismaClient,
+        private prisma: PrismaService,
         private readonly errorHandlingService: ErrorHandlingService,
         private readonly localizationStringsService: LocalizationStringsService,
         private readonly mappingService: MappingService,
