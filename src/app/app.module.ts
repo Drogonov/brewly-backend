@@ -29,6 +29,8 @@ import { TemplateModule } from 'src/app/common/services/template/template.module
 import { NotFoundModule } from './web/not-found/not-found.module';
 import { PublicPagesModule } from './web/public-pages/public-pages.module';
 import { AuthModule } from 'src/app/modules/auth/auth.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { CleanupService } from './common/services/cleanup-service';
 
 @Module({
   imports: [
@@ -87,6 +89,7 @@ import { AuthModule } from 'src/app/modules/auth/auth.module';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public')
     }),
+    ScheduleModule.forRoot(),
     // core modules
     ConfigurationModule,
     LocalizationModule,
@@ -111,6 +114,7 @@ import { AuthModule } from 'src/app/modules/auth/auth.module';
   ],
   controllers: [],
   providers: [
+    CleanupService,
     LanguageUserBodyResolver,
     { provide: APP_GUARD, useClass: AtGuard },
     { provide: APP_PIPE, useClass: CustomValidationPipe },

@@ -7,10 +7,11 @@ import { CompanyRulesService } from 'src/app/common/services/company-rules.servi
 import { ErrorHandlingModule } from 'src/app/common/error-handling/error-handling.module';
 import { IconsService } from 'src/app/common/services/icons/icons.service';
 import { LocalizationModule } from 'src/app/common/localization/localization-strings.module';
+import { PrismaService } from 'src/app/common/services/prisma/prisma.service';
 
 @Module({
   imports: [LocalizationModule, ErrorHandlingModule],
   controllers: [UserController],
-  providers: [UserService, ConfigurationService, MappingService, CompanyRulesService, IconsService],
+  providers: [UserService, ConfigurationService, MappingService, CompanyRulesService, IconsService, PrismaService],
 })
 export class UserModule {}

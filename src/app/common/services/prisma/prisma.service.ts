@@ -5,11 +5,14 @@ import { PrismaClient } from '@prisma/client';
 export class PrismaService {
   constructor(private readonly client: PrismaClient) { }
 
-  async getUserById(id: number) {
-    return this.client.user.findUnique({ where: { id } });
+  async deleteUser(id: number) {
+    return this.client.user.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 
-  async deleteUser(id: number) {
-    return this.client.user.delete({ where: { id } });
+  async getUserById(id: number) {
+    return this.client.user.findUnique({ where: { id } });
   }
 }

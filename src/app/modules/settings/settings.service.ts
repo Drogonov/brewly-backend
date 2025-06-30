@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   SaveDefaultCuppingSettingsRequestDto,
   IGetUserSettingsResponse,
@@ -16,6 +16,7 @@ import {
   Company,
   Friendship,
   FriendshipType,
+  PrismaClient,
   Role,
   TeamInvitation,
   TeamInvitationType,
@@ -35,7 +36,7 @@ import {
 @Injectable()
 export class SettingsService {
   constructor(
-    private prisma: PrismaService,
+    @Inject(PrismaClient) private readonly prisma: PrismaClient,
     private mappingService: MappingService,
     private errorHandlingService: ErrorHandlingService,
     private iconsService: IconsService,

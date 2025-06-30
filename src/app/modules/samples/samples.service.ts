@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
     SampleRequestDto,
     StatusType,
@@ -18,15 +18,14 @@ import { LocalizationOptionsListService } from 'src/app/common/localization/loca
 import { LocalizationOptionListConst } from 'src/app/common/localization/localization-options-list/localization-options-list.model';
 import { BusinessErrorKeys, SamplesKeys } from 'src/app/common/localization/generated';
 import { ArchiveSampleDto } from './dto/archive-sample.request.dto';
-import { SampleType } from '@prisma/client';
+import { PrismaClient, SampleType } from '@prisma/client';
 
 @Injectable()
 export class SamplesService {
     constructor(
-        private prisma: PrismaService,
+        @Inject(PrismaClient) private readonly prisma: PrismaClient,
         private mappingService: MappingService,
         private errorHandlingService: ErrorHandlingService,
-        private iconsService: IconsService,
         private localizationStringsService: LocalizationStringsService,
         private localizationOptionsListService: LocalizationOptionsListService,
     ) { }

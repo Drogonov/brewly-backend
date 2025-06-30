@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/app/common/services/prisma/prisma.service';
 import {
   EditCompanyRequestDto,
@@ -7,7 +7,7 @@ import {
   StatusResponseDto,
   StatusType,
 } from './dto';
-import { Company, Role, TeamInvitationType } from '@prisma/client';
+import { Company, PrismaClient, Role, TeamInvitationType } from '@prisma/client';
 import { MappingService } from 'src/app/common/services/mapping.service';
 import { CompanyRulesService } from 'src/app/common/services/company-rules.service';
 import { ErrorHandlingService } from 'src/app/common/error-handling/error-handling.service';
@@ -17,7 +17,7 @@ import { BusinessErrorKeys, CompanyKeys, ErrorsKeys } from 'src/app/common/local
 @Injectable()
 export class CompanyService {
   constructor(
-    private prisma: PrismaService,
+    @Inject(PrismaClient) private readonly prisma: PrismaClient,
     private mappingService: MappingService,
     private companyRulesService: CompanyRulesService,
     private errorHandlingService: ErrorHandlingService,

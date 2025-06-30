@@ -49,8 +49,10 @@ import { PrismaService } from 'src/app/common/services/prisma/prisma.service';
 @Injectable()
 export class UserService {
   constructor(
-    @Inject(PrismaClient) private readonly prisma: PrismaClient,
-    private prismaService: PrismaService,
+    // @Inject(PrismaClient) private readonly prisma: PrismaClient,
+    // private prismaService: PrismaService,
+
+    private prisma: PrismaService,
     private mappingService: MappingService,
     private companyRulesService: CompanyRulesService,
     private errorHandlingService: ErrorHandlingService,
@@ -365,13 +367,16 @@ export class UserService {
   ): Promise<StatusResponseDto> {
     try {
       const user = await this.prisma.user.findUnique({ where: { id: userId } });
-      await this.prismaService.deleteUser(user.id)
+      if (!user) {
+        throw await this.errorHandlingService.getBusinessError(BusinessErrorKeys.USER_DOESNT_EXIST);
+      }
+      await this.prismaService.deleteUser(user.id);
 
       return {
         status: StatusType.SUCCESS,
         description: await this.localizationStringsService.getUserText(
           UserKeys.DELETE_USER,
-         { email: user.email },
+          { email: user.email },
         )
       }
     } catch (error) {
@@ -388,6 +393,12 @@ export class UserService {
       if (!user) {
         throw await this.errorHandlingService.getBusinessError(
           BusinessErrorKeys.USER_DOESNT_EXIST,
+        );
+      }
+
+      if (!user.otpHash) {
+        throw await this.errorHandlingService.getBusinessError(
+          BusinessErrorKeys.UNEXPECTED_ERROR,
         );
       }
 

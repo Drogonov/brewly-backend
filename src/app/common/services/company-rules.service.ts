@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/app/common/services/prisma/prisma.service';
-import { CompanyRuleType, Role } from '@prisma/client';
+import { CompanyRuleType, PrismaClient, Role } from '@prisma/client';
 
 @Injectable()
 export class CompanyRulesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaClient) private readonly prisma: PrismaClient,
+  ) { }
 
   async createDefaultCompanyRules(companyId: number): Promise<void> {
     const defaultRules = [

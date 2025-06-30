@@ -1,6 +1,6 @@
 // src/app.modules/auth/auth.service.ts
-import { Injectable, ForbiddenException } from '@nestjs/common';
-import { Prisma, Role, User } from '@prisma/client';
+import { Injectable, ForbiddenException, Inject } from '@nestjs/common';
+import { Prisma, PrismaClient, Role, User } from '@prisma/client';
 import * as argon from 'argon2';
 import { PrismaService } from 'src/app/common/services/prisma/prisma.service';
 import {
@@ -26,7 +26,7 @@ import { PinoLogger } from 'nestjs-pino';
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
+    @Inject(PrismaClient) private readonly prisma: PrismaClient,
     private jwtSessionService: JWTSessionService,
     private mailService: MailService,
     private configService: ConfigurationService,
@@ -126,6 +126,12 @@ export class AuthService {
       if (user.otpExpiresAt && user.otpExpiresAt < new Date()) {
         throw await this.errorHandlingService.getBusinessError(
           BusinessErrorKeys.OTP_EXPIRED
+        );
+      }
+
+      if (!user.otpHash) {
+        throw await this.errorHandlingService.getBusinessError(
+          BusinessErrorKeys.UNEXPECTED_ERROR,
         );
       }
 
