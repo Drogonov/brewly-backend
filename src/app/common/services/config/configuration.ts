@@ -15,6 +15,8 @@ export const configuration = () => ({
         dev: process.env.OTP_DEV || "666666",
     },
     assets: {
-        appStoreURL: process.env.APP_STORE_URL
+        appStoreURL: process.env.APP_STORE_URL,
+        telegramGroupURL: process.env.TELEGRAM_URL,
+        privacyPolicyURL: process.env.PRIVACY_POLICY_URL
     }
 });

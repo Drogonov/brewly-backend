@@ -1,6 +1,8 @@
 {
   "ONBOARDING_PAGE_1_SUBTITLE": "Store",
-  "ONBOARDING_PAGE_1_TEXT_1": "Keep track of the coffee you have on hand. Next time you get the same bag, you’ll instantly remember its flavor notes — no need to write everything down again.",
+  "ONBOARDING_PAGE_1_TEXT_1": "Keep track of the coffee you have on hand. Next time you get the same pack, you’ll instantly remember its flavor notes — no need to write everything down again.",
+  "FOOTER_JOIN_TELEGRAM": "Join us in our [Telegram Group]({TELEGRAM_URL}) to contact with devs directly.",
+  "FOOTER_PRIVACY_POLICY": "[Privacy Policy]({PRIVACY_POLICY_URL}) check out if you have some questions about data.",
   "ONBOARDING_PAGE_2_SUBTITLE": "Collaborate",
   "ONBOARDING_PAGE_2_TEXT_1": "Cupping alone? Turn on Personal mode — only you will see the results.",
   "ONBOARDING_PAGE_2_TEXT_2": "Or gather your friends and cup together!",

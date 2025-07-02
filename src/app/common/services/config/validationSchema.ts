@@ -12,4 +12,7 @@ export const validationSchema = Joi.object({
   RT_SECRET: Joi.string(),
   BREVO_API_KEY: Joi.string(),
   OTP_DEV: Joi.string(),
+  APP_STORE_URL: Joi.string(),
+  TELEGRAM_URL: Joi.string(),
+  PRIVACY_POLICY_URL: Joi.string(),
 });

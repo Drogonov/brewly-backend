@@ -7,7 +7,7 @@ export class ConfigurationService {
 
     getEnv(): string {
         return this.configService.get('env');
-      }
+    }
 
     getDatabaseURL(): string {
         return this.configService.get('db.url');;
@@ -17,15 +17,15 @@ export class ConfigurationService {
         return this.configService.get('app.port');;
     }
 
-    getEmailAPI():string {
+    getEmailAPI(): string {
         return this.configService.get('app.emailAPI')
     }
 
-    getAccessTokenSecret():string {
+    getAccessTokenSecret(): string {
         return this.configService.get('jwt.at')
     }
 
-    getRefreshTokenSecret():string {
+    getRefreshTokenSecret(): string {
         return this.configService.get('jwt.rt')
     }
 
@@ -35,5 +35,13 @@ export class ConfigurationService {
 
     getAppStoreURL(): string {
         return this.configService.get('assets.appStoreURL')
+    }
+
+    getTelegramGroupURL(): string {
+        return this.configService.get('assets.telegramGroupURL')
+    }
+
+    getPrivacyPolicyURL(): string {
+        return this.configService.get('assets.privacyPolicyURL')
     }
 }

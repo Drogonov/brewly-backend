@@ -36,6 +36,7 @@ export class PublicPagesController {
       welcomeTitle: await t(WebKeys.WELCOME_TITLE),
       leadText: await t(WebKeys.LEAD_TEXT),
       downloadAppText: await t(WebKeys.DOWNLOAD_APP_TEXT),
+      telegramGroupText: await t(WebKeys.TELEGRAM_GROUP_TEXT),
       githubIosText: await t(WebKeys.GITHUB_IOS_TEXT),
       githubSwaggerText: await t(WebKeys.GITHUB_SWAGGER_TEXT),
       githubBackendText: await t(WebKeys.GITHUB_BACKEND_TEXT),
