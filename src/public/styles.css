@@ -185,6 +185,11 @@ p.lead {
   margin-top: 1.5rem;
 }
 
+.telegram-wrap {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
 /* Footer */
 footer {
   text-align: center;
@@ -207,6 +212,10 @@ footer {
   /* Show hamburger */
   .nav-toggle {
     display: block;
+  }
+
+  .telegram-wrap {
+    margin-top: 1rem;
   }
 
   /* Slide-in/off-canvas nav */
