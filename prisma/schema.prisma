@@ -197,7 +197,7 @@ model Cupping {
 model CuppingHiddenPackName {
   id             Int        @id @default(autoincrement())
   cuppingId      Int
-  cupping        Cupping    @relation(fields: [cuppingId], references: [id])
+  cupping        Cupping    @relation(fields: [cuppingId], references: [id], onDelete: Cascade)
   pack           CoffeePack @relation(fields: [coffeePackId], references: [id])
   coffeePackName String
   coffeePackId   Int
