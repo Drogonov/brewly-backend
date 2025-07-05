@@ -370,10 +370,7 @@ export class UserService {
       );
     };
 
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { deletedAt: new Date() },
-    });
+    await this.prisma.softDeleteUser(userId);
 
     // TODO: - Implement normal soft delete logic
     await this.prisma.$executeRaw`
