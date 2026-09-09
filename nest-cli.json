@@ -9,6 +9,6 @@
       "app/web/views//**/*",
       "app/common/services/**/*.html"
     ],
-    "watchAssets": true
+    "watchAssets": false
   }
 }

@@ -5,10 +5,7 @@ This document covers Docker Compose workflows and common Docker commands for Bre
 ## 🚧 Prerequisites
 
 * **Docker** & **Docker Compose** v2+
-* Environment files:
-
-  * `config/development.env`
-  * `config/production.env`
+* Development environment file: `config/development.env`
 
 ---
 
@@ -39,24 +36,11 @@ npm run docker:compose-dev
 
 ## 🚀 Production Workflow
 
-### Docker Compose (Prod)
+Production Compose, PostgreSQL, migrations, nginx, TLS, Grafana, Loki, Promtail, and pgAdmin are
+owned by the sibling `brewly-infrastructure` repository. This repository only retains
+`Dockerfile-prod`, the application image contract used by that deployment.
 
-Build and run production containers in detached mode:
-
-```bash
-docker compose -f docker-compose-prod.yaml \
-  --env-file ./config/production.env \
-  up --build -d
-```
-
-Or via npm script:
-
-```bash
-npm run docker:compose-prod
-```
-
-* Host port `APP_PORT` (default: 8080) maps to the NestJS server port in the container (`SERVER_PORT`).
-* Grafana UI is available on port 3000 by default.
+See `../brewly-infrastructure/README.md` for snapshot and cutover commands.
 
 ### Build & Push Custom Image
 
@@ -79,14 +63,8 @@ npm run docker:compose-prod
 
 ## ⚙️ GitHub Actions
 
-* `.github/workflows/deploy.yml` automates production deployment:
-
-  1. Checkout code
-  2. SSH into VPS
-  3. Run `docker compose -f docker-compose-prod.yaml --env-file $ENV_FILE_PATH up --build -d`
-
-* `.github/workflows/publish-swagger.yml` generates and pushes `swagger.json` to the `brewly-swagger` repo on each `master` push.
-* `docker compose -f docker-compose-prod.yaml --env-file ./config/production.env up --build -d`
+`.github/workflows/publish-swagger.yml` generates and publishes `swagger.json`. Production
+deployment automation belongs in `brewly-infrastructure`.
 
 ---
 
