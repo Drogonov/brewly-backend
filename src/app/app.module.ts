@@ -32,6 +32,7 @@ import { AuthModule } from 'src/app/modules/auth/auth.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CleanupService } from './common/services/cleanup/cleanup.service';
 import { CleanupModule } from './common/services/cleanup/cleanup.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -100,6 +101,7 @@ import { CleanupModule } from './common/services/cleanup/cleanup.module';
     MailModule,
     PrismaModule,
     CleanupModule,
+    HealthModule,
 
     // feature modules
     AuthModule,

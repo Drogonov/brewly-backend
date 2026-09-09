@@ -1,243 +1,361 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { User } from '@prisma/client';
-import { decode } from 'jsonwebtoken';
+import { Role, SessionType, User } from '@prisma/client';
+import * as argon from 'argon2';
+import { PinoLogger } from 'nestjs-pino';
+import { ITokensResponse } from 'src/app/common/dto';
+import { ErrorHandlingService } from 'src/app/common/error-handling/error-handling.service';
+import { ErrorFieldCode } from 'src/app/common/error-handling/exceptions';
+import {
+  BusinessErrorKeys,
+  ErrorsKeys,
+  ValidationErrorKeys,
+} from 'src/app/common/localization/generated';
+import { ConfigurationService } from 'src/app/common/services/config/configuration.service';
+import { JWTSessionService } from 'src/app/common/services/jwt-session/jwt-session.service';
+import { MailService } from 'src/app/common/services/mail/mail.service';
 import { PrismaService } from 'src/app/common/services/prisma/prisma.service';
-import { AppModule } from 'src/app/app.module';
 import { AuthService } from '../../auth.service';
+import { StatusType } from '../../dto';
 
-const user = {
+jest.mock('argon2', () => ({
+  hash: jest.fn(),
+  verify: jest.fn(),
+}));
+
+const authRequest = {
   email: 'test@gmail.com',
   password: 'super-secret-password',
+  language: 'en',
 };
 
-describe('Auth Flow', () => {
-  let prisma: PrismaService;
+const tokens: ITokensResponse = {
+  access_token: 'access-token',
+  refresh_token: 'refresh-token',
+};
+
+const testUser: User = {
+  id: 1,
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  deletedAt: null,
+  userName: null,
+  userImageURL: null,
+  email: authRequest.email,
+  about: null,
+  hash: 'password-hash',
+  otpHash: 'otp-hash',
+  otpExpiresAt: new Date('2099-01-01T00:00:00.000Z'),
+  isVerificated: true,
+  currentCompanyId: 2,
+};
+
+describe('AuthService', () => {
   let authService: AuthService;
-  let moduleRef: TestingModule;
+  let prisma: {
+    $transaction: jest.Mock;
+    user: {
+      create: jest.Mock;
+      findUnique: jest.Mock;
+      update: jest.Mock;
+    };
+    company: { create: jest.Mock };
+    userToCompanyRelation: { create: jest.Mock };
+  };
+  let jwtSessionService: {
+    createSession: jest.Mock;
+    endSession: jest.Mock;
+    verifyRtMatch: jest.Mock;
+    getTokens: jest.Mock;
+    updateRtHash: jest.Mock;
+  };
+  let mailService: { sendOtpEmail: jest.Mock };
+  let configService: { getEnv: jest.Mock; getOtpDevCode: jest.Mock };
+  let errorHandlingService: {
+    getBusinessError: jest.Mock;
+    getForbiddenError: jest.Mock;
+    getValidationError: jest.Mock;
+  };
+  let logger: { setContext: jest.Mock };
 
-  beforeAll(async () => {
-    moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+  beforeEach(() => {
+    prisma = {
+      $transaction: jest.fn(),
+      user: {
+        create: jest.fn().mockResolvedValue(testUser),
+        findUnique: jest.fn(),
+        update: jest.fn().mockResolvedValue(testUser),
+      },
+      company: {
+        create: jest.fn().mockResolvedValue({ id: 2 }),
+      },
+      userToCompanyRelation: {
+        create: jest.fn().mockResolvedValue({ id: 3 }),
+      },
+    };
+    prisma.$transaction.mockImplementation(async (callback) =>
+      callback(prisma),
+    );
 
-    prisma = moduleRef.get(PrismaService);
-    authService = moduleRef.get(AuthService);
+    jwtSessionService = {
+      createSession: jest.fn().mockResolvedValue(tokens),
+      endSession: jest.fn().mockResolvedValue(undefined),
+      verifyRtMatch: jest.fn().mockResolvedValue(true),
+      getTokens: jest.fn().mockResolvedValue(tokens),
+      updateRtHash: jest.fn().mockResolvedValue(undefined),
+    };
+    mailService = { sendOtpEmail: jest.fn().mockResolvedValue(undefined) };
+    configService = {
+      getEnv: jest.fn().mockReturnValue('development'),
+      getOtpDevCode: jest.fn().mockReturnValue('666666'),
+    };
+
+    const businessError = Object.assign(new Error('business error'), {
+      status: 422,
+    });
+    const forbiddenError = Object.assign(new Error('forbidden error'), {
+      status: 403,
+    });
+    const validationError = Object.assign(new Error('validation error'), {
+      status: 422,
+    });
+    errorHandlingService = {
+      getBusinessError: jest.fn().mockResolvedValue(businessError),
+      getForbiddenError: jest.fn().mockResolvedValue(forbiddenError),
+      getValidationError: jest.fn().mockResolvedValue(validationError),
+    };
+    logger = { setContext: jest.fn() };
+
+    (argon.hash as jest.Mock)
+      .mockReset()
+      .mockResolvedValueOnce('password-hash')
+      .mockResolvedValueOnce('otp-hash');
+    (argon.verify as jest.Mock).mockReset().mockResolvedValue(true);
+
+    authService = new AuthService(
+      prisma as unknown as PrismaService,
+      jwtSessionService as unknown as JWTSessionService,
+      mailService as unknown as MailService,
+      configService as unknown as ConfigurationService,
+      errorHandlingService as unknown as ErrorHandlingService,
+      logger as unknown as PinoLogger,
+    );
   });
 
-  afterAll(async () => {
-    await moduleRef.close();
+  describe('signUpLocal', () => {
+    it('creates a user, personal company and owner relation', async () => {
+      await expect(authService.signUpLocal(authRequest)).resolves.toEqual({
+        status: StatusType.SUCCESS,
+      });
+
+      expect(prisma.user.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          email: authRequest.email,
+          hash: 'password-hash',
+          otpHash: 'otp-hash',
+          isVerificated: false,
+        }),
+      });
+      expect(prisma.company.create).toHaveBeenCalledWith({
+        data: { companyName: 'Personal', isPersonal: true },
+      });
+      expect(prisma.userToCompanyRelation.create).toHaveBeenCalledWith({
+        data: { userId: testUser.id, companyId: 2, role: Role.OWNER },
+      });
+      expect(mailService.sendOtpEmail).not.toHaveBeenCalled();
+    });
+
+    it('maps OTP delivery failures to a business error', async () => {
+      configService.getEnv.mockReturnValue('production');
+      mailService.sendOtpEmail.mockRejectedValue(new Error('mail unavailable'));
+
+      await expect(authService.signUpLocal(authRequest)).rejects.toMatchObject({
+        status: 422,
+      });
+      expect(errorHandlingService.getBusinessError).toHaveBeenCalledWith(
+        BusinessErrorKeys.CANT_DELIVER_VERIFICATION_EMAIL,
+        { email: `"${authRequest.email}"` },
+      );
+    });
   });
 
-  describe('signup', () => {
-    beforeAll(async () => {
-      await prisma.cleanDatabase();
-    });
-
-    it('should signup', async () => {
-      const tokens = await authService.signupLocal({
-        email: user.email,
-        password: user.password,
+  describe('verifyOTP', () => {
+    it('verifies the OTP, clears it and creates a session', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...testUser,
+        isVerificated: false,
       });
+      prisma.user.update.mockResolvedValue(testUser);
 
-      expect(tokens.access_token).toBeTruthy();
-      expect(tokens.refresh_token).toBeTruthy();
-    });
+      await expect(
+        authService.verifyOTP({
+          email: authRequest.email,
+          otp: '666666',
+          language: authRequest.language,
+        }),
+      ).resolves.toEqual(tokens);
 
-    it('should throw on duplicate user signup', async () => {
-      let tokens: Tokens | undefined;
-      try {
-        tokens = await authService.signupLocal({
-          email: user.email,
-          password: user.password,
-        });
-      } catch (error) {
-        expect(error.status).toBe(403);
-      }
-
-      expect(tokens).toBeUndefined();
+      expect(argon.verify).toHaveBeenCalledWith('otp-hash', '666666');
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { email: authRequest.email },
+        data: { otpHash: null, isVerificated: true, otpExpiresAt: null },
+      });
+      expect(jwtSessionService.createSession).toHaveBeenCalledWith(
+        testUser,
+        authRequest.language,
+      );
     });
   });
 
-  describe('signin', () => {
-    beforeAll(async () => {
-      await prisma.cleanDatabase();
-    });
-    it('should throw if no existing user', async () => {
-      let tokens: Tokens | undefined;
-      try {
-        tokens = await authService.signinLocal({
-          email: user.email,
-          password: user.password,
-        });
-      } catch (error) {
-        expect(error.status).toBe(403);
-      }
-
-      expect(tokens).toBeUndefined();
-    });
-
-    it('should login', async () => {
-      await authService.signupLocal({
-        email: user.email,
-        password: user.password,
+  describe('signInLocal', () => {
+    it('returns tokens for a verified user with a valid password', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...testUser,
+        sessions: [],
+        currentCompany: { id: 2 },
       });
 
-      const tokens = await authService.signinLocal({
-        email: user.email,
-        password: user.password,
-      });
-
-      expect(tokens.access_token).toBeTruthy();
-      expect(tokens.refresh_token).toBeTruthy();
+      await expect(authService.signInLocal(authRequest)).resolves.toEqual(
+        tokens,
+      );
+      expect(argon.verify).toHaveBeenCalledWith(
+        testUser.hash,
+        authRequest.password,
+      );
+      expect(jwtSessionService.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({ id: testUser.id }),
+        authRequest.language,
+      );
     });
 
-    it('should throw if password incorrect', async () => {
-      let tokens: Tokens | undefined;
-      try {
-        tokens = await authService.signinLocal({
-          email: user.email,
-          password: user.password + 'a',
-        });
-      } catch (error) {
-        expect(error.status).toBe(403);
-      }
+    it('returns a validation error when the user does not exist', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
 
-      expect(tokens).toBeUndefined();
+      await expect(authService.signInLocal(authRequest)).rejects.toMatchObject({
+        status: 422,
+      });
+      expect(errorHandlingService.getValidationError).toHaveBeenCalledWith([
+        {
+          errorFieldsCode: ErrorFieldCode.email,
+          validationErrorKey: ValidationErrorKeys.USER_DOESNT_EXIST,
+        },
+      ]);
+    });
+
+    it('rejects an unverified user', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...testUser,
+        isVerificated: false,
+      });
+
+      await expect(authService.signInLocal(authRequest)).rejects.toMatchObject({
+        status: 422,
+      });
+      expect(errorHandlingService.getBusinessError).toHaveBeenCalledWith(
+        BusinessErrorKeys.USER_NOT_VERIFIED,
+      );
+    });
+
+    it('returns a validation error for an incorrect password', async () => {
+      prisma.user.findUnique.mockResolvedValue(testUser);
+      (argon.verify as jest.Mock).mockResolvedValue(false);
+
+      await expect(authService.signInLocal(authRequest)).rejects.toMatchObject({
+        status: 422,
+      });
+      expect(errorHandlingService.getValidationError).toHaveBeenCalledWith([
+        {
+          errorFieldsCode: ErrorFieldCode.password,
+          validationErrorKey: ValidationErrorKeys.INCORRECT_PASSWORD,
+        },
+      ]);
     });
   });
 
   describe('logout', () => {
-    beforeAll(async () => {
-      await prisma.cleanDatabase();
+    it('succeeds when the user no longer exists', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        authService.logout(404, tokens.refresh_token),
+      ).resolves.toEqual({
+        status: StatusType.SUCCESS,
+      });
+      expect(jwtSessionService.endSession).not.toHaveBeenCalled();
     });
 
-    it('should pass if call to non existent user', async () => {
-      const result = await authService.logout(4);
-      expect(result).toBeDefined();
-    });
+    it('ends the matching session', async () => {
+      const userWithSessions = {
+        ...testUser,
+        sessions: [
+          {
+            id: 7,
+            userId: testUser.id,
+            hashedRt: 'hashed-refresh-token',
+            type: SessionType.IOS,
+            createdAt: testUser.createdAt,
+            updatedAt: testUser.updatedAt,
+          },
+        ],
+      };
+      prisma.user.findUnique.mockResolvedValue(userWithSessions);
 
-    it('should logout', async () => {
-      await authService.signupLocal({
-        email: user.email,
-        password: user.password,
-      });
-
-      let userFromDb: User | null;
-
-      userFromDb = await prisma.user.findFirst({
-        where: {
-          email: user.email,
-        },
-      });
-      expect(userFromDb?.hashedRt).toBeTruthy();
-
-      // logout
-      await authService.logout(userFromDb!.id);
-
-      userFromDb = await prisma.user.findFirst({
-        where: {
-          email: user.email,
-        },
-      });
-
-      expect(userFromDb?.hashedRt).toBeFalsy();
+      await expect(
+        authService.logout(testUser.id, tokens.refresh_token),
+      ).resolves.toEqual({ status: StatusType.SUCCESS });
+      expect(jwtSessionService.endSession).toHaveBeenCalledWith(
+        userWithSessions,
+        tokens.refresh_token,
+      );
     });
   });
 
-  describe('refresh', () => {
-    beforeAll(async () => {
-      await prisma.cleanDatabase();
+  describe('refreshTokens', () => {
+    it('rejects a missing user as an expired session', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        authService.refreshTokens(404, tokens.refresh_token, 'en'),
+      ).rejects.toMatchObject({ status: 403 });
+      expect(errorHandlingService.getForbiddenError).toHaveBeenCalledWith(
+        ErrorsKeys.SESSION_EXPIRED,
+      );
     });
 
-    it('should throw if no existing user', async () => {
-      let tokens: Tokens | undefined;
-      try {
-        tokens = await authService.refreshTokens(1, '');
-      } catch (error) {
-        expect(error.status).toBe(403);
-      }
+    it('rotates the matching refresh-token session', async () => {
+      const rotatedTokens: ITokensResponse = {
+        access_token: 'rotated-access-token',
+        refresh_token: 'rotated-refresh-token',
+      };
+      const userWithSessions = {
+        ...testUser,
+        sessions: [{ id: 7, hashedRt: 'hashed-refresh-token' }],
+        currentCompany: { id: 2 },
+      };
+      prisma.user.findUnique.mockResolvedValue(userWithSessions);
+      jwtSessionService.getTokens.mockResolvedValue(rotatedTokens);
 
-      expect(tokens).toBeUndefined();
-    });
+      await expect(
+        authService.refreshTokens(
+          testUser.id,
+          tokens.refresh_token,
+          authRequest.language,
+        ),
+      ).resolves.toEqual(rotatedTokens);
 
-    it('should throw if user logged out', async () => {
-      // signup and save refresh token
-      const _tokens = await authService.signupLocal({
-        email: user.email,
-        password: user.password,
-      });
-
-      const rt = _tokens.refresh_token;
-
-      // get user id from refresh token
-      // also possible to get using prisma like above
-      // but since we have the rt already, why not just decoding it
-      const decoded = decode(rt);
-      const userId = Number(decoded?.sub);
-
-      // logout the user so the hashedRt is set to null
-      await authService.logout(userId);
-
-      let tokens: Tokens | undefined;
-      try {
-        tokens = await authService.refreshTokens(userId, rt);
-      } catch (error) {
-        expect(error.status).toBe(403);
-      }
-
-      expect(tokens).toBeUndefined();
-    });
-
-    it('should throw if refresh token incorrect', async () => {
-      await prisma.cleanDatabase();
-
-      const _tokens = await authService.signupLocal({
-        email: user.email,
-        password: user.password,
-      });
-
-      const rt = _tokens.refresh_token;
-
-      const decoded = decode(rt);
-      const userId = Number(decoded?.sub);
-
-      let tokens: Tokens | undefined;
-      try {
-        tokens = await authService.refreshTokens(userId, rt + 'a');
-      } catch (error) {
-        expect(error.status).toBe(403);
-      }
-
-      expect(tokens).toBeUndefined();
-    });
-
-    it('should refresh tokens', async () => {
-      await prisma.cleanDatabase();
-      // log in the user again and save rt + at
-      const _tokens = await authService.signupLocal({
-        email: user.email,
-        password: user.password,
-      });
-
-      const rt = _tokens.refresh_token;
-      const at = _tokens.access_token;
-
-      const decoded = decode(rt);
-      const userId = Number(decoded?.sub);
-
-      // since jwt uses seconds signature we need to wait for 1 second to have new jwts
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          resolve(true);
-        }, 1000);
-      });
-
-      const tokens = await authService.refreshTokens(userId, rt);
-      expect(tokens).toBeDefined();
-
-      // refreshed tokens should be different
-      expect(tokens.access_token).not.toBe(at);
-      expect(tokens.refresh_token).not.toBe(rt);
+      expect(jwtSessionService.verifyRtMatch).toHaveBeenCalledWith(
+        userWithSessions,
+        tokens.refresh_token,
+      );
+      expect(jwtSessionService.getTokens).toHaveBeenCalledWith(
+        testUser.id,
+        testUser.currentCompanyId,
+        testUser.email,
+        authRequest.language,
+      );
+      expect(jwtSessionService.updateRtHash).toHaveBeenCalledWith(
+        userWithSessions,
+        tokens.refresh_token,
+        rotatedTokens.refresh_token,
+      );
     });
   });
 });

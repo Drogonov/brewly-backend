@@ -19,6 +19,7 @@ async function bootstrap() {
   const configService = app.get(ConfigurationService);
 
   app.useLogger(app.get(Logger));
+  app.enableShutdownHooks();
 
   app.setBaseViewsDir(join(__dirname, 'app', 'web', 'views'));
   app.engine(
@@ -54,7 +55,7 @@ async function bootstrap() {
     app.useGlobalInterceptors(app.get(LoggingInterceptor));
   }
 
-  if (configService.getAppPort() !== 'production') {
+  if (configService.getEnv() !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('App API')
       .setDescription('API documentation for the application')

@@ -190,84 +190,16 @@ http://localhost:${SERVER_PORT}/api
 
 ## 🚀 Production Deployment
 
-### 1. GitHub Secrets
+Production deployment is owned by the sibling `brewly-infrastructure` repository. It contains
+host provisioning, Compose, database snapshot/cutover, Prisma migration execution, nginx, TLS,
+and monitoring. `Dockerfile-prod` remains here because it is the backend image contract.
 
-- `ENV_FILE_PATH` # starts from /root
-- `REPO_PATH` # starts from /root
-- `REPO_BOT_PAT` # it is personal access token for swagger repo
-- `SSH_KEY` # private key contents 
-- `VPS_HOST` # ip of the VPS
-- `VPS_USER` # usually root
-
-### 2. VPS Setup
-
-SSH into a clean VPS and run:
-
-```
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y python3 python3-pip git nano curl
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
-newgrp docker
-
-DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-mkdir -p $DOCKER_CONFIG/cli-plugins
-curl -SL https://github.com/docker/compose/releases/download/v2.12.2/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
-chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-
-docker compose version
-```
-now we install all dependencies to work with.
-
-Then:
-
-```
-mkdir -p ~/projects && cd ~/projects
-git clone git@github.com:Drogonov/brewly-backend.git
-cd brewly-backend/config
-nano production.env
-```
-When you opens nano paste there your variables and save
-
-
-Edit `~/.ssh/authorized_keys` on the VPS and paste:
-
-- your local machine's public key
-- GitHub Actions deploy key
-
-### 3. Trigger Deployment
-
-Push to `master`. GitHub Action will:
-
-- pull repo
-- rebuild container
-- apply migrations
-- run production app
-
-### 🔐 SSH Key Generation
-
-```
-ssh-keygen -t ed25519 -C "you@example.com" -f ~/.ssh/brewly_deploy
-ssh-copy-id -i ~/.ssh/brewly_deploy.pub user@vps_ip
-cat ~/.ssh/brewly_deploy  # add this to GitHub secrets
-```
-
-### 🌐 NGINX Configuration
-
-> ⚙️ I tried to add automation for renew certbot but my VPS add it as option (and brokes my automated certs) so it is in developing for now
-
-Pray your God before launch it and maybe it will works
-```
-cd brewly-backend/ansible
-ansible-playbook  playbook.yml
-```
-
----
+See `../brewly-infrastructure/README.md` for operational commands.
 
 ## 📊 Monitoring
 
-Visit `http://localhost:3000` to access Grafana UI. Logs are shipped from container → Promtail → Loki → Grafana.
-Also after all setups on port 3000 it will accessable on your server
+Grafana, Loki, Promtail, datasource provisioning, retention, and their persistent volumes are
+managed by `brewly-infrastructure`.
 
 ---
 
